@@ -3,7 +3,7 @@
 /**
  * Plugin Name: WP CTA
  * Description: WordPress Call To Action plugin that helps promote content, increase sales and generate leads. It's easy to use and comes with 3 customizable templates.
- * Version: 1.6.0
+ * Version: 1.6.1
  * Author: WP CTA PRO
  * Text Domain: easy-sticky-sidebar
  * Author URI: https://wpctapro.com/
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
-define('EASY_STICKY_SIDEBAR_VERSION', '1.6.0');
+define('EASY_STICKY_SIDEBAR_VERSION', '1.6.1');
 define('EASY_STICKY_SIDEBAR_PLUGIN_DIR', untrailingslashit(plugin_dir_path(__FILE__)));
 define('EASY_STICKY_SIDEBAR_PLUGIN_URL', untrailingslashit(plugin_dir_url(__FILE__)));
 define('EASY_STICKY_SIDEBAR_PLUGIN_FILE', __FILE__);
@@ -36,7 +36,8 @@ if (!class_exists('SSuprydpClassStickySidebar')) {
  * @since  1.2.0
  * @return ClassStickySidebar
  */
-function SSuprydpStickySidebar() {
+function SSuprydpStickySidebar()
+{
 	return SSuprydpStickySidebar::instance();
 }
 
@@ -49,7 +50,8 @@ $GLOBALS['SSuprydp_shortcodes'] = SSuprydpStickySidebar();
  *
  * @return void
  */
-function easy_sticky_sidebar_appsero_init_tracker() {
+function easy_sticky_sidebar_appsero_init_tracker()
+{
 
 	if (!class_exists('Appsero\Client')) {
 		require_once __DIR__ . '/appsero/src/Client.php';

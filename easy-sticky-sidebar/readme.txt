@@ -1,13 +1,13 @@
 === WP CTA - Call To Action Plugin, Sticky CTA, Floating Buttons, Floating Tab Plugin ===
 Plugin Name: WP CTA - Create Call To Actions Without Code, Sticky CTA, Floating Buttons, Floating Tab Plugin
-Version: 1.6.0
+Version: 1.6.1
 Author URI: https://wpctapro.com
 Contributors: wpctaplugin, blendmedia, rcwpexpert
 Tags: CTA, Call to Action, sticky cta, floating buttons, sticky buttons, social buttons, floating content, Lead Generation, Cta Plugin, sidebar, sticky sidebar, woocommerce, ecommerce, promote, promotion, Lead Gen, pop up, sticky pop up, popup, promote product, promote products, new content, promote content, digital marketing
 Requires at least: 4.9
 Tested up to: 6.6.1
 Requires PHP: 5.6
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -109,6 +109,12 @@ Please visit our demos page here: <a href="https://wpctapro.com/demo/">Demos</a>
 
 
 == Changelog ==
+
+= 1.6.1 =
+* Changed Status column into dropdown similar to pro version
+* Added Location Column
+* Changed Action Links into Buttons
+* Added Bulk Delete Functionality.
 
 = 1.6.0 =
 * tested the latest wordpress version

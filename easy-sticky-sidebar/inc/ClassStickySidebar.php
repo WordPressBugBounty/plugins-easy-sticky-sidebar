@@ -8,7 +8,8 @@
 
 use EasyStickySidebar\TemplateFilters;
 
-class SSuprydpStickySidebar {
+class SSuprydpStickySidebar
+{
 	/**
 	 * The single instance of the class.
 	 *
@@ -34,7 +35,8 @@ class SSuprydpStickySidebar {
 	 * @static
 	 * @return StickySidebar.
 	 */
-	public static function instance() {
+	public static function instance()
+	{
 		if (is_null(self::$_instance)) {
 			self::$_instance = new self();
 		}
@@ -53,7 +55,8 @@ class SSuprydpStickySidebar {
 	 * @global Array StickySidebar
 	 *
 	 */
-	function __construct() {
+	function __construct()
+	{
 		$this->add_data_table();
 
 		require_once EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/inc/helpers.php';
@@ -88,7 +91,8 @@ class SSuprydpStickySidebar {
 	 * Add table at $wpdb object
 	 * @since 1.3.6
 	 */
-	public function add_data_table() {
+	public function add_data_table()
+	{
 		global $wpdb;
 		$wpdb->sticky_cta = $wpdb->prefix . 'sticky_cta';
 		$wpdb->sticky_cta_options = $wpdb->prefix . 'sticky_cta_options';
@@ -98,7 +102,8 @@ class SSuprydpStickySidebar {
 	 * Init
 	 * @since 1.4.5
 	 */
-	public function init() {
+	public function init()
+	{
 		$GLOBALS['CTA_Query'] = new Easy_Sticky_Sidebar_Query();
 
 		new SSuprydpproActions();
@@ -146,7 +151,8 @@ class SSuprydpStickySidebar {
 		$this->migrate_data();
 	}
 
-	public function add_help_link_on_plugin_page($links, $plugin_file_name) {
+	public function add_help_link_on_plugin_page($links, $plugin_file_name)
+	{
 		if (EASY_STICKY_SIDEBAR_PLUGIN_BASENAME != $plugin_file_name) {
 			return $links;
 		}
@@ -158,21 +164,23 @@ class SSuprydpStickySidebar {
 	/**
 	 * Check if user using old version of CTA pro
 	 */
-	public function wp_cta_pro_upgrade_notice() {
+	public function wp_cta_pro_upgrade_notice()
+	{
 		if (!defined('WORDPRESS_CTA_PRO_VERSION') || version_compare(WORDPRESS_CTA_PRO_VERSION, '1.1.3', '<=') === false) {
 			return;
 		}
 ?>
-		<div class="notice notice-warning is-dismissible">
-			<p><?php _e('Please download WP CTA Pro from our website and upgrade!', 'easy-sticky-sidebar'); ?></p>
-		</div>
+<div class="notice notice-warning is-dismissible">
+    <p><?php _e('Please download WP CTA Pro from our website and upgrade!', 'easy-sticky-sidebar'); ?></p>
+</div>
 <?php
 	}
 
 	/**
 	 * sticky sidebar hook run add installation
 	 **/
-	public function SSuprydp_plugin_install() {
+	public function SSuprydp_plugin_install()
+	{
 		$current_version = get_option('easy_sticky_sidebar_version', EASY_STICKY_SIDEBAR_VERSION);
 
 		global $wpdb;
@@ -279,7 +287,8 @@ class SSuprydpStickySidebar {
 		$this->singup();
 	}
 
-	public function singup() {
+	public function singup()
+	{
 		wp_remote_get('https://wpctapro.com/wp-json/easy-sticky-sidebar/v1/on_install', array('body' => array(
 			'email' => get_bloginfo('admin_email'),
 			'name' => get_bloginfo('name')
@@ -290,7 +299,8 @@ class SSuprydpStickySidebar {
 	 * Migrate data
 	 * @since 1.3.1
 	 */
-	function migrate_data() {
+	function migrate_data()
+	{
 		if (!is_admin() || get_option('easy_sticky_sidebar_migrated')) {
 			return;
 		}
@@ -361,7 +371,8 @@ class SSuprydpStickySidebar {
 	 *
 	 * @since 1.2.0
 	 */
-	public function SSuprydpScripts() {
+	public function SSuprydpScripts()
+	{
 		wp_enqueue_style('SSuprydp_style', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar.css', array('fontawesome'), EASY_STICKY_SIDEBAR_VERSION);
 
 		$upload_dir = wp_upload_dir();
@@ -373,7 +384,10 @@ class SSuprydpStickySidebar {
 		wp_enqueue_script('SSuprydp_script', EASY_STICKY_SIDEBAR_PLUGIN_URL . "/assets/js/sticky-sidebar.js", array('jquery'), EASY_STICKY_SIDEBAR_VERSION);
 	}
 
-	public function SSuprydpAdminScripts() {
+	public function SSuprydpAdminScripts()
+	{
+		$version = time();
+
 		wp_enqueue_style('easy-sidebar-global', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/easy-sidebar-global.css', [], EASY_STICKY_SIDEBAR_VERSION);
 		if (!is_easy_sticky_sidebar_screen()) {
 			return;
@@ -386,6 +400,13 @@ class SSuprydpStickySidebar {
 		wp_register_script('select2', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/select2.min.js', ['jquery'], '4.1.0', true);
 
 		wp_enqueue_style('wp-color-picker');
+
+		wp_enqueue_style(
+			'easy-sticky-sidebar-admin',
+			EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/admin.css',
+			array(),
+			$version
+		);
 
 		wp_enqueue_script('jquery-fontselect-js', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/jquery.fontselect.js', [], EASY_STICKY_SIDEBAR_VERSION);
 
@@ -409,7 +430,8 @@ class SSuprydpStickySidebar {
 		}
 	}
 
-	public function stick_sidebar_content() {
+	public function stick_sidebar_content()
+	{
 		global $CTA_Query;
 
 		$dataview = array();
@@ -471,7 +493,8 @@ class SSuprydpStickySidebar {
 		}
 	}
 
-	public function SSuprydp_mediameta() {
+	public function SSuprydp_mediameta()
+	{
 		$ar = array();
 		$ar['width'] = 1344;
 		$ar['height'] = 751;
@@ -533,7 +556,8 @@ class SSuprydpStickySidebar {
 		return serialize($ar);
 	}
 
-	public function SSuprydp_cmedia() {
+	public function SSuprydp_cmedia()
+	{
 		$currentpath = wp_get_upload_dir();
 
 		if ($currentpath['path']) {
