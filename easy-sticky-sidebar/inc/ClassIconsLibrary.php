@@ -5,6 +5,14 @@
  * @since 1.4.5
  */
 class Easy_Sticky_Sidebar_Icons_Library {
+
+    /**
+     * Fontawesome stylesheet
+     * @var string
+     */
+    private $stylesheet;
+
+
     /**
      * Construct
      * @since 1.4.5

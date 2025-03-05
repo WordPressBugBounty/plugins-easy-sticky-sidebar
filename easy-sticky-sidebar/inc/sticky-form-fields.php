@@ -318,7 +318,7 @@ function wordpress_cta_free_design_template_option($stickycta) {
 	</div>
 <?php
 }
-add_action('easy_sticky_sidebar_design_template', 'wordpress_cta_free_design_template_option', 0.5);
+add_action('easy_sticky_sidebar_design_template', 'wordpress_cta_free_design_template_option', 1);
 
 
 /**

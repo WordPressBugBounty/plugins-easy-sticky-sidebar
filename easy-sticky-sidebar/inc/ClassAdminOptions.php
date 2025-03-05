@@ -7,6 +7,13 @@ class SSuprydpStickySidebarOptions {
     private $options;
 
     /**
+     * Export Import
+     *
+     * @var string
+     */
+    private $export_import;
+
+    /**
      * Start up
      */
     public function __construct() {

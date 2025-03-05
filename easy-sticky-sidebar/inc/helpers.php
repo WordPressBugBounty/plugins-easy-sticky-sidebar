@@ -700,7 +700,7 @@ function easy_sticky_sidebar_page_load_callback($stickycta) {
         </details>
     <?php endif;
 }
-add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_page_load_callback', 4.2);
+add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_page_load_callback', 4);
 
 
 /**
@@ -829,7 +829,7 @@ function easy_sticky_sidebar_global_style_callback($stickycta) {
         </details>
     <?php endif;
 }
-add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_global_style_callback', 1.1);
+add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_global_style_callback', 1);
 
 function easy_sticky_sidebar_settings_disable_google_font($post_data) { ?>
     <div class="SSuprydp_field_wrap">
