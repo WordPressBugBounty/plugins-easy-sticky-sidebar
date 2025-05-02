@@ -11,12 +11,26 @@ function easy_sticky_sidebar_cta_position($stickycta, $sticky_id) {
 		'bottom' => __('Bottom', 'easy-sticky-sidebar'),
 	);
 
+	$h_positions = array(
+		'top' => __('Top', 'easy-sticky-sidebar'),
+		'center' => __('Center', 'easy-sticky-sidebar'),
+		'bottom' => __('Bottom', 'easy-sticky-sidebar'),
+	);
+
 	$pro_features = ['left', 'top', 'bottom'];
+	$pro_h_features = ['center', 'bottom'];
 
 	$cta_position = $stickycta->SSuprydp_cta_position;
 	if ($cta_position == '' || !has_wordpress_cta_pro()) {
 		$cta_position == 'right';
-	} ?>
+	} 
+	
+	$cta_h_position = $stickycta->horizontal_vertical_position;
+	if ($cta_h_position == '' || !has_wordpress_cta_pro()) {
+		$cta_h_position == 'top';
+	}
+	
+	?>
 
 	<div id="easy-sticky-sidebar-position">
 		<?php do_action('easy_sticky_sidebar/cta_position_fields', $stickycta); ?>
@@ -45,9 +59,25 @@ function easy_sticky_sidebar_cta_position($stickycta, $sticky_id) {
 
 		<div id="cta-horizontal-vertical-position" class="SSuprydp_field_wrap" data-position="<?php echo esc_attr($stickycta->horizontal_vertical_position) ?>">
 			<div class="group-inline-field group-inline-field-position">
-				<div class="horizontal_vertical_position-wrapper">
+			<div class="horizontal_vertical_position-wrapper">
 					<label><?php _e("Horizontal/Vertical Position", "easy-sticky-sidebar"); ?></label>
-					<select class="input-field" name="horizontal_vertical_position" data-position="<?php echo esc_attr($stickycta->horizontal_vertical_position) ?>"></select>
+					<select class="input-field" name="horizontal_vertical_position" data-position="<?php echo esc_attr($cta_h_position) ?>">
+					<?php
+					foreach ($h_positions as $key => $position) {
+						unset($attr);
+						$attr[] = sprintf('value="%s"', esc_attr($key));
+						if (in_array($key, $pro_h_features) && !has_wordpress_cta_pro()) {
+							$position = sprintf('%s (%s)', $position, __('Pro Feature', 'easy-sticky-sidebar'));
+							$attr[] = 'disabled';
+						}
+
+						$attr[] = selected($key, $cta_h_position, false);
+						printf('<option %s>%s</option>', implode(' ', $attr), esc_html($position));
+					}
+					?>
+
+
+					</select>
 				</div>
 				<?php do_action('easy_sticky_sidebar_after_position2', $stickycta) ?>
 			</div>
@@ -68,18 +98,18 @@ function easy_sticky_sidebar_form_page_location($stickycta, $sticky_id) {
 		echo '<p class="wordpress-cta-instruction text-bold">Get more options with our <a href="https://wpctapro.com/" target="_blank">pro version</a>.</p>';
 	}
 
-	echo '<div class="SSuprydp_field_wrap">';
-	if (!$front_page) {
-		echo '<div style="margin-top:5px"></div>';
-		_e('This option is not available because the home page is not set. Please go to Settings -> Reading -> Your Homepage Displays. Then set your home page.', 'easy-sticky-sidebar');
-	} else {
-		echo '<label>' . esc_html__("Location", "easy-sticky-sidebar") . '</label>';
-		echo '<select name="SSuprydp_location" class="SSuprydp_location">';
-		printf('<option value="" %s>%s</option>', selected('', $stickycta->SSuprydp_location, false), esc_html__('Entire Site', 'easy-sticky-sidebar'));
-		printf('<option value="%d" %s>%s</option>', $front_page, selected($front_page, $stickycta->SSuprydp_location, false), esc_html(get_the_title($front_page)));
-		echo '</select>';
-	}
-	echo '</div>';
+	// echo '<div class="SSuprydp_field_wrap">';
+	// if (!$front_page) {
+	// 	echo '<div style="margin-top:5px"></div>';
+		
+	// } else {
+	// 	echo '<label>' . esc_html__("Location", "easy-sticky-sidebar") . '</label>';
+	// 	echo '<select name="SSuprydp_location" class="SSuprydp_location">';
+	// 	printf('<option value="" %s>%s</option>', selected('', $stickycta->SSuprydp_location, false), esc_html__('Entire Site', 'easy-sticky-sidebar'));
+	// 	printf('<option value="%d" %s>%s</option>', $front_page, selected($front_page, $stickycta->SSuprydp_location, false), esc_html(get_the_title($front_page)));
+	// 	echo '</select>';
+	// }
+	// echo '</div>';
 }
 
 /**
@@ -299,7 +329,7 @@ add_action('easy_sticky_sidebar_call_to_action', 'easy_stick_sidebar_link_text_b
 function wordpress_cta_free_design_template_option($stickycta) {
 	$design_templates = wordpress_cta_get_design_templates(); ?>
 	<div class="gap-5"></div>
-	<p class="wordpress-cta-instruction"><?php _e('Load one of our designs. Please note this will change your current CTA settings.', 'easy-sticky-sidebar') ?></p>
+	<p class="wordpress-cta-instruction"><?php _e('', 'easy-sticky-sidebar') ?></p>
 	<div class="SSuprydp_field_wrap">
 		<select id="cta-premade-style" class="SSuprydp_input">
 			<option value=""><?php _e('Select style', 'easy-sticky-sidebar'); ?></option>

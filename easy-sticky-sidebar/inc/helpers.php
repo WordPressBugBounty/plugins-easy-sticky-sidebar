@@ -130,7 +130,6 @@ function easy_sticky_sidebar_insert($args) {
 
     if (count($meta_fields) > 0 && $wpdb->get_var("SELECT id FROM $wpdb->sticky_cta WHERE id = $sticky_id")) {
         foreach ($meta_fields as $meta_key => $meta_value) {
-
             $exists = $wpdb->get_var($wpdb->prepare("SELECT ID FROM $wpdb->sticky_cta_options WHERE option_name = '%s' AND sticky_cta_id = %d", $meta_key, $sticky_id));
 
             $data_format = array('%d', '%s', '%s');
@@ -173,8 +172,9 @@ function easy_sticky_sidebar_templates() {
         'sticky-cta' => __('Sticky CTA', 'easy-sticky-sidebar'),
         'floating-buttons' =>  __('Floating Buttons', 'easy-sticky-sidebar'),
         'tab-cta' => __('Tab CTA', 'easy-sticky-sidebar'),
-        'html' => __('HTML CTA', 'easy-sticky-sidebar'),
-        'banner' => __('Banner', 'easy-sticky-sidebar'),
+        'banner' => __('Announcement Banner', 'easy-sticky-sidebar'),
+        'html' => __('HTML / iframe CTA', 'easy-sticky-sidebar'),
+        
         'gdpr' => __('GDPR / Cookies', 'easy-sticky-sidebar'),
     ]);
 }
@@ -269,7 +269,7 @@ function easy_sticky_sidebar_get_cta_tabs() {
             'callback' => 'easy_sticky_sidebar_location_tab',
             'priority' => 3
         ],
-
+      
         'content' => [
             'label' => __("Content", 'easy-sticky-sidebar'),
             'callback' => 'easy_sticky_sidebar_content_tab_callback',
@@ -330,16 +330,22 @@ function easy_sticky_sidebar_get_cta_tabs() {
  * @since  1.4.0
  */
 function easy_sticky_sidebar_template_tab($stickycta) {
-    $pro_templates = array('html', 'banner', 'gdpr'); ?>
+    ?>
+<!-- <div class="s_set"><input type="submit" onclick="return SSuprydp_Admin.ProcessPageData(event, this);"
+class="button_save" value="Save Setting"></div> -->
+<?php
+    $pro_templates = array('html', 'banner', 'gdpr', 'floating-buttons', 'tab-cta'); ?>
     <h4 class="wordpress-cta-heading"><?php _e("Template Layout", "easy-sticky-sidebar") ?> </h4>
     <p class="wordpress-cta-instruction"><?php _e('Select a template layout for this CTA. Click on the button below to view our demos.', 'easy-sticky-sidebar') ?></p>
     <?php
     if (!has_wordpress_cta_pro()) {
         echo '<p class="wordpress-cta-instruction text-bold">Get more options with our <a href="https://wpctapro.com/" target="_blank">pro version</a>.</p>';
     } ?>
+
+    <div class="uip">
     <div class="SSuprydp_field_wrap">
         <label><?php _e("Template", "easy-sticky-sidebar"); ?></label>
-        <select name="sidebar_template" class="SSuprydp_input">
+        <select name="sidebar_template" class="SSuprydp_input" id="sidebar_template" style="margin-top:19px">
             <?php
             foreach (easy_sticky_sidebar_templates() as $template => $name) {
                 $attribute = selected($template, $stickycta->sidebar_template, false);
@@ -356,7 +362,58 @@ function easy_sticky_sidebar_template_tab($stickycta) {
         <div style="margin-top:10px">
             <a class="button btn-wordpress-cta-primary" href="https://wpctapro.com/demos/" target="_blank"><?php _e('View Demos', 'easy-sticky-sidebar') ?></a>
         </div>
+
+
+
+
     </div>
+
+
+    
+
+    <div id="design_template_section">
+        <?php $design_templates = wordpress_cta_get_design_templates(); ?>
+        <div class="gap-5"></div>
+        <h4 class="wordpress-cta-heading"><?php esc_html_e("Design Template", "easy-sticky-sidebar"); ?></h4>
+        <div class="SSuprydp_field_wrap">
+        <?php
+        if (has_action('easy_sticky_sidebar_design_template')) : ?>
+       <?php echo esc_attr(Wordpress_CTA_Free_Utils::pro_tab_class('easy_sticky_sidebar_design_template')); ?>
+           
+            <?php do_action('easy_sticky_sidebar_design_template', $stickycta); ?>
+        </details>
+    <?php endif;
+    
+    ?>
+    </div>
+
+
+
+
+
+
+
+    </div>
+            </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const sidebarTemplate = document.getElementById("sidebar_template");
+            const designTemplateSection = document.getElementById("design_template_section");
+            const proTemplates = <?php echo json_encode($pro_templates); ?>;
+
+            function toggleDesignTemplateSection() {
+                const selectedValue = sidebarTemplate.value;
+                if (proTemplates.includes(selectedValue)) {
+                    designTemplateSection.style.display = "none";
+                } else {
+                    designTemplateSection.style.display = "block";
+                }
+            }
+
+            sidebarTemplate.addEventListener("change", toggleDesignTemplateSection);
+            toggleDesignTemplateSection();
+        });
+    </script>
 <?php
     do_action('easy_sticky_sidebar_form_after_template', $stickycta, $stickycta->id);
 }
@@ -366,9 +423,12 @@ function easy_sticky_sidebar_template_tab($stickycta) {
  * @since  1.4.0
  */
 function easy_sticky_sidebar_position_tab($stickycta) {
+ 
     if (has_action('easy_sticky_sidebar_cta_position')) :
         echo '<h4 class="wordpress-cta-heading">' . esc_html__("Page Position", "easy-sticky-sidebar") . '</h4>';
         echo '<p class="wordpress-cta-instruction">' . esc_html__('Select where on the page you would like to display your CTA', 'easy-sticky-sidebar') . '</p>';
+       
+ 
         if (!has_wordpress_cta_pro()) {
             echo '<p class="wordpress-cta-instruction text-bold">Get more options with our <a href="https://wpctapro.com/" target="_blank">pro version</a>.</p>';
         }
@@ -381,9 +441,15 @@ function easy_sticky_sidebar_position_tab($stickycta) {
  * @since  1.4.0
  */
 function easy_sticky_sidebar_location_tab($stickycta) {
+   
     if (has_action('easy_sticky_sidebar_form_cta_location')) :
+       
         do_action('easy_sticky_sidebar_form_cta_location', $stickycta, $stickycta->id);
+       
     endif;
+
+    
+    
 }
 
 
@@ -392,8 +458,13 @@ function easy_sticky_sidebar_location_tab($stickycta) {
  * @since  1.4.0
  */
 function easy_sticky_sidebar_responsive_tab($stickycta) { ?>
+<!-- 
+<div class="s_set"><input type="submit" onclick="return SSuprydp_Admin.ProcessPageData(event, this);"
+class="button_save" value="Save Setting"></div> -->
     <h4 class="wordpress-cta-heading"><?php _e("Responsive Setting", "easy-sticky-sidebar"); ?></h4>
     <p class="wordpress-cta-instruction">Show and hide the cta on different devices.</p>
+
+  
     <?php
     if (!has_wordpress_cta_pro()) {
         echo '<p class="wordpress-cta-instruction text-bold">Get more options with our <a href="https://wpctapro.com/" target="_blank">pro version</a>.</p>';
@@ -428,9 +499,12 @@ function easy_sticky_sidebar_responsive_tab($stickycta) { ?>
  * @since  1.4.5
  */
 function easy_sticky_sidebar_css_tab($stickycta) { ?>
+
+
     <h4 class="wordpress-cta-heading"><?php _e("Custom CSS", "easy-sticky-sidebar"); ?></h4>
 
     <p>Example: a { font-size: 16px; }</p>
+   
     <div class="SSuprydp_field_wrap wordpress-cta-pro-features">
         <?php wordpress_cta_pro_get_block(); ?>
         <textarea style="width: 100%" cols="30" rows="10"></textarea>
@@ -443,8 +517,13 @@ function easy_sticky_sidebar_css_tab($stickycta) { ?>
  * @since  1.4.0
  */
 function easy_sticky_sidebar_status_tab($stickycta) { ?>
+
     <h4 class="wordpress-cta-heading"><?php _e("Display Settings", "easy-sticky-sidebar"); ?></h4>
-    <p style="margin-bottom: 10px" class="wordpress-cta-instruction"><?php _e('Change the status of your CTA. Live will show to everyone, Development will only show to admins who are logged in and off will not show to anyone.', 'easy-sticky-sidebar') ?></p>
+    
+    <p style="margin-bottom: 10px" class="wordpress-cta-instruction"><?php _e("<strong>Change the status of your CTA.</strong><br><strong>Live:</strong> This will show to everyone.<br><strong>Development:</strong> This will only show to admins who are logged in.<br><strong>Off::</strong> Will not show to anyone", 'easy-sticky-sidebar'); ?>
+
+    </p>
+    
     <?php easy_sticky_sidebar_get_status_menu($stickycta); ?>
     <?php
 }
@@ -454,17 +533,30 @@ function easy_sticky_sidebar_status_tab($stickycta) { ?>
  * @since  1.4.0
  */
 function easy_sticky_sidebar_styling_tab($stickycta) {
+
+    
+    echo '<div class="gap-10"></div>';
     echo '<h4 class="wordpress-cta-heading">' . esc_html__("Content / Styling", "easy-sticky-sidebar") . '</h4>';
     echo '<p class="wordpress-cta-instruction">' . esc_html__('Add your content and edit the styles of your CTA.', 'easy-sticky-sidebar') . '</p>';
+
+
+    
     if (!has_wordpress_cta_pro()) {
         echo '<p class="wordpress-cta-instruction text-bold">Get more options with our <a href="https://wpctapro.com/" target="_blank">pro version</a>.</p>';
     }
 
-    echo '<div class="gap-10"></div>';
+
+ 
+   
     echo '<div class="wordpress-cta-styling-container">';
     do_action('easy_sticky_sidebar_styling_options', $stickycta);
     echo '</div>';
 }
+
+
+
+
+
 
 /**
  * Add section for cta Design templates
@@ -477,7 +569,7 @@ function easy_sticky_sidebar_design_template_callback($stickycta) {
             <?php do_action('easy_sticky_sidebar_design_template', $stickycta); ?>
         </details>
     <?php endif;
-}
+ }
 add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_design_template_callback', 1);
 
 /**
@@ -688,6 +780,57 @@ function wordpress_cta_pro_get_block($title = '', $description = null) {
     <?php
 }
 
+function wordpress_cta_location_group($key = '') {
+    $location_groups = [
+        'general' => __('General', 'wordpress-cta-pro'),
+        'post' => __('Single Posts, Pages or CPT (pro Feature)', 'wordpress-cta-pro'),
+        'post_taxonomy' => __('Posts, Pages or CPT With(pro Feature)', 'wordpress-cta-pro'),
+        'archive' => __('Archive Pages With (pro Feature)', 'wordpress-cta-pro'),
+    ];
+
+    return isset($location_groups[$key]) ? $location_groups[$key] : '';
+}
+function wordpress_cta_get_location_types() {
+    $location_types = [];
+
+    // General group - only Home Page should be enabled
+    $location_types['general'] = [
+        'all'        => __('Home / Front Page', 'wordpress-cta-pro'),
+        'singular'   => __('All Singular (pro feature)', 'wordpress-cta-pro'),
+        'archive'    => __('All Archives (pro feature)', 'wordpress-cta-pro'),
+        'search'     => __('Search Results (pro feature)', 'wordpress-cta-pro'),
+        '404'        => __('404 Page (pro feature)', 'wordpress-cta-pro')
+    ];
+
+    // Other groups - all options disabled
+    $post_types = get_post_types(['public' => true], 'objects');
+    foreach ($post_types as $pkey => $post_type) {
+        $location_types['post'][$pkey] = $post_type->label . ' (pro feature)';
+    }
+
+    $taxonomies = get_taxonomies(['public' => true], 'objects');
+    unset($taxonomies['post_format']);
+    foreach ($taxonomies as $key => $taxonomy) {
+        $location_types['post_taxonomy'][$key] = $taxonomy->label . ' (pro feature)';
+    }
+
+    foreach ($taxonomies as $taxonomy_slug => $taxonomy) {
+        $location_types['archive'][$taxonomy_slug] = 'Archive ' . $taxonomy->label . ' (pro feature)';
+    }
+
+    return $location_types;
+}
+
+
+ 
+
+
+
+
+
+
+
+
 /**
  * Add Page load option section
  * @since  1.4.5
@@ -708,8 +851,12 @@ add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_page_load
  * @since  1.4.5
  */
 function easy_sticky_sidebar_content_tab_callback($stickycta) {
+
+  
     echo '<h4 class="wordpress-cta-heading">' . esc_html__("Content", "easy-sticky-sidebar") . '</h4>';
     echo '<p class="wordpress-cta-instruction">' . esc_html__('Please enter your text / content', 'easy-sticky-sidebar') . '</p>';
+
+   
     if (!has_wordpress_cta_pro()) {
         echo '<p class="wordpress-cta-instruction text-bold">Get more options with our <a href="https://wpctapro.com/" target="_blank">pro version</a>.</p>';
     }

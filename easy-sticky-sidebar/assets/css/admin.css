@@ -45,3 +45,22 @@
     background: #D63638;
     border-color: #D63638;
 }
+
+
+
+
+.s_set input.button_save {
+    background: var(--primaryColor);
+    color: #fff;
+    padding: 16px 25px;
+    border: none !important;
+    font-size: 16px;
+    border-radius: 25px;
+    outline: 0;
+    cursor: pointer;
+}
+.s_set {
+    text-align: end;
+    margin-right: 109px;
+    margin-top: -17px;
+}

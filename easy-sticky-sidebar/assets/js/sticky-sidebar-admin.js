@@ -413,41 +413,41 @@ jQuery(document).ready(function ($) {
 
 
     $('[name="SSuprydp_cta_position"]').on("change", function () {
-        cta_position = $(this).val();
+        // cta_position = $(this).val();
 
-        $(this).attr('data-position', cta_position)
+        // $(this).attr('data-position', cta_position)
 
-        positions = { left: 'Left', center: 'Center', right: 'Right' }
-        if (cta_position == "left" || cta_position == "right") {
-            positions = { top: "Top", center: "Center", bottom: "Bottom" };
-        }
+        // positions = { left: 'Left', center: 'Center', right: 'Right' }
+        // if (cta_position == "left" || cta_position == "right") {
+        //     positions = { top: "Top", center: "Center", bottom: "Bottom" };
+        // }
 
-        const current_position = $('[name="horizontal_vertical_position"]').attr("data-position");
+        // const current_position = $('[name="horizontal_vertical_position"]').attr("data-position");
 
-        const options = Object.keys(positions).map((key) => {
-            const selected_attr = key == current_position ? "selected" : "";
-            return `<option value="${key}" ${selected_attr}>${positions[key]}</option>`;
-        });
+        // const options = Object.keys(positions).map((key) => {
+        //     const selected_attr = key == current_position ? "selected" : "";
+        //     return `<option value="${key}" ${selected_attr}>${positions[key]}</option>`;
+        // });
 
-        $('[name="horizontal_vertical_position"]').html(options.join(""));
+        // $('[name="horizontal_vertical_position"]').html(options.join(""));
 
-        //text alignment option fields
-        button_text_alignment = $('[name="SSuprydp_button_option_align"]');
+        // //text alignment option fields
+        // button_text_alignment = $('[name="SSuprydp_button_option_align"]');
 
 
-        text_alignments = { left: 'Top', center: 'Center', right: 'Bottom' };
-        if (cta_position == "top" || cta_position == "bottom") {
-            text_alignments = Object.assign(text_alignments, { left: 'Left', right: 'Right' });
-        }
+        // text_alignments = { left: 'Top', center: 'Center', right: 'Bottom' };
+        // if (cta_position == "top" || cta_position == "bottom") {
+        //     text_alignments = Object.assign(text_alignments, { left: 'Left', right: 'Right' });
+        // }
 
-        const button_text_alignment_options = Object.keys(text_alignments).map((key) => {
-            const selected_attr = key == button_text_alignment.attr('data-align') ? "selected" : "";
-            return `<option value="${key}" ${selected_attr}>${text_alignments[key]}</option>`;
-        });
+        // const button_text_alignment_options = Object.keys(text_alignments).map((key) => {
+        //     const selected_attr = key == button_text_alignment.attr('data-align') ? "selected" : "";
+        //     return `<option value="${key}" ${selected_attr}>${text_alignments[key]}</option>`;
+        // });
 
-        button_text_alignment.html(button_text_alignment_options.join(""));
+        // button_text_alignment.html(button_text_alignment_options.join(""));
 
-        $('[name="horizontal_vertical_position"]').trigger('change')
+        // $('[name="horizontal_vertical_position"]').trigger('change')
 
     }).trigger("change");
 
@@ -922,3 +922,17 @@ jQuery(document).ready(function ($) {
         $(this).closest('.sticky-cta-range-slider').attr('data-value', $(this).val());
     })
 });
+
+
+
+
+// jQuery(document).ready(function($) {
+//     var $btn = $('#btn-add-exclude-location');
+//     var isWPCTAProActive = $('body').hasClass('Wordpress_CTA_Pro');
+
+//     if (!isWPCTAProActive) {
+//         $btn.addClass('blurred');     // Plugin NOT active → blur
+//     } else {
+//         $btn.removeClass('blurred');  // Plugin active → remove blur
+//     }
+// });

@@ -29,7 +29,9 @@
                                  value="<?php echo esc_attr($stickycta->sidebar_name); ?>"
                                  placeholder="Enter CTA name here">
                          </div>
-
+                         <?php
+                         error_log( 'Sticky Object: ' . print_r( $stickycta, true ) );
+?>
                          <input type="hidden" name="sticky_id" value="<?php echo esc_attr($sticky_id); ?>" />
                          <div class="gap-10"></div>
 
@@ -47,11 +49,18 @@
 
                          <input type="hidden" name="cta_editor_current_tab"
                              value="<?php echo esc_attr($editor_current_tab) ?>">
-
+                           
                          <h2 class="wordpress-cta-heading"><?php _e("CTA Settings", "easy-sticky-sidebar") ?> </h2>
+                         <div class="s_set"><input type="submit" onclick="return SSuprydp_Admin.ProcessPageData(event, this);"
+                         class="button_save" value="Save Setting"></div>
+                         <div class="SSuprydp_btn_save">
+                         <input type="submit" onclick="return SSuprydp_Admin.ProcessPageData(event, this);"
+                             class="button_save" value="<?php _e("Save Setting"); ?>">
+                     </div>
                          <p class="wordpress-cta-instruction" style="margin-bottom: 10px">
                              <?php _e('Follow the steps to create your CTA and then make it go live.', 'easy-sticky-sidebar') ?>
                          </p>
+                    
                          <nav class="nav-tab-wrapper sticky-sidebar-nav-tab-wrapper">
                              <?php
 								$tabs = easy_sticky_sidebar_get_cta_tabs();
@@ -66,7 +75,13 @@
 
                          <div class="sticky-sidebar-tab-content">
                              <?php
+                           
 								foreach ($tabs as $key => $tab) {
+                                    // echo "<pre>";
+                                    // print_r($tab_1['callback']);
+                                    // echo "</pre>";
+
+
 									$tab_display = ('sticky-sidebar-' . $key === $editor_current_tab) ? 'display:block' : '';
 									printf('<div id="sticky-sidebar-%s" class="tab-content" style="%s">', $key, $tab_display);
 									call_user_func_array($tab['callback'], [$stickycta]);
@@ -77,10 +92,7 @@
                      </div>
                      <!--/end .SSuprydp_page_fields -->
 
-                     <div class="SSuprydp_btn_save">
-                         <input type="submit" onclick="return SSuprydp_Admin.ProcessPageData(event, this);"
-                             class="button_save" value="<?php _e("Save Setting"); ?>">
-                     </div>
+                   
 
                      <div class="SSuprydp_field_wrap" id="SSuprydp_modal_msg" style="display:none;">
                          <div class="SSuprydp_modal_content"></div>

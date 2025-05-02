@@ -66,10 +66,11 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
         $columns = array(
             'cb'        => '<input type="checkbox" />',
             'name'      => __('Name', 'easy-sticky-sidebar'),
-            'status'   => __('Status', 'easy-sticky-sidebar'),
+           
             'impressions' => __('Impressions', 'easy-sticky-sidebar'),
             'clicks'    => __('Clicks', 'easy-sticky-sidebar'),
             'ctr'      => __('CTR%', 'easy-sticky-sidebar'),
+            'status'   => __('Status', 'easy-sticky-sidebar'),
             'location'    => __('Location', 'easy-sticky-sidebar'),
             'template'  => __('Template', 'easy-sticky-sidebar'),
             'position'  => __('Position', 'easy-sticky-sidebar'),
@@ -97,59 +98,36 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
      *
      * @return Mixed
      */
-    public function column_default($sidebar, $column_name)
-    {
+    public function column_default( $sidebar, $column_name ) {
 
         $templates = [
-            'sticky-cta' => __('Open Sliding CTA', 'easy-sticky-sidebar'),
-            'tab-cta' => __('Tab CTA', 'easy-sticky-sidebar')
+            'sticky-cta' => __( 'Open Sliding CTA', 'easy-sticky-sidebar' ),
+            'tab-cta'    => __( 'Tab CTA', 'easy-sticky-sidebar' )
         ];
 
-        switch ($column_name) {
-                // Old Columns Cases
-                // case 'id':
-                //     return sprintf('<a class="dashicons dashicons-edit" href="%s"></a>', admin_url('admin.php?page=edit-easy-sticky-sidebar&id=' . $sidebar->id));
-
-                // case 'status':
-                //     return ucfirst($sidebar->SSuprydp_development);
-
-                // case 'position':
-                //     return ucfirst($sidebar->SSuprydp_cta_position);
-
-                // case 'template':
-                //     return $templates[$sidebar->sidebar_template];
-
-                // case 'status':
-                //     return ucfirst($sidebar->SSuprydp_development);
-
+        switch ( $column_name ) {
             case 'position':
-                return ucfirst($sidebar->SSuprydp_cta_position);
-
+                return ucfirst( $sidebar->SSuprydp_cta_position );
             case 'template':
-                return $templates[$sidebar->sidebar_template];
-
+                return $templates[ $sidebar->sidebar_template ];
             case 'impressions':
-                return sprintf(
-                    '<div class="pro-feature-stat" title="%s"><span class="dashicons dashicons-lock"></span><span class="stat-value">4544</span></div>',
-                    __('Upgrade to Pro to view statistics', 'easy-sticky-sidebar')
-                );
+                return $sidebar->SSuprydp_impressions;
             case 'clicks':
                 return sprintf(
                     '<div class="pro-feature-stat" title="%s"><span class="dashicons dashicons-lock"></span><span class="stat-value">654</span></div>',
-                    __('Upgrade to Pro to view statistics', 'easy-sticky-sidebar')
+                    __( 'Upgrade to Pro to view statistics', 'easy-sticky-sidebar' )
                 );
-
             case 'ctr':
                 return sprintf(
                     '<div class="pro-feature-stat" title="%s"><span class="dashicons dashicons-lock"></span><span class="stat-value">%s</span></div>',
-                    esc_attr__('Upgrade to Pro to view statistics', 'easy-sticky-sidebar'),
-                    esc_html('78%')
+                    esc_attr__( 'Upgrade to Pro to view statistics', 'easy-sticky-sidebar' ),
+                    esc_html( '78%' )
                 );
-
             default:
-                return print_r($sidebar, true);
+                return print_r( $sidebar, true );
         }
     }
+
 
     /**
      * Display the status column as a dropdown (similar to the pro plugin).
