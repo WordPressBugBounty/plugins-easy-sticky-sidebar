@@ -1,55 +1,48 @@
 <?php
 if (!defined('ABSPATH')) {
-	exit; // Exit if accessed directly
+	exit; // Exit if accessed directly 
 }
-
-// Initialize variables with fallback
-$button_color = $button_background_color = $content_color = $contents_background_color = $link_color = $links_text_background = '';
-$cta_classes = [];
-
-// Safely access and assign values
-if (!empty($ctacontent->SSuprydp_button_option_color)) {
+if ( $ctacontent->SSuprydp_button_option_color) {
 	$button_color = sanitize_hex_color($ctacontent->SSuprydp_button_option_color);
 }
 
-if (!empty($ctacontent->SSuprydp_button_option_backg_color)) {
+if ( $ctacontent->SSuprydp_button_option_backg_color) {
 	$button_background_color = sanitize_hex_color($ctacontent->SSuprydp_button_option_backg_color);
 }
 
-if (!empty($ctacontent->SSuprydp_content_option_color)) {
+if ( $ctacontent->SSuprydp_content_option_color) {
 	$content_color = sanitize_hex_color($ctacontent->SSuprydp_content_option_color);
 }
 
-if (!empty($ctacontent->content_background_color)) {
+if ( $ctacontent->content_background_color) {
 	$contents_background_color = sanitize_hex_color($ctacontent->content_background_color);
 }
 
-if (!empty($ctacontent->SSuprydp_action_option_color)) {
+if ( $ctacontent->SSuprydp_action_option_color) {
 	$link_color = sanitize_hex_color($ctacontent->SSuprydp_action_option_color);
 }
 
-if (!empty($ctacontent->link_text_background)) {
+if ( $ctacontent->link_text_background) {
 	$links_text_background = sanitize_hex_color($ctacontent->link_text_background);
 }
 
-// Additional settings
-if (isset($ctacontent->collapse_on_page_load) && $ctacontent->collapse_on_page_load === 'yes') {
-	$cta_classes[] = 'shrink';
+if ('yes' == $ctacontent->collapse_on_page_load) {
+	array_push($cta_classes, 'shrink');
 }
 
 $cta_links_attrs = '';
 $tag = 'div';
-
-if (!empty($ctacontent->SSuprydp_action_option_url)) {
+if ($ctacontent->SSuprydp_action_option_url) {
 	$tag = 'a';
-	$cta_links_attrs = sprintf('href="%s"', esc_url($ctacontent->SSuprydp_action_option_url));
+	$cta_links_attrs = sprintf('href="%s"', esc_url_raw($ctacontent->SSuprydp_action_option_url));
+}
 
-	if (!empty($ctacontent->SSuprydp_target_blank) && $ctacontent->SSuprydp_target_blank === 'Yes') {
-		$cta_links_attrs .= ' target="_blank"';
-	}
-	if (!empty($ctacontent->SSuprydp_nofollow) && $ctacontent->SSuprydp_nofollow === 'Yes') {
-		$cta_links_attrs .= ' rel="nofollow"';
-	}
+if ($ctacontent->SSuprydp_target_blank == 'Yes') {
+	$cta_links_attrs .= ' target="_blank"';
+}
+
+if ($ctacontent->SSuprydp_nofollow == 'Yes') {
+	$cta_links_attrs .= ' rel="nofollow"';
 }
 
 ob_start(); ?>
@@ -71,11 +64,14 @@ ob_start(); ?>
     <<?php echo esc_html($tag); ?> class="sticky-sidebar-content sticky-sidebar-container"
         <?php echo $cta_links_attrs; ?>>
         <?php
-		$image = !empty($ctacontent->sticky_s_media) ? esc_url($ctacontent->sticky_s_media) : '';
 
-		if (!empty($image) && $ctacontent->hide_cta_image !== 'yes') : ?>
+
+// print_r($ctacontent);
+		$image = $ctacontent->sticky_s_media;
+
+	 if ('yes' != $ctacontent->hide_cta_image) { ?>
         <div class="sticky-sidebar-image" style="background-image: url('<?php echo $image; ?>');"></div>
-        <?php endif; ?>
+        <?php } ?>
 
         <div class="sticky-sidebar-text sticky-content-inner"
             style="color: <?php echo esc_attr($content_color); ?>; background-color: <?php echo esc_attr($contents_background_color); ?>;">
@@ -103,5 +99,6 @@ ob_start(); ?>
 		endif; ?>
     </<?php echo esc_html($tag); ?>>
 </div>
+<?php
 
-<?php echo ob_get_clean(); ?>
+echo ob_get_clean();

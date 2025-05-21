@@ -3,12 +3,12 @@ if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly 
 }
 $btn_color = $ctacontent->SSuprydp_button_option_color;
-if(!empty($btn_color)){
+if($btn_color){
 $button_color = $btn_color ;
 }
 
 $btn_backcolor = $ctacontent->SSuprydp_button_option_backg_color;
-if(!empty($btn_backcolor)){
+if($btn_backcolor){
 $button_background_color = $btn_backcolor ;
 }
 
