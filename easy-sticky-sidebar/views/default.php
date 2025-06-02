@@ -45,6 +45,31 @@ if ($ctacontent->SSuprydp_nofollow == 'Yes') {
 	$cta_links_attrs .= ' rel="nofollow"';
 }
 
+if ( $ctacontent->call_to_action_padding ) {
+    $padding_top    = isset($ctacontent->call_to_action_padding['top']) ? intval($ctacontent->call_to_action_padding['top']) : 0;
+    $padding_bottom = isset($ctacontent->call_to_action_padding['bottom']) ? intval($ctacontent->call_to_action_padding['bottom']) : 0;
+    $padding_right  = isset($ctacontent->call_to_action_padding['right']) ? intval($ctacontent->call_to_action_padding['right']) : 0;
+    $padding_left   = isset($ctacontent->call_to_action_padding['left']) ? intval($ctacontent->call_to_action_padding['left']) : 0;
+    $padding_unit   = isset($ctacontent->call_to_action_padding['unit']) 
+                        ? sanitize_text_field((string) $ctacontent->call_to_action_padding['unit']) 
+                        : 'px';
+
+    // If all paddings are 0, use default
+    if ($padding_top === 0 && $padding_right === 0 && $padding_bottom === 0 && $padding_left === 0) {
+        $padding_css = "14px 24px";
+    } else {
+        $padding_css = "{$padding_top}{$padding_unit} {$padding_right}{$padding_unit} {$padding_bottom}{$padding_unit} {$padding_left}{$padding_unit}";
+    }
+} else {
+    // No padding set, use default
+    $padding_css = "14px 24px";
+}
+
+$btn_letter_spacing = '';
+if($ctacontent->call_to_action_letter_spacing){
+	$btn_letter_spacing = $ctacontent->call_to_action_letter_spacing ? intval($ctacontent->call_to_action_letter_spacing) : 0;
+}
+
 ob_start(); ?>
 
 <div id="<?php echo esc_attr('easy-sticky-sidebar-' . $ctacontent->id); ?>"
@@ -63,14 +88,12 @@ ob_start(); ?>
 
     <<?php echo esc_html($tag); ?> class="sticky-sidebar-content sticky-sidebar-container"
         <?php echo $cta_links_attrs; ?>>
+
         <?php
-
-
-// print_r($ctacontent);
 		$image = $ctacontent->sticky_s_media;
 
-	 if ('yes' != $ctacontent->hide_cta_image) { ?>
-        <div class="sticky-sidebar-image" style="background-image: url('<?php echo $image; ?>');"></div>
+		if ('yes' != $ctacontent->hide_cta_image) { ?>
+        <div class="sticky-sidebar-image" style="background-image: url('<?php echo esc_url($image); ?>');"></div>
         <?php } ?>
 
         <div class="sticky-sidebar-text sticky-content-inner"
@@ -78,27 +101,37 @@ ob_start(); ?>
             <?php echo do_shortcode(wp_kses_post($ctacontent->SSuprydp_content_option_text)); ?>
         </div>
 
-        <?php if (!empty($ctacontent->SSuprydp_action_option_url)) :
-			if ($ctacontent->line_separator_show !== 'no') {
-				echo '<hr>';
-			}
+        <?php 
 
-			if ($ctacontent->hide_call_to_action !== 'yes') {
-				$style = sprintf(
-					'color:%s; background-color:%s;',
-					esc_attr($link_color),
-					esc_attr($links_text_background)
-				);
+        $url = $ctacontent->SSuprydp_action_option_url;
+        $text = $ctacontent->SSuprydp_action_option_text;
+        $line_background = $ctacontent->line_separator_color;
+        $line_height = $ctacontent->dynamic_properties['line_separator_thickness'] ?? '';
 
-				printf(
-					'<div class="sticky-sidebar-call-to-action sticky-content-inner" style="%s">%s</div>',
-					$style,
-					wp_kses_post($ctacontent->SSuprydp_action_option_text)
-				);
-			}
-		endif; ?>
+        if (!empty($url)) :
+            if ($ctacontent->line_separator_show !== 'no') {
+                echo '<hr style="background-color:' . esc_attr($line_background) . '; height:' . esc_attr($line_height) . 'px; border: none;">';
+            }
+
+            if ($ctacontent->hide_call_to_action !== 'yes') {
+                $style = sprintf(
+                    'color:%s; background-color:%s;%s%s',
+                    esc_attr($link_color),
+                    esc_attr($links_text_background),
+                    $padding_css ? ' padding:' . esc_attr($padding_css) . ';' : '',
+                    $btn_letter_spacing ? ' letter-spacing:' . esc_attr($btn_letter_spacing) . 'px;' : ''
+                );
+
+                printf(
+                    '<div class="sticky-sidebar-call-to-action sticky-content-inner" style="%s">%s</div>',
+                    $style,
+                    wp_kses_post($text)
+                );
+            } 
+        endif;
+        ?>
+
     </<?php echo esc_html($tag); ?>>
 </div>
 <?php
-
 echo ob_get_clean();
