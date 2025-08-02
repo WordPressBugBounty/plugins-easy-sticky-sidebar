@@ -44,15 +44,8 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
      */
     function extra_tablenav($which)
     {
-        $disable_button = 'disabled';
-
-        global $wpdb;
-        $cta = $wpdb->get_var("SELECT COUNT(*) FROM $wpdb->sticky_cta");
-        if ($cta < 3) {
-            return printf('<a style="margin-right: 10px" class="btn-add-new button-primary" href="%s">%s</a>', admin_url('admin.php?page=add-easy-sticky-sidebar'), esc_html__('Add New CTA', 'easy-sticky-sidebar'));
-        }
-
-        printf('<a style="margin-right: 10px" data-toggle="tooltip" title="Upgrade to WP CTA Pro"class="btn-add-new button-primary" href="#" disabled>%s</a>', esc_html__('Add New CTA', 'easy-sticky-sidebar'));
+        // Always show Add New CTA button - removed restriction
+        return printf('<a style="margin-right: 10px" class="btn-add-new button-primary" href="%s">%s</a>', admin_url('admin.php?page=add-easy-sticky-sidebar'), esc_html__('Add New CTA', 'easy-sticky-sidebar'));
     }
 
     /**

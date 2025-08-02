@@ -758,6 +758,11 @@ add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_close_but
  * @since  1.4.5
  */
 function wordpress_cta_pro_get_block($title = '', $description = null) {
+    // Don't show block if pro plugin is active
+    if (has_wordpress_cta_pro()) {
+        return;
+    }
+    
     if (empty($title)) {
         $title = __('This is a pro feature', 'easy-sticky-sidebar');
     }

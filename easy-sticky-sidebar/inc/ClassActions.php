@@ -20,6 +20,8 @@ class SSuprydpproActions {
 		// Fixed: Removed wp_ajax_nopriv_ hooks for security - only authenticated users can access these functions
 		add_action('wp_ajax_update_cta_status', [$this, 'update_cta_status']);
 		add_action('wp_ajax_change_sticky_sidebar_name', [$this, 'change_sticky_sidebar_name']);
+		
+		// Removed tracking functionality - keeping analytics as pro features
 
 		add_action('easy_sticky_sidebar_after_save', [$this, 'redirect_after_creating_new_sidebar'], 10, 3);
 	}
@@ -220,4 +222,6 @@ class SSuprydpproActions {
 			wp_send_json($response);
 		}
 	}
+	
+	// Removed tracking methods - keeping analytics as pro features
 }
