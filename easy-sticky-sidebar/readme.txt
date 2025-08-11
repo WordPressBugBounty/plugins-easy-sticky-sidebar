@@ -2,9 +2,9 @@
 Contributors: wpctapro
 Tags: call-to-action, cta, lead-generation, popup, sticky, sidebar, marketing, conversion, sales
 Requires at least: 4.0
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.7.2
+Stable tag: 1.7.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -102,6 +102,15 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 
 == Changelog ==
 
+= 1.7.3 =
+* Fixed fatal error in import/export functionality
+* Resolved PHP 8.2+ deprecation warnings
+* Improved import success messages with count display
+* Enhanced error handling for media file imports
+* Fixed protected property access issues
+* Updated compatibility to WordPress 6.8
+* Improved overall stability and performance
+
 = 1.7.2 =
 * Fixed compatibility issues with WordPress 6.7
 * Improved performance and stability
@@ -115,6 +124,9 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 * Responsive design
 
 == Upgrade Notice ==
+
+= 1.7.3 =
+This update includes critical bug fixes for import/export functionality and PHP 8.2+ compatibility improvements.
 
 = 1.7.2 =
 This update includes important compatibility fixes for WordPress 6.7 and performance improvements.

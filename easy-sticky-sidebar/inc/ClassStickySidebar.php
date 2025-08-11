@@ -442,7 +442,7 @@ class SSuprydpStickySidebar
 			$SSuprydp_development = $sticky_data->SSuprydp_development;
 
 
-			$dataview['cta_classes'] = ['easy-sticky-sidebar', 'easy-sticky-sidebar-' . $sticky_data->id, $sticky_data->sidebar_template];
+			$dataview['cta_classes'] = ['easy-sticky-sidebar', 'easy-sticky-sidebar-' . $sticky_data->__get('id'), $sticky_data->sidebar_template];
 			$dataview['cta_classes'][] = 'easy-sticky-sidebar-' . $sticky_data->sidebar_template;
 
 			if ($sticky_data->sidebar_template === 'sticky-cta') {

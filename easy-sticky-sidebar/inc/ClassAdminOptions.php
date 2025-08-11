@@ -179,7 +179,7 @@ document.getElementById("cta-button").addEventListener("click", function() {
         $stickycta = new WP_Sticky_CTA_Data($record);
 
         $data['stickycta'] = $stickycta;
-        $data['sticky_id'] = $stickycta->id ? $stickycta->id : 0;
+        $data['sticky_id'] = $stickycta->__get('id') ? $stickycta->__get('id') : 0;
 
         $data['editor_current_tab'] = 'sticky-sidebar-template';
         if ($stickycta->cta_editor_current_tab && WP_DEBUG) {
