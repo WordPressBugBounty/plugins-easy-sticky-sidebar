@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Plugin Name: WP CTA
+ * Plugin Name: WP CTA - sticky CTA builder, generate leads, promote sales
  * Description: WordPress Call To Action plugin that helps promote content, increase sales and generate leads. It's easy to use and comes with 3 customizable templates.
- * Version: 1.7.3
+ * Version: 1.7.4
  * Author: WP CTA PRO
  * Text Domain: easy-sticky-sidebar
  * Author URI: https://wpctapro.com/

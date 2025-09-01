@@ -1,10 +1,10 @@
 === WP CTA ===
 Contributors: wpctapro
-Tags: call-to-action, cta, lead-generation, popup, sticky, sidebar, marketing, conversion, sales
+Tags: call-to-action, cta, sticky-cta, lead-generation, woocommerce-sales
 Requires at least: 4.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.7.3
+Stable tag: 1.7.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,6 +101,9 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 5. Page targeting options
 
 == Changelog ==
+= 1.7.4 =
+* Minor security enhancements
+* Updated plugin name for better clarity
 
 = 1.7.3 =
 * Fixed fatal error in import/export functionality
