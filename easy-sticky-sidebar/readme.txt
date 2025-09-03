@@ -1,4 +1,4 @@
-=== WP CTA ===
+=== WP CTA - sticky CTA builder, generate leads, promote sales ===
 Contributors: wpctapro
 Tags: call-to-action, cta, sticky-cta, lead-generation, woocommerce-sales
 Requires at least: 4.0
