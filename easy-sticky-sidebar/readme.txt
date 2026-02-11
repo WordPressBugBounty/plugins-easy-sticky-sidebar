@@ -1,8 +1,8 @@
-=== WP CTA - sticky CTA builder, generate leads, promote sales ===
-Contributors: wpctapro
+=== WP CTA – Sticky CTA Builder, Generate Leads, Promote Sales ===
+Contributors: mandeeps1987
 Tags: call-to-action, cta, sticky-cta, lead-generation, woocommerce-sales
 Requires at least: 4.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 1.7.4
 License: GPLv2 or later
@@ -12,7 +12,7 @@ WordPress Call To Action plugin that helps promote content, increase sales and g
 
 == Description ==
 
-WP CTA is a powerful and easy-to-use WordPress plugin designed to help you create compelling call-to-action elements that drive conversions, increase sales, and generate leads.
+WP CTA: A powerful, easy-to-use plugin to create compelling call-to-actions. Drive conversions, increase sales, and generate leads effortlessly.
 
 = Key Features =
 
