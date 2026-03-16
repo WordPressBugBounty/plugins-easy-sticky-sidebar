@@ -313,7 +313,7 @@ jQuery(document).ready(function ($) {
             nonce: sticky_sidebar.nonce,
         };
 
-        $.post("/wp-admin/admin-ajax.php", data, function (response) {
+        $.post(sticky_sidebar.ajax_url, data, function (response) {
             if (response.success == false) {
                 return alert(response.error);
             }
@@ -323,12 +323,13 @@ jQuery(document).ready(function ($) {
         });
     });
 
-    var current_tab = "#sticky-sidebar-settings";
-    if (window.location.hash === '#cta-location-options') {
-        current_tab = '#sticky-sidebar-layout'
+    var current_tab = "#sticky-sidebar-template";
+    var $current_tab = $('.nav-tab-wrapper.sticky-sidebar-nav-tab-wrapper .nav-tab[href="' + current_tab + '"]');
+    if ($current_tab.length) {
+        $current_tab.trigger("click");
+    } else {
+        $('.nav-tab-wrapper.sticky-sidebar-nav-tab-wrapper .nav-tab').first().trigger("click");
     }
-
-    $('.nav-tab-wrapper.sticky-sidebar-nav-tab-wrapper .nav-tab[href="' + current_tab + '"]').trigger("click");
 
     var CTA_Button_Options_HTML = $('#sticky-sidebar-button-options > summary h2').html();
 
@@ -545,7 +546,7 @@ jQuery(document).ready(function ($) {
                             input.prop('checked', checked).trigger('change');
 
                         } else {
-                            input.prop('value', values[key]).trigger('change, input');
+                            input.prop('value', values[key]).trigger('change').trigger('input');
                             if (input.hasClass('wp-color-picker')) {
                                 input.iris('color', values[key]);
                             }
@@ -938,3 +939,377 @@ jQuery(document).ready(function ($) {
 //         $btn.removeClass('blurred');  // Plugin active → remove blur
 //     }
 // });
+
+jQuery(document).ready(function ($) {
+    const form = $('#SSuprydp_form');
+    if (!form.length) {
+        return;
+    }
+
+    const tabs = $('.nav-tab-wrapper.sticky-sidebar-nav-tab-wrapper .nav-tab');
+    const navWrapper = $('.nav-tab-wrapper.sticky-sidebar-nav-tab-wrapper').first();
+    const progress = $('.ess-step-progress');
+    const previewCard = $('.ess-live-preview-card');
+    let navBgReady = false;
+
+    const stripText = function (value) {
+        return $('<div>').html(value || '').text().trim();
+    };
+
+    const getValue = function (name, fallback = '') {
+        const input = form.find(`[name="${name}"]`).first();
+        if (!input.length) {
+            return fallback;
+        }
+
+        if (input.attr('type') === 'checkbox') {
+            return input.is(':checked') ? input.val() : '';
+        }
+
+        return input.val() || fallback;
+    };
+
+    const getChecked = function (name) {
+        const input = form.find(`[name="${name}"][type="checkbox"]`).first();
+        return input.length ? input.is(':checked') : false;
+    };
+
+    const setStepState = function () {
+        if (!tabs.length) {
+            return;
+        }
+
+        const activeTab = tabs.filter('.nav-tab-active').first();
+        const activeIndex = tabs.index(activeTab);
+        const total = tabs.length;
+
+        tabs.each(function (index) {
+            let state = 'upcoming';
+            if (index < activeIndex) {
+                state = 'done';
+            } else if (index === activeIndex) {
+                state = 'active';
+            }
+
+            $(this)
+                .attr('data-state', state)
+                // CUSTOM STICKY NAV: class hook for completed tabs.
+                .toggleClass('is-completed', state === 'done');
+        });
+
+        progress.text(`${activeIndex + 1} / ${total}`);
+        $('.ess-step-control[data-direction="prev"]').prop('disabled', activeIndex <= 0);
+        $('.ess-step-control[data-direction="next"]').prop('disabled', activeIndex >= total - 1);
+        moveActiveNavBackground(true);
+    };
+
+    const ensureActiveNavBackground = function () {
+        if (!navWrapper.length) {
+            return null;
+        }
+
+        let bg = navWrapper.children('.ess-nav-active-bg').first();
+        if (!bg.length) {
+            bg = $('<span class="ess-nav-active-bg" aria-hidden="true"></span>');
+            navWrapper.append(bg);
+        }
+
+        return bg;
+    };
+
+    const moveActiveNavBackground = function (animate = true) {
+        const bg = ensureActiveNavBackground();
+        if (!bg || !bg.length) {
+            return;
+        }
+
+        const activeTab = tabs.filter('.nav-tab-active').first();
+        if (!activeTab.length) {
+            return;
+        }
+
+        const left = activeTab.position().left;
+        const top = activeTab.position().top;
+        const width = activeTab.outerWidth();
+        const height = activeTab.outerHeight();
+
+        bg
+            .toggleClass('is-first', activeTab.is(':first-of-type'))
+            .toggleClass('is-last', activeTab.is(':last-of-type'));
+
+        if (!navBgReady || !animate) {
+            bg.css('transition', 'none');
+            bg.css({ left, top, width, height });
+            // Force reflow so transition can be restored for next change.
+            void bg[0].offsetHeight;
+            bg.css('transition', '');
+            navBgReady = true;
+            return;
+        }
+
+        bg.css({ left, top, width, height });
+    };
+
+    $('.ess-step-control').on('click', function (e) {
+        e.preventDefault();
+
+        const activeIndex = tabs.index(tabs.filter('.nav-tab-active').first());
+        const direction = $(this).data('direction');
+        const targetIndex = direction === 'next' ? activeIndex + 1 : activeIndex - 1;
+
+        if (targetIndex < 0 || targetIndex >= tabs.length) {
+            return;
+        }
+
+        tabs.eq(targetIndex).trigger('click');
+    });
+
+    tabs.on('click', function () {
+        setTimeout(setStepState, 0);
+    });
+
+    $(window).on('resize', function () {
+        moveActiveNavBackground(false);
+    });
+
+    const getPreviewFont = function (rawValue, fallback) {
+        const value = (rawValue || '').toString().trim();
+        if (!value.length) {
+            return { family: fallback || '', weight: '', style: '' };
+        }
+
+        const [familyPart, variantPart = ''] = value.split(':');
+        const family = familyPart.replace(/\+/g, ' ').trim();
+        const variant = variantPart.trim().toLowerCase();
+
+        let weight = '';
+        let style = '';
+
+        const weightMatch = variant.match(/\d{3}/);
+        if (weightMatch) {
+            weight = weightMatch[0];
+        }
+
+        if (variant.includes('italic')) {
+            style = 'italic';
+        }
+
+        return { family: family || (fallback || ''), weight, style };
+    };
+
+    const applyPreviewFont = function (selector, value, fallback) {
+        const font = getPreviewFont(value, fallback);
+        const cssData = {};
+
+        if (font.family) {
+            cssData['font-family'] = `'${font.family}'`;
+        }
+        cssData['font-weight'] = font.weight || '';
+        cssData['font-style'] = font.style || '';
+
+        $(selector).css(cssData);
+    };
+
+    const getDimensionCss = function (fieldName) {
+        const top = getValue(`${fieldName}[top]`, '');
+        const right = getValue(`${fieldName}[right]`, '');
+        const bottom = getValue(`${fieldName}[bottom]`, '');
+        const left = getValue(`${fieldName}[left]`, '');
+        const unit = getValue(`${fieldName}[unit]`, 'px') || 'px';
+
+        const values = [top, right, bottom, left];
+        const hasAny = values.some((item) => `${item}`.trim().length > 0);
+        if (!hasAny) {
+            return '';
+        }
+
+        const normalized = values.map((item) => {
+            const raw = `${item}`.trim();
+            if (!raw.length) {
+                return `0${unit}`;
+            }
+
+            if (/^-?\d+(\.\d+)?$/.test(raw)) {
+                return `${raw}${unit}`;
+            }
+
+            return raw;
+        });
+
+        return normalized.join(' ');
+    };
+
+    const updatePreview = function () {
+        previewCard.addClass('is-preview-loading');
+        const template = getValue('sidebar_template', 'sticky-cta');
+        const isStickyTemplate = template === 'sticky-cta';
+        const isProActive = typeof has_easy_sticky_sidebar_pro === 'function' ? has_easy_sticky_sidebar_pro() : false;
+        const allowedPositions = ['left', 'right', 'top', 'bottom'];
+        const allowedAlignments = ['top', 'center', 'bottom'];
+
+        previewCard.toggleClass('is-preview-disabled', !isStickyTemplate);
+        previewCard.find('.ess-preview-note').toggle(!isStickyTemplate);
+        $('.ess-template-label').text(form.find('[name="sidebar_template"] option:selected').text().replace(/\s+\(.*\)$/, ''));
+
+        let ctaPosition = getValue('SSuprydp_cta_position', 'right');
+        let ctaAlignment = getValue('horizontal_vertical_position', 'top');
+
+        if (!allowedPositions.includes(ctaPosition)) {
+            ctaPosition = 'right';
+        }
+
+        if (!allowedAlignments.includes(ctaAlignment)) {
+            ctaAlignment = 'top';
+        }
+
+        if (!isProActive) {
+            ctaPosition = 'right';
+            ctaAlignment = 'top';
+        }
+
+        const preview = $('#ess-preview-cta');
+        preview
+            .removeClass('sticky-cta-position-left sticky-cta-position-right sticky-cta-position-top sticky-cta-position-bottom vertical-cta vertical-cta-top vertical-cta-bottom ess-preview-align-top ess-preview-align-center ess-preview-align-bottom')
+            .addClass(`sticky-cta-position-${ctaPosition}`)
+            .addClass(`ess-preview-align-${ctaAlignment}`);
+
+        if (ctaPosition === 'top' || ctaPosition === 'bottom') {
+            preview.addClass('vertical-cta').addClass(`vertical-cta-${ctaPosition}`);
+        }
+
+        $('#ess-preview-button-text').text(getValue('SSuprydp_button_option_text', 'Click Here'));
+        $('#ess-preview-content-text').text(stripText(getValue('SSuprydp_content_option_text', 'This is the content area for your sticky CTA.')));
+        $('#ess-preview-link').text(getValue('SSuprydp_action_option_text', 'Click Here to View'));
+
+        const image = getValue('sticky_s_media', '');
+        if (image.length) {
+            $('#ess-preview-image-wrap').css('background-image', `url("${image}")`).show();
+        } else {
+            $('#ess-preview-image-wrap').hide();
+        }
+
+        const hideImage = getChecked('SSuprydp_img_hideimg');
+        if (hideImage) {
+            $('#ess-preview-image-wrap').hide();
+        }
+
+        $('#ess-preview-button-wrap').css('background-color', getValue('SSuprydp_button_option_backg_color', '#2466d5'));
+        $('#ess-preview-button-text').css('color', getValue('SSuprydp_button_option_color', '#ffffff'));
+        $('#ess-preview-content-text').css({
+            'background-color': getValue('content_background_color', '#ffffff'),
+            'color': getValue('SSuprydp_content_option_color', '#1a2940')
+        });
+        $('#ess-preview-link').css({
+            'background-color': getValue('link_text_background', '#e8eef8'),
+            'color': getValue('SSuprydp_action_option_color', '#1c3f87')
+        });
+
+        const showLine = getChecked('line_separator_show');
+        if (showLine) {
+            $('#ess-preview-divider').show().css('background-color', getValue('line_separator_color', '#c7d7ef'));
+        } else {
+            $('#ess-preview-divider').hide();
+        }
+
+        const buttonFontSize = parseInt(getValue('SSuprydp_button_option_size', '18'), 10);
+        const contentFontSize = parseInt(getValue('SSuprydp_content_option_size', '17'), 10);
+        const linkFontSize = parseInt(getValue('SSuprydp_action_option_size', '15'), 10);
+
+        if (!isNaN(buttonFontSize)) {
+            $('#ess-preview-button-text').css('font-size', `${buttonFontSize}px`);
+        }
+
+        if (!isNaN(contentFontSize)) {
+            $('#ess-preview-content-text').css('font-size', `${contentFontSize}px`);
+        }
+
+        if (!isNaN(linkFontSize)) {
+            $('#ess-preview-link').css('font-size', `${linkFontSize}px`);
+        }
+
+        // Keep preview font rendering in sync with style tab Google font values.
+        applyPreviewFont('#ess-preview-button-text', getValue('SSuprydp_button_option_font', 'Open Sans'), 'Open Sans');
+        applyPreviewFont('#ess-preview-content-text', getValue('SSuprydp_content_option_font', 'Open Sans'), 'Open Sans');
+        applyPreviewFont('#ess-preview-link', getValue('SSuprydp_action_option_font', 'Open Sans'), 'Open Sans');
+
+        const alignMap = { left: 'left', center: 'center', right: 'right' };
+        const flexAlignMap = { left: 'flex-start', center: 'center', right: 'flex-end' };
+        const buttonAlign = alignMap[getValue('SSuprydp_button_option_align', 'left')] || 'left';
+        $('#ess-preview-button-wrap').css({
+            'text-align': 'center',
+            'display': 'flex',
+            'flex-direction': 'column',
+            'align-items': 'center',
+            'justify-content': flexAlignMap[buttonAlign] || 'flex-start'
+        });
+
+        const dividerThickness = parseInt(getValue('line_separator_thickness', ''), 10);
+        $('#ess-preview-divider').css('height', Number.isNaN(dividerThickness) ? '' : `${Math.max(1, dividerThickness)}px`);
+
+        const imageHeight = parseInt(getValue('cta_image_height', ''), 10);
+        $('#ess-preview-image-wrap').css('height', Number.isNaN(imageHeight) ? '' : `${Math.max(1, imageHeight)}px`);
+
+        const buttonLetterSpacing = parseInt(getValue('letter_spacing', ''), 10);
+        $('#ess-preview-button-text').css('letter-spacing', Number.isNaN(buttonLetterSpacing) ? '' : `${buttonLetterSpacing}px`);
+
+        const contentLetterSpacing = parseInt(getValue('content_letter_spacing', ''), 10);
+        $('#ess-preview-content-text').css('letter-spacing', Number.isNaN(contentLetterSpacing) ? '' : `${contentLetterSpacing}px`);
+
+        const linkLetterSpacing = parseInt(getValue('call_to_action_letter_spacing', ''), 10);
+        $('#ess-preview-link').css('letter-spacing', Number.isNaN(linkLetterSpacing) ? '' : `${linkLetterSpacing}px`);
+
+        const buttonPadding = getDimensionCss('button_padding');
+        $('#ess-preview-button-wrap').css('padding', buttonPadding || '');
+
+        const contentPadding = getDimensionCss('content_padding');
+        $('#ess-preview-content-text').css('padding', contentPadding || '');
+
+        const linkPadding = getDimensionCss('call_to_action_padding');
+        $('#ess-preview-link').css('padding', linkPadding || '');
+
+        const buttonRound = parseInt(getValue('button_round', ''), 10);
+        if (!Number.isNaN(buttonRound)) {
+            preview.css('--round', `${Math.max(0, buttonRound)}px`);
+        }
+
+        const hideCallToAction = ['yes', 'Yes', '1', true].includes(getValue('hide_call_to_action', 'no')) ||
+            getChecked('hide_call_to_action');
+        $('#ess-preview-link').toggle(!hideCallToAction);
+        if (hideCallToAction) {
+            $('#ess-preview-divider').hide();
+        }
+
+        const collapseOnLoad = getChecked('collapse_on_page_load') || getValue('collapse_on_page_load', 'no') === 'yes';
+        preview.toggleClass('shrink', collapseOnLoad);
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                previewCard.removeClass('is-preview-loading').attr('aria-busy', 'false');
+            });
+        });
+    };
+
+    form.on('input change', 'input, textarea, select', function () {
+        updatePreview();
+    });
+
+    form.on('change', '#sticky_s_media, #image_attachment_id, [name="sidebar_template"]', function () {
+        updatePreview();
+    });
+
+    // Font selector dropdowns update values programmatically; ensure preview refreshes immediately.
+    form.on('click', '.font-select a, .font-select li', function () {
+        setTimeout(updatePreview, 0);
+    });
+
+    // Preview-only interaction: mimic frontend hide/show by toggling shrink.
+    previewCard.on('click', '#ess-preview-button-wrap', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $('#ess-preview-cta').toggleClass('shrink');
+    });
+
+    setStepState();
+    moveActiveNavBackground(false);
+    updatePreview();
+});

@@ -12,13 +12,13 @@ function easy_sticky_sidebar_cta_position($stickycta, $sticky_id) {
 	);
 
 	$h_positions = array(
-		'top' => __('Top', 'easy-sticky-sidebar'),
 		'center' => __('Center', 'easy-sticky-sidebar'),
+		'top' => __('Top', 'easy-sticky-sidebar'),
 		'bottom' => __('Bottom', 'easy-sticky-sidebar'),
 	);
 
 	$pro_features = ['left', 'top', 'bottom'];
-	$pro_h_features = ['center', 'bottom'];
+	$pro_h_features = ['top', 'bottom'];
 
 	$cta_position = $stickycta->SSuprydp_cta_position;
 	if ($cta_position == '' || !has_wordpress_cta_pro()) {
@@ -27,7 +27,7 @@ function easy_sticky_sidebar_cta_position($stickycta, $sticky_id) {
 	
 	$cta_h_position = $stickycta->horizontal_vertical_position;
 	if ($cta_h_position == '' || !has_wordpress_cta_pro()) {
-		$cta_h_position == 'top';
+		$cta_h_position = 'center';
 	}
 	
 	?>

@@ -1,10 +1,10 @@
-=== WP CTA – Sticky CTA Builder, Generate Leads, Promote Sales ===
-Contributors: mandeeps1987
+=== WP CTA - sticky CTA builder, generate leads, promote sales ===
+Contributors: wpctapro
 Tags: call-to-action, cta, sticky-cta, lead-generation, woocommerce-sales
-Requires at least: 4.0
+Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 1.7.4
+Stable tag: 2.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,7 @@ WordPress Call To Action plugin that helps promote content, increase sales and g
 
 == Description ==
 
-WP CTA: A powerful, easy-to-use plugin to create compelling call-to-actions. Drive conversions, increase sales, and generate leads effortlessly.
+WP CTA is a powerful and easy-to-use WordPress plugin designed to help you create compelling call-to-action elements that drive conversions, increase sales, and generate leads.
 
 = Key Features =
 
@@ -94,13 +94,25 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 
 == Screenshots ==
 
-1. Plugin dashboard
-2. CTA creation interface
-3. Template selection
-4. Design customization
-5. Page targeting options
+1. CTA Demo 1
+2. CTA Demo 2
+3. CTA Demo 3
+4. CTA Plugin dashboard
+5. CTA Template selection
+6. CTA Page position selection
+7. CTA Content customization
+8. CTA Design modifications
+9. CTA Responsive setting for visiblity on different devices
+10. CTA Save and STATS visiblity 
 
 == Changelog ==
+= 2.0.0 =
+* New Dashboard added with multi-step ui.
+* Improved admin live preview loading experience with a dedicated spinner.
+* Enhanced preview alignment, template switching behavior, and status indicators.
+* Added safer handling for imported media URLs during CTA import.
+* UI refinements across admin screens.
+
 = 1.7.4 =
 * Minor security enhancements
 * Updated plugin name for better clarity
@@ -127,6 +139,9 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 * Responsive design
 
 == Upgrade Notice ==
+
+= 2.0.0 =
+Major admin UX improvements, safer imports, and preview alignment refinements.
 
 = 1.7.3 =
 This update includes critical bug fixes for import/export functionality and PHP 8.2+ compatibility improvements.

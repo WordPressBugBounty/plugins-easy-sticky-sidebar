@@ -51,25 +51,19 @@ class Wordpress_CTA_Pro_Placeholder {
                 <li>
                     <i class="dashicons dashicons-info" data-toggle="tooltip" title="Impressions are the number of times your CTA is displayed, no matter if it was clicked or not."></i>
                     <h4 class="stats-label"><?php _e('Impressions', 'easy-sticky-sidebar') ?></h4>
-                    <span class="result id" id="cust-img" style="filter:blur(0px)">4544</span>
+                    <span class="result id" id="cust-img" style="filter:blur(0px)"><?php echo esc_html(absint($stickycta->SSuprydp_impressions)); ?></span>
                 </li>
 			 
                 <li>
-					<div class="trp">
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-				</div>
                     <i class="dashicons dashicons-info" data-toggle="tooltip" title="Number of times your CTA was clicked."></i>
                     <h4 class="stats-label"><?php _e('Clicks', 'easy-sticky-sidebar') ?></h4>
-                    <span class="result">654</span>
+                    <span class="result"><?php echo esc_html(absint($stickycta->SSuprydp_clicks)); ?></span>
                 </li>
 
                 <li>
-				<div class="trp">
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-				</div>
                     <i class="dashicons dashicons-info" data-toggle="tooltip" title="Clickthrough rate (CTR) is the number of clicks that your CTA receives divided by the number of times your CTA is shown (impressions)."></i>
                     <h4 class="stats-label"><?php _e('CTR', 'easy-sticky-sidebar') ?></h4>
-                    <span class="result">78%</span>
+                    <span class="result"><?php echo esc_html($stickycta->get_ctr()); ?></span>
                 </li>
             </ul>
         </div>

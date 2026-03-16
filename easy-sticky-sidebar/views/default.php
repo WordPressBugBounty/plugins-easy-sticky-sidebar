@@ -82,16 +82,13 @@ if($ctacontent->SSuprydp_cta_position == 'left' || $ctacontent->SSuprydp_cta_pos
         $position_style = 'bottom: 0; transform: none; top: unset;';
     }
 }
-$button_alignment = $ctacontent->dynamic_properties['button_alignment'];
-if($button_alignment == 'start'){
-    $button_alignment_style = 'text-align:start;';
-}
-elseif($button_alignment == 'center'){
-    $button_alignment_style = 'text-align:center;';
-}
-else{
-    $button_alignment_style = 'text-align:end;';
-}
+$button_alignment = $ctacontent->SSuprydp_button_option_align ?? 'left';
+$justify_map = ['left' => 'flex-start', 'center' => 'center', 'right' => 'flex-end'];
+$justify_value = $justify_map[$button_alignment] ?? 'flex-start';
+$button_alignment_style = sprintf(
+    'text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:%s;',
+    esc_attr($justify_value)
+);
 
 ?>
 <div id="<?php echo esc_attr('easy-sticky-sidebar-' . $ctacontent->id); ?>" style="<?php echo $position_style;   ?>"

@@ -94,7 +94,11 @@ class Wordpress_CTA_Import_Export {
 					continue; // Skip this item if media URL is invalid
 				}
 
-				$image_content = @file_get_contents($media_url);
+				if (!$this->is_safe_media_url($media_url)) {
+					continue;
+				}
+
+				$image_content = $this->fetch_remote_media($media_url);
 
 				if ($image_content) {
 					$filename = basename($sidebar->sticky_s_media);
@@ -130,6 +134,60 @@ class Wordpress_CTA_Import_Export {
 		$import_count = count($sidebars);
 
 		exit(wp_safe_redirect(add_query_arg(['settings-updated' => true, 'import-count' => $import_count], $request_data['_wp_http_referer'])));
+	}
+
+	private function is_safe_media_url($media_url) {
+		$validated_url = wp_http_validate_url($media_url);
+		if (empty($validated_url)) {
+			return false;
+		}
+
+		$parsed = wp_parse_url($validated_url);
+		if (empty($parsed['host'])) {
+			return false;
+		}
+
+		$host = $parsed['host'];
+		$resolved = gethostbyname($host);
+		if ($resolved && $this->is_private_ip($resolved)) {
+			return false;
+		}
+
+		return true;
+	}
+
+	private function is_private_ip($ip) {
+		if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+			return true;
+		}
+
+		if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+			return !filter_var(
+				$ip,
+				FILTER_VALIDATE_IP,
+				FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE
+			);
+		}
+
+		return !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE);
+	}
+
+	private function fetch_remote_media($media_url) {
+		$response = wp_remote_get($media_url, [
+			'timeout' => 10,
+			'redirection' => 3,
+		]);
+
+		if (is_wp_error($response)) {
+			return false;
+		}
+
+		$code = wp_remote_retrieve_response_code($response);
+		if ($code < 200 || $code >= 300) {
+			return false;
+		}
+
+		return wp_remote_retrieve_body($response);
 	}
 
 	public function output() {

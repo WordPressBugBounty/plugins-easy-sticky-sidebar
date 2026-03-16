@@ -382,6 +382,9 @@ class SSuprydpStickySidebar
 		}
 
 		wp_enqueue_script('SSuprydp_script', EASY_STICKY_SIDEBAR_PLUGIN_URL . "/assets/js/sticky-sidebar.js", array('jquery'), EASY_STICKY_SIDEBAR_VERSION);
+		wp_localize_script('SSuprydp_script', 'easy_sticky_sidebar_front', [
+			'ajax_url' => admin_url('admin-ajax.php'),
+		]);
 	}
 
 	public function SSuprydpAdminScripts()
@@ -422,7 +425,12 @@ class SSuprydpStickySidebar
 
 		wp_enqueue_style('fontselect-default', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/fontselect-default.css', [], EASY_STICKY_SIDEBAR_VERSION);
 
-		wp_enqueue_style('SSuprydp_admin_style', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar-admin.css', ['fontawesome'], EASY_STICKY_SIDEBAR_VERSION);
+		wp_enqueue_style('SSuprydp_admin_style', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar-admin-base.css', ['fontawesome'], EASY_STICKY_SIDEBAR_VERSION);
+
+		$current_page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
+		if (in_array($current_page, ['add-easy-sticky-sidebar', 'edit-easy-sticky-sidebar'], true)) {
+			wp_enqueue_style('SSuprydp_admin_style_builder', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar-admin-builder.css', ['SSuprydp_admin_style'], EASY_STICKY_SIDEBAR_VERSION);
+		}
 
 		//wp_enqueue_style('SSuprydp_bootstrap', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/bootstrap.min.css', [], EASY_STICKY_SIDEBAR_VERSION);
 
@@ -489,9 +497,38 @@ class SSuprydpStickySidebar
 			}
 
 			if ($SSuprydp_development == 'live' || ($SSuprydp_development == 'development' && current_user_can('manage_options'))) {
+				$this->track_impression($sticky_data);
 				print SSuprydpStickySidebar()->engine->getView($template, $dataview);
 			}
 		}
+	}
+
+	/**
+	 * Increment impressions when CTA is rendered on frontend.
+	 * Clicks/CTR remain unchanged (pro features).
+	 *
+	 * @param WP_Sticky_CTA_Data|object $sticky_data
+	 * @return void
+	 */
+	private function track_impression($sticky_data)
+	{
+		if (is_admin()) {
+			return;
+		}
+
+		$sticky_id = 0;
+		if (is_object($sticky_data) && method_exists($sticky_data, '__get')) {
+			$sticky_id = absint($sticky_data->__get('id'));
+		} elseif (is_object($sticky_data) && isset($sticky_data->id)) {
+			$sticky_id = absint($sticky_data->id);
+		}
+
+		if ($sticky_id <= 0) {
+			return;
+		}
+
+		global $wpdb;
+		$wpdb->query($wpdb->prepare("UPDATE $wpdb->sticky_cta SET SSuprydp_impressions = SSuprydp_impressions + 1 WHERE id = %d", $sticky_id));
 	}
 
 	public function SSuprydp_mediameta()

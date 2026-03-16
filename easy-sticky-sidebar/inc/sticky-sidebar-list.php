@@ -106,16 +106,9 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
             case 'impressions':
                 return $sidebar->SSuprydp_impressions;
             case 'clicks':
-                return sprintf(
-                    '<div class="pro-feature-stat" title="%s"><span class="dashicons dashicons-lock"></span><span class="stat-value">654</span></div>',
-                    __( 'Upgrade to Pro to view statistics', 'easy-sticky-sidebar' )
-                );
+                return absint($sidebar->SSuprydp_clicks);
             case 'ctr':
-                return sprintf(
-                    '<div class="pro-feature-stat" title="%s"><span class="dashicons dashicons-lock"></span><span class="stat-value">%s</span></div>',
-                    esc_attr__( 'Upgrade to Pro to view statistics', 'easy-sticky-sidebar' ),
-                    esc_html( '78%' )
-                );
+                return esc_html($sidebar->get_ctr());
             default:
                 return print_r( $sidebar, true );
         }
@@ -352,8 +345,8 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
                         src="<?php echo EASY_STICKY_SIDEBAR_PLUGIN_URL; ?>/assets/img/ads.jpeg" /></a>
             </span>
             <span class="div-two">
-                <a href="https://alphalinkseo.com/" target="_blank"><img
-                        src="<?php echo EASY_STICKY_SIDEBAR_PLUGIN_URL; ?>/assets/img/alphalinkseo.jpg" /></a>
+                <a href="https://wordpress.org/plugins/ez-countdown-timer//" target="_blank"><img
+                        src="<?php echo EASY_STICKY_SIDEBAR_PLUGIN_URL; ?>/assets/img/ezcountdowntimer.jpg" /></a>
             </span>
         </div>
         <?php endif; ?>

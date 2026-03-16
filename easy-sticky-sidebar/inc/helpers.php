@@ -291,12 +291,6 @@ function easy_sticky_sidebar_get_cta_tabs() {
             'label' => __("CSS", 'easy-sticky-sidebar'),
             'callback' => 'easy_sticky_sidebar_css_tab',
             'priority' => 7
-        ],
-
-        'status' => [
-            'label' => __("Live Status", 'easy-sticky-sidebar'),
-            'callback' => 'easy_sticky_sidebar_status_tab',
-            'priority' => 8
         ]
     ));
 

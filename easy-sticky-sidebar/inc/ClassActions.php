@@ -101,7 +101,37 @@ class SSuprydpproActions {
 			['name' => 'process_pages', 'callback' => 'processPages'],
 			['name' => 'ajax_check', 'callback' => 'ajaxCheck'],
 			['name' => 'validate_data', 'callback' => 'validateData'],
+			['name' => 'easy_sticky_sidebar_get_click', 'callback' => 'easyStickySidebarGetClick'],
 		];
+	}
+
+	/**
+	 * Track CTA click on frontend.
+	 * Clicks/CTR are now available in free plugin stats.
+	 *
+	 * @return void
+	 */
+	public function easyStickySidebarGetClick() {
+		global $wpdb;
+
+		$sticky_id = isset($_POST['sticky_id']) ? absint($_POST['sticky_id']) : 0;
+		if ($sticky_id <= 0) {
+			wp_send_json_success();
+		}
+
+		$current_user = wp_get_current_user();
+		$has_admin_role = array_intersect(['administrator', 'editor'], (array) $current_user->roles);
+		if (!empty($has_admin_role)) {
+			wp_send_json_success();
+		}
+
+		$sticky = $wpdb->get_row($wpdb->prepare("SELECT id FROM $wpdb->sticky_cta WHERE id = %d", $sticky_id));
+		if (!$sticky) {
+			wp_send_json_success();
+		}
+
+		$wpdb->query($wpdb->prepare("UPDATE $wpdb->sticky_cta SET SSuprydp_clicks = SSuprydp_clicks + 1 WHERE id = %d", $sticky_id));
+		wp_send_json_success();
 	}
 
 	function content_filter($tags, $context) {
@@ -137,6 +167,18 @@ class SSuprydpproActions {
 		}
 
 		$postdata = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+		$sticky_id = isset($postdata['sticky_id']) ? absint($postdata['sticky_id']) : 0;
+
+		if (!has_wordpress_cta_pro() && $sticky_id === 0) {
+			global $wpdb;
+			$cta_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}sticky_cta");
+			if ($cta_count >= 3) {
+				wp_send_json([
+					'status' => 'failed',
+					'message' => __('Only 3 CTAs are allowed in free version. Please upgrade to Pro to build more CTAs.', 'easy-sticky-sidebar')
+				]);
+			}
+		}
 
 		add_filter('wp_kses_allowed_html', [$this, 'content_filter'], 10, 2);
 		$postdata['SSuprydp_content_option_text'] = wp_kses_stripslashes(wp_kses_post($_POST['SSuprydp_content_option_text'], wp_kses_allowed_html()));
