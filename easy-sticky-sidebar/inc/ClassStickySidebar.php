@@ -396,6 +396,8 @@ class SSuprydpStickySidebar
 			return;
 		}
 
+		wp_enqueue_style('easy-sticky-sidebar-preview', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar.css', ['fontawesome'], EASY_STICKY_SIDEBAR_VERSION);
+
 		//deregister for showing problem with tooltip
 		wp_deregister_script('gform_tooltip_init');
 

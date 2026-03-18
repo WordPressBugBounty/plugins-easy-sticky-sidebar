@@ -132,28 +132,12 @@ add_action('easy_sticky_sidebar_button_options', 'easy_sticky_sidebar_button_fon
 function easy_sticky_sidebar_button_font_size($stickycta) { ?>
 	<div class="SSuprydp_field_wrap sticky-sidebar-button_fontsize">
 		<label><?php _e("Font Size", "easy-sticky-sidebar"); ?></label>
-		<input style="width: 50px;text-align:right" type="number" min="0" name="SSuprydp_button_option_size" value="<?php echo esc_attr($stickycta->SSuprydp_button_option_size) ?>"> px
+		<?php $button_size = preg_replace('/[^0-9.]/', '', (string) $stickycta->SSuprydp_button_option_size); ?>
+		<input style="width: 50px;text-align:right" type="number" min="0" name="SSuprydp_button_option_size" value="<?php echo esc_attr($button_size); ?>"> px
 	</div>
 <?php
 }
 add_action('easy_sticky_sidebar_button_options', 'easy_sticky_sidebar_button_font_size', 25);
-
-/**
- * CTA button text alignment field
- * @since 1.3.6
- */
-function easy_sticky_sidebar_button_text_alignment($stickycta) { ?>
-	<div id="cta-button-text-alignment" class="SSuprydp_field_wrap sticky-sidebar-button_text_align">
-		<label><?php _e("Text Align", "easy-sticky-sidebar"); ?></label>
-		<select name="SSuprydp_button_option_align" class="SSuprydp_input meta_title" data-align="<?php echo esc_attr($stickycta->SSuprydp_button_option_align); ?>">
-			<option value="left" <?php selected('left', $stickycta->SSuprydp_button_option_align) ?>>Top</option>
-			<option value="center" <?php selected('center', $stickycta->SSuprydp_button_option_align) ?>>Center</option>
-			<option value="right" <?php selected('right', $stickycta->SSuprydp_button_option_align) ?>>Bottom</option>
-		</select>
-	</div>
-<?php
-}
-add_action('easy_sticky_sidebar_button_options', 'easy_sticky_sidebar_button_text_alignment', 30);
 
 /**
  * CTA button button color field
@@ -200,6 +184,22 @@ add_action('easy_sticky_sidebar_button_options', 'easy_sticky_sidebar_button_bac
  * CTA content font
  * @since 1.4.0
  */
+function easy_sticky_sidebar_content_show_hide($stickycta) { ?>
+	<div class="SSuprydp_field_wrap">
+		<div class="heading"><?php _e("Hide / Show Content", "easy-sticky-sidebar"); ?></div>
+		<label class="SSuprydp_switch">
+			<input type="hidden" name="hide_content_text" value="no">
+			<input type="checkbox" name="hide_content_text" value="yes" <?php checked('yes', $stickycta->hide_content_text) ?> class="develop_check checkbox-hide-show">
+		</label>
+	</div>
+<?php
+}
+add_action('easy_sticky_sidebar_content_option', 'easy_sticky_sidebar_content_show_hide', 1, 2);
+
+/**
+ * CTA content font
+ * @since 1.4.0
+ */
 function easy_sticky_sidebar_content_font($stickycta) { ?>
 	<div class="SSuprydp_field_wrap field-google-font">
 		<label><?php _e("Font Family", "easy-sticky-sidebar"); ?></label>
@@ -216,7 +216,8 @@ add_action('easy_sticky_sidebar_content_option', 'easy_sticky_sidebar_content_fo
 function easy_sticky_sidebar_content_font_size($stickycta) { ?>
 	<div class="SSuprydp_field_wrap">
 		<label><?php _e("Font Size", "easy-sticky-sidebar"); ?></label>
-		<input style="width: 50px;text-align:right" type="number" min="0" name="SSuprydp_content_option_size" value="<?php echo esc_attr($stickycta->SSuprydp_content_option_size) ?>"> px
+		<?php $content_size = preg_replace('/[^0-9.]/', '', (string) $stickycta->SSuprydp_content_option_size); ?>
+		<input style="width: 50px;text-align:right" type="number" min="0" name="SSuprydp_content_option_size" value="<?php echo esc_attr($content_size); ?>"> px
 	</div>
 <?php
 }
@@ -290,7 +291,8 @@ add_action('easy_sticky_sidebar_call_to_action', 'easy_sticky_sidebar_call_top_a
 function easy_sticky_sidebar_call_top_action_font_size($stickycta) { ?>
 	<div class="SSuprydp_field_wrap call-to-action-font-size">
 		<label><?php _e("Font Size", "easy-sticky-sidebar"); ?></label>
-		<input style="width: 50px;text-align:right" type="number" min="0" name="SSuprydp_action_option_size" value="<?php echo esc_attr($stickycta->SSuprydp_action_option_size) ?>"> px
+		<?php $action_size = preg_replace('/[^0-9.]/', '', (string) $stickycta->SSuprydp_action_option_size); ?>
+		<input style="width: 50px;text-align:right" type="number" min="0" name="SSuprydp_action_option_size" value="<?php echo esc_attr($action_size); ?>"> px
 	</div>
 <?php
 }

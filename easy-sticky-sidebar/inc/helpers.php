@@ -144,6 +144,9 @@ function easy_sticky_sidebar_insert($args) {
     }
 
     do_action('easy_sticky_sidebar_after_save', $args, $sticky_id, $is_new);
+    if (class_exists('Easy_Sticky_CTA_Generate_CSS')) {
+        Easy_Sticky_CTA_Generate_CSS::regenerate_now();
+    }
 
     return $sticky_id;
 }
@@ -746,6 +749,18 @@ function easy_sticky_sidebar_close_button_options($stickycta) {
     <?php endif;
 }
 add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_close_button_options', 11);
+
+function easy_sticky_sidebar_box_shadow_options($stickycta) {
+    if (has_action('easy_sticky_sidebar_box_shadow_options')) : ?>
+        <details class="easy-sticky-sidebar-fieldset <?php echo esc_attr(Wordpress_CTA_Free_Utils::pro_tab_class('easy_sticky_sidebar_box_shadow_options')); ?>" id="cta-box-shadow-options">
+            <summary class="heading">
+                <?php _e("Box Shadow", "easy-sticky-sidebar"); ?>
+            </summary>
+            <?php do_action('easy_sticky_sidebar_box_shadow_options', $stickycta, $stickycta->__get('id')) ?>
+        </details>
+    <?php endif;
+}
+add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_box_shadow_options', 12);
 
 /**
  * Get pro featured block

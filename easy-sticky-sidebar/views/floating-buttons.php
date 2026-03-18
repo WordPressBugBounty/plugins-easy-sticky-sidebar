@@ -70,4 +70,5 @@ if($ctacontent->SSuprydp_cta_position == 'left' || $ctacontent->SSuprydp_cta_pos
 			echo '</li>';
 		endforeach; ?>
     </ul>
+
 </div>

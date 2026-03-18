@@ -4,7 +4,7 @@ Tags: call-to-action, cta, sticky-cta, lead-generation, woocommerce-sales
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -106,6 +106,13 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 10. CTA Save and STATS visiblity 
 
 == Changelog ==
+
+= 2.0.1 =
+* Live preview fixings
+* Custom padding option for CTA Buttons
+* CTA content show/hide toggle option
+* Code quality and reliability improvements
+
 = 2.0.0 =
 * New Dashboard added with multi-step ui.
 * Improved admin live preview loading experience with a dedicated spinner.

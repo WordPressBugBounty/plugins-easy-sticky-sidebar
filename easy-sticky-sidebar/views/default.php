@@ -31,6 +31,8 @@ if ('yes' == $ctacontent->collapse_on_page_load) {
 	array_push($cta_classes, 'shrink');
 }
 
+$hide_content_text = ($ctacontent->hide_content_text ?? '') === 'yes';
+
 $cta_links_attrs = '';
 $tag = 'div';
 if ($ctacontent->SSuprydp_action_option_url) {
@@ -116,10 +118,12 @@ $button_alignment_style = sprintf(
         <div class="sticky-sidebar-image" style="background-image: url('<?php echo esc_url($image); ?>');"></div>
         <?php } ?>
 
-        <div class="sticky-sidebar-text sticky-content-inner"
-            style="color: <?php echo esc_attr($content_color); ?>; background-color: <?php echo esc_attr($contents_background_color); ?>;">
-            <?php echo do_shortcode(wp_kses_post($ctacontent->SSuprydp_content_option_text)); ?>
-        </div>
+        <?php if (!$hide_content_text) : ?>
+            <div class="sticky-sidebar-text sticky-content-inner"
+                style="color: <?php echo esc_attr($content_color); ?>; background-color: <?php echo esc_attr($contents_background_color); ?>;">
+                <?php echo do_shortcode(wp_kses_post($ctacontent->SSuprydp_content_option_text)); ?>
+            </div>
+        <?php endif; ?>
 
         <?php 
 
@@ -129,7 +133,7 @@ $button_alignment_style = sprintf(
         $line_height = $ctacontent->dynamic_properties['line_separator_thickness'] ?? '';
 
         if (!empty($url)) :
-            if ($ctacontent->line_separator_show !== 'no') {
+            if (!$hide_content_text && $ctacontent->line_separator_show !== 'no') {
                 echo '<hr style="background-color:' . esc_attr($line_background) . '; height:' . esc_attr($line_height) . 'px; border: none;">';
             }
 

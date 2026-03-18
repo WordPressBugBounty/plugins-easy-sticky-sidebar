@@ -21,15 +21,10 @@ $preview_align = !empty($stickycta->horizontal_vertical_position) ? $stickycta->
 
 if (!$is_pro_active) {
     $preview_position = 'right';
-    $preview_align = 'top';
 }
 
 if (!in_array($preview_position, ['left', 'right', 'top', 'bottom'], true)) {
     $preview_position = 'right';
-}
-
-if (!in_array($preview_align, ['top', 'center', 'bottom'], true)) {
-    $preview_align = 'top';
 }
 
 $preview_classes = [
@@ -37,8 +32,22 @@ $preview_classes = [
     'sticky-cta',
     'ess-preview-static',
     'sticky-cta-position-' . $preview_position,
-    'ess-preview-align-' . $preview_align,
 ];
+
+$show_close_button = ($stickycta->show_close_button ?? '') === 'yes';
+$close_button_position = !empty($stickycta->close_button_position) ? $stickycta->close_button_position : 'start';
+$close_button_edge = ($stickycta->close_button_edge ?? '') === 'yes' ? 'outside' : '';
+$close_button_color = !empty($stickycta->close_button_color) ? $stickycta->close_button_color : '#000000';
+$close_button_style = $show_close_button ? '' : 'display:none;';
+
+if ($show_close_button) {
+    $preview_classes[] = 'ess-close-button-' . $close_button_position;
+}
+
+$preview_anchor_align = $preview_align;
+if (in_array($preview_position, ['top', 'bottom'], true)) {
+    $preview_anchor_align = ($preview_align === 'top') ? 'left' : (($preview_align === 'bottom') ? 'right' : 'center');
+}
 
 if (in_array($preview_position, ['top', 'bottom'], true)) {
     $preview_classes[] = 'vertical-cta';
@@ -102,25 +111,138 @@ $before_tab_content = trim(ob_get_clean());
                                             <span class="ess-spinner"></span>
                                         </div>
                                         <div class="ess-preview-stage">
-                                            <div class="<?php echo esc_attr(implode(' ', $preview_classes)); ?>" id="ess-preview-cta">
-                                                <div class="sticky-sidebar-button" id="ess-preview-button-wrap">
-                                                    <div id="ess-preview-button-text">
-                                                        <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Click Here', 'easy-sticky-sidebar')); ?>
+                                            <div class="ess-preview-anchor" data-position="<?php echo esc_attr($preview_position); ?>" data-align="<?php echo esc_attr($preview_anchor_align); ?>">
+                                                <div class="ess-preview-template ess-preview-sticky is-active" data-template="sticky-cta">
+                                                    <div class="<?php echo esc_attr(implode(' ', $preview_classes)); ?>" id="ess-preview-cta">
+                                                    <div class="sticky-sidebar-button" id="ess-preview-button-wrap">
+                                                        <div id="ess-preview-button-text">
+                                                            <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Click Here', 'easy-sticky-sidebar')); ?>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="sticky-sidebar-content sticky-sidebar-container">
+                                                        <div class="sticky-sidebar-image" id="ess-preview-image-wrap"
+                                                            style="background-image: url('<?php echo esc_url($preview_image); ?>');"></div>
+
+                                                        <div class="sticky-sidebar-text sticky-content-inner" id="ess-preview-content-text">
+                                                            <?php echo esc_html(wp_strip_all_tags((string) $stickycta->SSuprydp_content_option_text)); ?>
+                                                        </div>
+
+                                                        <hr id="ess-preview-divider">
+
+                                                        <div class="sticky-sidebar-call-to-action sticky-content-inner" id="ess-preview-link">
+                                                            <?php echo esc_html($stickycta->SSuprydp_action_option_text ? $stickycta->SSuprydp_action_option_text : __('Click Here to View', 'easy-sticky-sidebar')); ?>
+                                                        </div>
+                                                    </div>
+                                                    <span style="background-color: <?php echo esc_attr($close_button_color); ?>; <?php echo esc_attr($close_button_style); ?>" class="btn-ess-close icon-close <?php echo esc_attr($close_button_position); ?> <?php echo esc_attr($close_button_edge); ?>"></span>
                                                     </div>
                                                 </div>
 
-                                                <div class="sticky-sidebar-content sticky-sidebar-container">
-                                                    <div class="sticky-sidebar-image" id="ess-preview-image-wrap"
-                                                        style="background-image: url('<?php echo esc_url($preview_image); ?>');"></div>
-
-                                                    <div class="sticky-sidebar-text sticky-content-inner" id="ess-preview-content-text">
-                                                        <?php echo esc_html(wp_strip_all_tags((string) $stickycta->SSuprydp_content_option_text)); ?>
+                                                <div class="ess-preview-template ess-preview-tab" data-template="tab-cta">
+                                                    <div class="easy-sticky-sidebar ess-preview-static ess-preview-tab-cta sticky-cta-position-<?php echo esc_attr($preview_position); ?><?php echo $show_close_button ? ' ess-close-button-' . esc_attr($close_button_position) : ''; ?>" id="ess-preview-tab-cta">
+                                                        <a class="sticky-sidebar-button" id="ess-preview-tab-button" href="#" aria-label="<?php esc_attr_e('Preview tab CTA', 'easy-sticky-sidebar'); ?>">
+                                                            <div id="ess-preview-tab-button-text">
+                                                                <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Tab CTA', 'easy-sticky-sidebar')); ?>
+                                                            </div>
+                                                        </a>
+                                                        <span style="background-color: <?php echo esc_attr($close_button_color); ?>; <?php echo esc_attr($close_button_style); ?>" class="btn-ess-close icon-close <?php echo esc_attr($close_button_position); ?> <?php echo esc_attr($close_button_edge); ?>"></span>
                                                     </div>
+                                                </div>
 
-                                                    <hr id="ess-preview-divider">
+                                                <div class="ess-preview-template ess-preview-banner" data-template="banner">
+                                                    <div class="easy-sticky-sidebar wordpress-cta-pro-banner ess-preview-banner" id="ess-preview-banner">
+                                                        <div class="ess-preview-banner-text" id="ess-preview-banner-text">
+                                                            <?php echo esc_html(wp_strip_all_tags((string) $stickycta->SSuprydp_content_option_text)); ?>
+                                                        </div>
+                                                        <a class="ess-preview-banner-link btn-banner" id="ess-preview-banner-link" href="#">
+                                                            <?php echo esc_html($stickycta->SSuprydp_action_option_text ? $stickycta->SSuprydp_action_option_text : __('Learn More', 'easy-sticky-sidebar')); ?>
+                                                        </a>
+                                                        <span style="background-color: <?php echo esc_attr($close_button_color); ?>; <?php echo esc_attr($close_button_style); ?>" class="btn-ess-close icon-close <?php echo esc_attr($close_button_position); ?> <?php echo esc_attr($close_button_edge); ?>"></span>
+                                                    </div>
+                                                </div>
 
-                                                    <div class="sticky-sidebar-call-to-action sticky-content-inner" id="ess-preview-link">
-                                                        <?php echo esc_html($stickycta->SSuprydp_action_option_text ? $stickycta->SSuprydp_action_option_text : __('Click Here to View', 'easy-sticky-sidebar')); ?>
+                                                <div class="ess-preview-template ess-preview-gdpr" data-template="gdpr">
+                                                    <div class="easy-sticky-sidebar wordpress-cta-pro-gdpr ess-preview-gdpr" id="ess-preview-gdpr">
+                                                        <div class="gdpr-content ess-preview-gdpr-text" id="ess-preview-gdpr-text">
+                                                            <?php echo esc_html(wp_strip_all_tags((string) $stickycta->SSuprydp_content_option_text)); ?>
+                                                        </div>
+                                                        <div class="gdpr-footer ess-preview-gdpr-actions">
+                                                            <a class="ess-preview-gdpr-button btn-gdpr-close" id="ess-preview-gdpr-accept" href="#">
+                                                                <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Got it.', 'easy-sticky-sidebar')); ?>
+                                                            </a>
+                                                            <a class="ess-preview-gdpr-button ess-preview-gdpr-decline btn-gdpr-decline" id="ess-preview-gdpr-decline" href="#">
+                                                                <?php echo esc_html($stickycta->button2_text ? $stickycta->button2_text : __('Decline', 'easy-sticky-sidebar')); ?>
+                                                            </a>
+                                                        </div>
+                                                        <span style="background-color: <?php echo esc_attr($close_button_color); ?>; <?php echo esc_attr($close_button_style); ?>" class="btn-ess-close icon-close <?php echo esc_attr($close_button_position); ?> <?php echo esc_attr($close_button_edge); ?>"></span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="ess-preview-template ess-preview-html" data-template="html">
+                                                    <div class="easy-sticky-sidebar sticky-cta ess-preview-static ess-preview-html-cta sticky-cta-position-<?php echo esc_attr($preview_position); ?><?php echo $show_close_button ? ' ess-close-button-' . esc_attr($close_button_position) : ''; ?>" id="ess-preview-html-cta">
+                                                        <div class="sticky-sidebar-button" id="ess-preview-html-button">
+                                                            <div id="ess-preview-html-button-text">
+                                                                <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Click Here', 'easy-sticky-sidebar')); ?>
+                                                            </div>
+                                                        </div>
+                                                        <div class="sticky-sidebar-content sticky-sidebar-container">
+                                                            <div class="sticky-sidebar-text sticky-content-inner" id="ess-preview-html-content-text">
+                                                                <?php echo esc_html(wp_strip_all_tags((string) $stickycta->SSuprydp_content_option_text)); ?>
+                                                            </div>
+                                                        </div>
+                                                        <span style="background-color: <?php echo esc_attr($close_button_color); ?>; <?php echo esc_attr($close_button_style); ?>" class="btn-ess-close icon-close <?php echo esc_attr($close_button_position); ?> <?php echo esc_attr($close_button_edge); ?>"></span>
+                                                    </div>
+                                                </div>
+
+                                                <div class="ess-preview-template ess-preview-floating" data-template="floating-buttons">
+                                                    <?php
+                                                    $preview_buttons = Wordpress_CTA_Free_Floating_Buttons::get_buttons($stickycta);
+                                                    if (empty($preview_buttons)) {
+                                                        $preview_buttons = [
+                                                            (object) ['icon' => 'fa-solid fa-phone', 'text' => __('Call Us', 'easy-sticky-sidebar'), 'url' => ''],
+                                                            (object) ['icon' => 'fa-solid fa-comment-dots', 'text' => __('Chat Now', 'easy-sticky-sidebar'), 'url' => ''],
+                                                        ];
+                                                    }
+
+                                                    $preview_has_text = array_filter($preview_buttons, function ($button) {
+                                                        return !empty(trim((string) ($button->text ?? '')));
+                                                    });
+                                                    $preview_hide_text = ($stickycta->hide_floating_button_text ?? '') === 'yes' || empty($preview_has_text);
+                                                    $preview_floating_classes = [
+                                                        'easy-sticky-sidebar',
+                                                        'ess-preview-static',
+                                                        'ess-preview-floating-buttons',
+                                                        'ess-floating-buttons',
+                                                        'sticky-cta-position-' . $preview_position
+                                                    ];
+                                                    if ($preview_hide_text) {
+                                                        $preview_floating_classes[] = 'floating-button-no-text';
+                                                    }
+                                                    ?>
+                                                    <div class="<?php echo esc_attr(implode(' ', $preview_floating_classes)); ?>" id="ess-preview-floating-cta">
+                                                        <ul class="floating-buttons-container ess-preview-floating-list" id="ess-preview-floating-list">
+                                                        <?php
+                                                        foreach ($preview_buttons as $key => $button) :
+                                                            $button_icon = !empty($button->icon) ? sprintf('<i class="icon %s"></i>', esc_attr($button->icon)) : '';
+                                                            $button_text = (!$preview_hide_text && isset($button->text)) ? esc_html($button->text) : '';
+                                                            $button_html = trim($button_icon . $button_text);
+                                                            if ($button_html === '') {
+                                                                $button_html = esc_html__('Button', 'easy-sticky-sidebar');
+                                                            }
+                                                            $has_link = !empty($button->url);
+                                                            $button_class = $has_link ? 'has-link' : '';
+                                                        ?>
+                                                            <li class="floating-button-<?php echo esc_attr($key); ?> <?php echo esc_attr($button_class); ?>">
+                                                                <?php
+                                                                if ($has_link) {
+                                                                    printf('<a href="%s">%s</a>', esc_url($button->url), wp_kses_post($button_html));
+                                                                } else {
+                                                                    echo wp_kses_post($button_html);
+                                                                }
+                                                                ?>
+                                                            </li>
+                                                        <?php endforeach; ?>
+                                                        </ul>
                                                     </div>
                                                 </div>
                                             </div>

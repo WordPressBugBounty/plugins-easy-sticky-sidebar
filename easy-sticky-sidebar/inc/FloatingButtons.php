@@ -75,6 +75,9 @@ class Wordpress_CTA_Free_Floating_Buttons {
      * @since 1.4.5
      */
     public function generate_css($stickycta) {
+        if (empty($stickycta) || $stickycta->sidebar_template !== 'floating-buttons') {
+            return;
+        }
         $wrapper = sprintf('.easy-sticky-sidebar.easy-sticky-sidebar-%d', $stickycta->__get('id'));
 
 

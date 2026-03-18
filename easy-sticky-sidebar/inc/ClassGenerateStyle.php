@@ -9,10 +9,13 @@ class Easy_Sticky_CTA_Generate_CSS {
 
     // Declare the property to avoid dynamic property creation deprecated warning
     protected $item;
+    protected static $has_generated = false;
 
-    function __construct() {
-        $this->generate_css_file();
-        add_action('easy_sticky_sidebar_after_save', [$this, 'generate_style'], 2);
+    function __construct($register_hooks = true) {
+        if ($register_hooks) {
+            $this->generate_css_file();
+            add_action('easy_sticky_sidebar_after_save', [$this, 'generate_style'], 2);
+        }
     }
 
     public function generate_css_file() {
@@ -24,6 +27,7 @@ class Easy_Sticky_CTA_Generate_CSS {
     }
 
     public function generate_style() {
+        self::$has_generated = true;
         global $wpdb;
 
         $results = $wpdb->get_results("SELECT * FROM $wpdb->sticky_cta WHERE SSuprydp_development != 'off' ORDER BY id");
@@ -41,6 +45,15 @@ class Easy_Sticky_CTA_Generate_CSS {
         $styles = ob_get_clean();
 
         file_put_contents(wp_upload_dir()['basedir'] . '/sticky-sidebar-generated.css', $styles);
+    }
+
+    public static function regenerate_now() {
+        if (self::$has_generated) {
+            return;
+        }
+
+        $generator = new self(false);
+        $generator->generate_style();
     }
 
     public static function get_font_style($font) {

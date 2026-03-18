@@ -35,6 +35,7 @@ class Wordpress_CTA_Pro_Placeholder {
         $elements['call_to_action_link_or_button'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_link_or_button'], 'priority' => 21);
 
         $elements['show_close_button'] = array('hook' => 'easy_sticky_sidebar_close_button_options', 'callback' => [$this, 'close_button_option'], 'priority' => 5);
+        $elements['enable_box_shadow'] = array('hook' => 'easy_sticky_sidebar_box_shadow_options', 'callback' => [$this, 'box_shadow_toggle'], 'priority' => 1);
 		
         return $elements;
     }
@@ -449,5 +450,20 @@ class Wordpress_CTA_Pro_Placeholder {
 			</div>
 		</div>
 		<?php
+	}
+
+	/**
+	 * CTA box shadow toggle (Pro)
+	 * @since 1.4.5
+	 */
+	function box_shadow_toggle() { ?>
+		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+			<label class="h"><?php _e('Enable Box Shadow', 'easy-sticky-sidebar') ?></label>
+			<label class="SSuprydp_switch has-label h">
+				<input type="checkbox">
+			</label>
+			<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+		</div>
+	<?php
 	}
 }
