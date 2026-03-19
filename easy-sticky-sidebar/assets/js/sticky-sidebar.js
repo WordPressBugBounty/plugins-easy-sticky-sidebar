@@ -35,11 +35,11 @@ jQuery(document).ready(function ($) {
 	});
 
 	$('.easy-sticky-sidebar .btn-ess-close').on('click', function (e) {
-        e.stopPropagation();
-        $(this).closest('.easy-sticky-sidebar').fadeOut(200, function(){
-            $(this).remove();
-        })
-	})
+		e.stopPropagation();
+		$(this).closest('.easy-sticky-sidebar').fadeOut(200, function () {
+			$(this).remove();
+		});
+	});
 
 	var width = $(window).width();
 
@@ -47,20 +47,20 @@ jQuery(document).ready(function ($) {
 		$(window).scroll(function () {
 			var scroll = $(window).scrollTop();
 			if (scroll <= 120) {
-				return
+				return;
 			}
 
-			jQuery('.easy-sticky-sidebar.sticky-cta:not(.scrolled)').each(function(){
-				if ( $(this).hasClass('shrink-disabled') ) {
+			jQuery('.easy-sticky-sidebar.sticky-cta:not(.scrolled)').each(function () {
+				if ($(this).hasClass('shrink-disabled')) {
 					return;
 				}
 
 				cta_id = parseInt($(this).data('id'));
-				if ( !CTA_Click.includes(cta_id) ) {
+				if (!CTA_Click.includes(cta_id)) {
 					updateButtonMetrics($(this));
 					$(this).addClass('shrink scrolled');
 				}
-			})
+			});
 		});
 	}
 
@@ -71,12 +71,12 @@ jQuery(document).ready(function ($) {
 		updateButtonMetrics(current_cta);
 
 		cta_id = parseInt(current_cta.data('id'));
-		if ( cta_id > 0 && !CTA_Click.includes(cta_id) ) {
+		if (cta_id > 0 && !CTA_Click.includes(cta_id)) {
 			CTA_Click.push(cta_id);
 		}
 
 		current_cta.toggleClass('shrink');
-	})
+	});
 
 	$('body').on('click', '.easy-sticky-sidebar a', function () {
 		var sticky_id = parseInt($(this).closest('[data-id]').data('id'), 10);

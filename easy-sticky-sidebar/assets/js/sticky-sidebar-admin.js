@@ -1307,7 +1307,12 @@ jQuery(document).ready(function ($) {
         preview.css('--width', previewWidth);
 
         const buttonTextValue = getValue('SSuprydp_button_option_text', '');
-        $('#ess-preview-button-text').text(buttonTextValue);
+        const buttonIconValue = getValue('button_icon', '');
+        if (buttonIconValue) {
+            $('#ess-preview-button-text').html(`<i class="icon ${buttonIconValue}"></i> ${buttonTextValue}`);
+        } else {
+            $('#ess-preview-button-text').text(buttonTextValue);
+        }
         $('#ess-preview-content-text').text(stripText(getValue('SSuprydp_content_option_text', 'This is the content area for your sticky CTA.')));
         $('#ess-preview-link').text(getValue('SSuprydp_action_option_text', 'Click Here to View'));
 
@@ -1809,4 +1814,5 @@ jQuery(document).ready(function ($) {
     setStepState();
     moveActiveNavBackground(false);
     updatePreview();
+
 });

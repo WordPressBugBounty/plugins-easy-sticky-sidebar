@@ -302,6 +302,8 @@
     transition: none !important;
     animation: none !important;
 }
+
+/* Preview display animations */
 .wrap-easy-sticky-sidebar.ess-dashboard-redesign .ess-preview-stage .easy-sticky-sidebar.has-image-ovarlay .sticky-sidebar-image {
     position: relative;
 }
@@ -400,6 +402,10 @@
     padding: 0 !important;
     line-height: 1.1;
     text-align: right;
+}
+.wrap-easy-sticky-sidebar.ess-dashboard-redesign #ess-preview-button-text .icon {
+    display: inline-block;
+    line-height: 1;
 }
 .wrap-easy-sticky-sidebar.ess-dashboard-redesign .ess-preview-stage .easy-sticky-sidebar.vertical-cta #ess-preview-button-text {
     writing-mode: horizontal-tb !important;

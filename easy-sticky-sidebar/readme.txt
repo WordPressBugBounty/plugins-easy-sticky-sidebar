@@ -4,7 +4,7 @@ Tags: call-to-action, cta, sticky-cta, lead-generation, woocommerce-sales
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -17,6 +17,7 @@ WP CTA is a powerful and easy-to-use WordPress plugin designed to help you creat
 = Key Features =
 
 * **3 Pre-built Templates**: Choose from banner, sticky sidebar, and HTML templates
+* **Smart Display Controls**: Show CTAs based on timing, scroll behavior, and user interaction
 * **Easy Customization**: Customize colors, fonts, positioning, and content
 * **Responsive Design**: Works perfectly on all devices
 * **Page Targeting**: Display CTAs on specific pages or site-wide
@@ -54,6 +55,8 @@ Upgrade to [WP CTA Pro](https://wpctapro.com/) for advanced features:
 
 * Unlimited CTAs
 * Advanced targeting options
+* Entrance animations (slide, fade, and more)
+* Smart display triggers (time, scroll, behavior-based)
 * A/B testing
 * Click tracking and analytics
 * Custom CSS editor
@@ -106,6 +109,11 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 10. CTA Save and STATS visiblity 
 
 == Changelog ==
+
+== 2.1.0 ==
+* Optimized live preview performance for better responsiveness
+* Added infrastructure for animation support (available in Pro)
+* Minor UI enhancements and bug fixes
 
 = 2.0.1 =
 * Live preview fixings

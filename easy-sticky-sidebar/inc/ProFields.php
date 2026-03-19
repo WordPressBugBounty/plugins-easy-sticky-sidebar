@@ -8,6 +8,27 @@
 class Wordpress_CTA_Pro_Placeholder {
     public function __construct() {
         add_filter('wordpress_cta_free/pro_fields', [$this, 'register_placeholder'], 1);
+        add_filter('easy_sticky_sidebar_tabs', [$this, 'add_display_setting_tab'], 12);
+    }
+
+    public function add_display_setting_tab($tabs) {
+        if (!isset($tabs['display-setting'])) {
+            $tabs['display-setting'] = [
+                'label' => __("Display Behaviour", 'easy-sticky-sidebar'),
+                'callback' => [$this, 'display_setting_tab'],
+                'priority' => 6
+            ];
+        }
+
+        if (isset($tabs['responsive']) && (!isset($tabs['display-setting']) || $tabs['display-setting']['priority'] <= $tabs['responsive']['priority'])) {
+            $tabs['responsive']['priority'] = 7;
+        }
+
+        if (isset($tabs['css']) && (!isset($tabs['display-setting']) || $tabs['display-setting']['priority'] <= $tabs['css']['priority'])) {
+            $tabs['css']['priority'] = 8;
+        }
+
+        return $tabs;
     }
 
     public function register_placeholder($elements) {
@@ -39,6 +60,109 @@ class Wordpress_CTA_Pro_Placeholder {
 		
         return $elements;
     }
+
+    public function display_setting_tab($stickycta) { ?>
+        <h4 class="wordpress-cta-heading"><?php _e("Display Setting", "easy-sticky-sidebar"); ?></h4>
+        <div class="wordpress-cta-pro-features">
+
+            <div class="SSuprydp_field_wrap">
+                <h4 class="heading"><?php _e("Show CTA", "easy-sticky-sidebar"); ?></h4>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
+                <label><?php _e("Trigger", "easy-sticky-sidebar"); ?></label>
+                <select name="display_trigger" disabled>
+                    <option><?php _e("Show immediately", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Show after X seconds", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Show after X% scroll", "easy-sticky-sidebar"); ?></option>
+                </select>
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container ess-display-trigger-seconds">
+                <label><?php _e("After X seconds", "easy-sticky-sidebar"); ?></label>
+                <input type="number" style="width: 80px" disabled>
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container ess-display-trigger-scroll">
+                <label><?php _e("After X% scroll", "easy-sticky-sidebar"); ?></label>
+                <input type="number" style="width: 80px" disabled> %
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
+                <label><?php _e("Animation", "easy-sticky-sidebar"); ?></label>
+                <select name="display_animation" disabled>
+                    <option><?php _e("None", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Fade in", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Slide up", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Slide down", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Slide left", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Slide right", "easy-sticky-sidebar"); ?></option>
+                </select>
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+
+            <div class="SSuprydp_field_wrap" style="margin-top: 14px;">
+                <h4 class="heading"><?php _e("Hide CTA", "easy-sticky-sidebar"); ?></h4>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
+                <label><?php _e("Auto Hide", "easy-sticky-sidebar"); ?></label>
+                <select name="hide_behavior" disabled>
+                    <option><?php _e("Don't auto hide", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Hide after X seconds", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Hide near page bottom", "easy-sticky-sidebar"); ?></option>
+                </select>
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container ess-hide-after-seconds">
+                <label><?php _e("Hide after X seconds", "easy-sticky-sidebar"); ?></label>
+                <input type="number" style="width: 80px" disabled>
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+
+            <div class="SSuprydp_field_wrap" style="margin-top: 14px;">
+                <h4 class="heading"><?php _e("Display Frequency", "easy-sticky-sidebar"); ?></h4>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
+                <label><?php _e("Frequency", "easy-sticky-sidebar"); ?></label>
+                <select name="display_frequency" disabled>
+                    <option><?php _e("Show every time", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Show once per visit", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Show once every 24 hours", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Show once every 7 days", "easy-sticky-sidebar"); ?></option>
+                </select>
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+
+            <div class="SSuprydp_field_wrap" style="margin-top: 14px;">
+                <h4 class="heading"><?php _e("After Close", "easy-sticky-sidebar"); ?></h4>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
+                <label><?php _e("Behavior", "easy-sticky-sidebar"); ?></label>
+                <select name="after_close_behavior" disabled>
+                    <option><?php _e("Show again next visit", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Don't show again for X time", "easy-sticky-sidebar"); ?></option>
+                </select>
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+
+            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container ess-after-close-time">
+                <label><?php _e("Don't show again for", "easy-sticky-sidebar"); ?></label>
+                <input type="number" style="width: 80px" disabled>
+                <select name="after_close_time_unit" disabled>
+                    <option><?php _e("Hours", "easy-sticky-sidebar"); ?></option>
+                    <option><?php _e("Days", "easy-sticky-sidebar"); ?></option>
+                </select>
+                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+            </div>
+        </div>
+    <?php }
 
 	/**
 	 * Show statistics

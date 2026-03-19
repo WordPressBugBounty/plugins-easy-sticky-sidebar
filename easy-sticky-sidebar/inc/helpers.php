@@ -515,7 +515,7 @@ function easy_sticky_sidebar_css_tab($stickycta) { ?>
  */
 function easy_sticky_sidebar_status_tab($stickycta) { ?>
 
-    <h4 class="wordpress-cta-heading"><?php _e("Display Settings", "easy-sticky-sidebar"); ?></h4>
+    <h4 class="wordpress-cta-heading"><?php _e("Display Behaviour", "easy-sticky-sidebar"); ?></h4>
     
     <p style="margin-bottom: 10px" class="wordpress-cta-instruction"><?php _e("<strong>Change the status of your CTA.</strong><br><strong>Live:</strong> This will show to everyone.<br><strong>Development:</strong> This will only show to admins who are logged in.<br><strong>Off::</strong> Will not show to anyone", 'easy-sticky-sidebar'); ?>
 

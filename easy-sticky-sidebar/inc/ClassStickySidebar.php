@@ -381,7 +381,7 @@ class SSuprydpStickySidebar
 			wp_enqueue_style('sticky-sidebar-generated', $upload_dir['baseurl'] . '/sticky-sidebar-generated.css', [], filemtime($generated_css));
 		}
 
-		wp_enqueue_script('SSuprydp_script', EASY_STICKY_SIDEBAR_PLUGIN_URL . "/assets/js/sticky-sidebar.js", array('jquery'), EASY_STICKY_SIDEBAR_VERSION);
+		wp_enqueue_script('SSuprydp_script', EASY_STICKY_SIDEBAR_PLUGIN_URL . "/assets/js/sticky-sidebar.js", array('jquery'), EASY_STICKY_SIDEBAR_VERSION, true);
 		wp_localize_script('SSuprydp_script', 'easy_sticky_sidebar_front', [
 			'ajax_url' => admin_url('admin-ajax.php'),
 		]);
