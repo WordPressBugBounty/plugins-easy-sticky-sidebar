@@ -1,14 +1,14 @@
-=== WP CTA - sticky CTA builder, generate leads, promote sales ===
-Contributors: wpctapro
-Tags: call-to-action, cta, sticky-cta, lead-generation, woocommerce-sales
+=== WP CTA - Call Now Button, Sticky Button & Call to Action Builder ===
+Contributors: blendmedia, mandeeps1987
+Tags: call button, call now button, call to action, cta, sticky button
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-WordPress Call To Action plugin that helps promote content, increase sales and generate leads. It's easy to use and comes with 3 customizable templates.
+WordPress Call To Action builder that creates sticky buttons, call now buttons and CTAs to boost clicks, increase sales and generate leads.
 
 == Description ==
 
@@ -110,7 +110,14 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 
 == Changelog ==
 
-== 2.1.0 ==
+= 2.1.1 =
+* Plugin title update
+* Plugin tags updated
+* Input size increased min 100px
+* Contributor name issue fixed
+* Minor code quality improvements
+
+= 2.1.0 =
 * Optimized live preview performance for better responsiveness
 * Added infrastructure for animation support (available in Pro)
 * Minor UI enhancements and bug fixes

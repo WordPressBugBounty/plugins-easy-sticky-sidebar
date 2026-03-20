@@ -437,8 +437,9 @@ class Wordpress_CTA_Pro_Placeholder {
     
     // Add click handler for lock icons
     $(document).on('click', '.wordpress-cta-pro-feature-lock-inline', function(e) {
+        // Open the upgrade popup first, then allow users to click links inside the popup.
         e.preventDefault();
-        alert('<?php _e("This is a premium feature. Please upgrade to unlock.", "easy-sticky-sidebar"); ?>');
+        $('#wordpress-cta-pro-feature-popup').trigger('open');
     });
 });
 	</script>

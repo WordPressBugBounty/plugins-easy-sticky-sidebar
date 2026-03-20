@@ -651,6 +651,20 @@ h4.heading {
     max-width: 400px !important
 }
 
+/* Ensure form controls are comfortably sized in all (free + pro) screens */
+.wrap-easy-sticky-sidebar .SSuprydp_field_wrap input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.wrap-easy-sticky-sidebar .SSuprydp_field_wrap select,
+.wrap-easy-sticky-sidebar .SSuprydp_field_wrap textarea,
+.wrap-easy-sticky-sidebar .SSuprydp_field_wrap .font-select {
+    min-width: 100px;
+}
+
+.wrap-easy-sticky-sidebar .SSuprydp_field_wrap input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.wrap-easy-sticky-sidebar .SSuprydp_field_wrap select,
+.wrap-easy-sticky-sidebar .SSuprydp_field_wrap textarea {
+    text-align: left !important;
+}
+
 .SSuprydp_field_wrap .font-select {
     width: min(400px, 100%);
 }
