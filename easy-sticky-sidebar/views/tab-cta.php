@@ -68,10 +68,13 @@ $position_a = '';
         }
     }
 
+$button_icon_class = trim((string) ($ctacontent->button_icon ?? ''));
+$icon_attr = ' data-button-icon="' . esc_attr($button_icon_class) . '"';
+
 ob_start(); ?>
 
 <div id="<?php echo 'easy-sticky-sidebar-' . esc_attr($ctacontent->id) ?>" style="<?php echo $position_style;   ?>"
-    class="<?php echo esc_attr(implode(' ', $cta_classes)) ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"<?php echo $display_attrs; ?>>
+    class="<?php echo esc_attr(implode(' ', $cta_classes)) ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"<?php echo $icon_attr; ?><?php echo $display_attrs; ?>>
     <?php 
  
 ?>
@@ -79,7 +82,14 @@ ob_start(); ?>
     <a class="sticky-sidebar-button"
         style="color: <?php echo $button_color ?> ; background-color:<?php echo $button_background_color ?>; <?php echo $position_a; ?>"
         <?php echo $cta_links_attrs; ?>>
-        <div><?php echo wp_kses_post($ctacontent->SSuprydp_button_option_text) ?></div>
+        <?php
+            $button_icon = $button_icon_class !== ''
+                ? '<i class="' . esc_attr($button_icon_class) . '"></i> '
+                : '';
+            $button_text = trim((string) $ctacontent->SSuprydp_button_option_text);
+            $button_text_html = $button_text === '' ? '' : esc_html($button_text);
+        ?>
+        <div><?php echo $button_icon . $button_text_html; ?></div>
     </a>
     <?php 
 	if (function_exists('wordpress_cta_pro_get_close_button')) { 

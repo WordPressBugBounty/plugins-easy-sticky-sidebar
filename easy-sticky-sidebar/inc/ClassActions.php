@@ -169,6 +169,11 @@ class SSuprydpproActions {
 		$postdata = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 		$sticky_id = isset($postdata['sticky_id']) ? absint($postdata['sticky_id']) : 0;
 
+		// Ensure button_icon is captured (free feature now).
+		if (isset($_POST['button_icon'])) {
+			$postdata['button_icon'] = sanitize_text_field(wp_unslash($_POST['button_icon']));
+		}
+
 		if (!has_wordpress_cta_pro() && $sticky_id === 0) {
 			global $wpdb;
 			$cta_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}sticky_cta");

@@ -21,8 +21,13 @@ class Easy_Sticky_CTA_Generate_CSS {
     public function generate_css_file() {
         $upload_dir = wp_get_upload_dir();
         $css_file = $upload_dir['basedir'] . '/sticky-sidebar-generated.css';
-        if (!file_exists($css_file)) {
+        $has_pro = function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro();
+        $current_status = $has_pro ? '1' : '0';
+        $last_status = get_option('ess_last_pro_status', '');
+
+        if (!file_exists($css_file) || $last_status !== $current_status) {
             $this->generate_style();
+            update_option('ess_last_pro_status', $current_status);
         }
     }
 
@@ -121,7 +126,9 @@ class Easy_Sticky_CTA_Generate_CSS {
             printf("\tbackground-color: %s;\n", esc_html($this->item->SSuprydp_button_option_backg_color));
         }
 
-        Wordpress_CTA_Free_Utils::get_dimensions_output($sticky_cta->button_padding, 'padding-%');
+        if (function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro()) {
+            Wordpress_CTA_Free_Utils::get_dimensions_output($sticky_cta->button_padding, 'padding-%');
+        }
 
         do_action('easy_sticky_sidebar_generate_button_style', $this->item);
     }
@@ -154,7 +161,9 @@ class Easy_Sticky_CTA_Generate_CSS {
             printf("background-color: %s;\n", esc_attr($this->item->content_background_color));
         }
 
-        Wordpress_CTA_Free_Utils::get_dimensions_output($this->item->content_padding, 'padding-%');
+        if (function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro()) {
+            Wordpress_CTA_Free_Utils::get_dimensions_output($this->item->content_padding, 'padding-%');
+        }
 
         do_action('easy_sticky_sidebar_generate_content_style', $this->item);
     }
@@ -175,7 +184,9 @@ class Easy_Sticky_CTA_Generate_CSS {
             printf("background-color: %s;\n", esc_attr($this->item->link_text_background));
         }
 
-        Wordpress_CTA_Free_Utils::get_dimensions_output($this->item->call_to_action_padding, 'padding-%');
+        if (function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro()) {
+            Wordpress_CTA_Free_Utils::get_dimensions_output($this->item->call_to_action_padding, 'padding-%');
+        }
 
         do_action('easy_sticky_sidebar_generate_call_to_action_style', $this->item);
     }

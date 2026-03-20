@@ -1902,7 +1902,7 @@ form.SSuprydp_form:not([data-template="sticky-cta"]) :is(#cta-line-separator-opt
 }
 
 form.SSuprydp_form[data-template="tab-cta"] :is(#sticky_cta_banner_img, #sticky-cta-content-text-container, .call-to-action-button-wrapper,
-    #cta-adjustment-options, #sticky-cta-content-text-container-text-container, #cta-content-options, #cta-button-text-alignment, #cta-line-separator-options, #cta-link-text-options),
+    #cta-adjustment-options, #sticky-cta-content-text-container-text-container, #cta-content-options, #cta-button-text-alignment, #cta-line-separator-options, #cta-link-text-options, #cta-design-template),
 form.SSuprydp_form:not([data-template="tab-cta"]) .easy-sticky-sidebar-tab-cta-url-options {
     display: none !important
 }

@@ -48,7 +48,9 @@ if ($ctacontent->SSuprydp_nofollow == 'Yes') {
 	$cta_links_attrs .= ' rel="nofollow"';
 }
 
-if ( $ctacontent->call_to_action_padding ) {
+$padding_css = "14px 24px";
+$pro_enabled = function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro();
+if ($pro_enabled && $ctacontent->call_to_action_padding) {
     $padding_top    = isset($ctacontent->call_to_action_padding['top']) ? intval($ctacontent->call_to_action_padding['top']) : 0;
     $padding_bottom = isset($ctacontent->call_to_action_padding['bottom']) ? intval($ctacontent->call_to_action_padding['bottom']) : 0;
     $padding_right  = isset($ctacontent->call_to_action_padding['right']) ? intval($ctacontent->call_to_action_padding['right']) : 0;
@@ -57,15 +59,9 @@ if ( $ctacontent->call_to_action_padding ) {
                         ? sanitize_text_field((string) $ctacontent->call_to_action_padding['unit']) 
                         : 'px';
 
-    // If all paddings are 0, use default
-    if ($padding_top === 0 && $padding_right === 0 && $padding_bottom === 0 && $padding_left === 0) {
-        $padding_css = "14px 24px";
-    } else {
+    if (!($padding_top === 0 && $padding_right === 0 && $padding_bottom === 0 && $padding_left === 0)) {
         $padding_css = "{$padding_top}{$padding_unit} {$padding_right}{$padding_unit} {$padding_bottom}{$padding_unit} {$padding_left}{$padding_unit}";
     }
-} else {
-    // No padding set, use default
-    $padding_css = "14px 24px";
 }
 
 

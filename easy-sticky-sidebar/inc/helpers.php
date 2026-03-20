@@ -173,8 +173,8 @@ function get_easy_sticky_sidebar($sticky_id) {
 function easy_sticky_sidebar_templates() {
     return apply_filters('easy_sticky_sidebar_templates', [
         'sticky-cta' => __('Sticky CTA', 'easy-sticky-sidebar'),
-        'floating-buttons' =>  __('Floating Buttons', 'easy-sticky-sidebar'),
         'tab-cta' => __('Tab CTA', 'easy-sticky-sidebar'),
+        'floating-buttons' =>  __('Floating Buttons', 'easy-sticky-sidebar'),
         'banner' => __('Announcement Banner', 'easy-sticky-sidebar'),
         'html' => __('HTML / iframe CTA', 'easy-sticky-sidebar'),
         
@@ -331,7 +331,7 @@ function easy_sticky_sidebar_template_tab($stickycta) {
 <!-- <div class="s_set"><input type="submit" onclick="return SSuprydp_Admin.ProcessPageData(event, this);"
 class="button_save" value="Save Setting"></div> -->
 <?php
-    $pro_templates = array('html', 'banner', 'gdpr', 'floating-buttons', 'tab-cta'); ?>
+    $pro_templates = array('html', 'banner', 'gdpr', 'floating-buttons'); ?>
     <h4 class="wordpress-cta-heading"><?php _e("Template Layout", "easy-sticky-sidebar") ?> </h4>
     <p class="wordpress-cta-instruction"><?php _e('Select a template layout for this CTA. Click on the button below to view our demos.', 'easy-sticky-sidebar') ?></p>
     <?php
@@ -400,7 +400,7 @@ class="button_save" value="Save Setting"></div> -->
 
             function toggleDesignTemplateSection() {
                 const selectedValue = sidebarTemplate.value;
-                if (proTemplates.includes(selectedValue)) {
+                if (selectedValue !== 'sticky-cta' || proTemplates.includes(selectedValue)) {
                     designTemplateSection.style.display = "none";
                 } else {
                     designTemplateSection.style.display = "block";
@@ -1011,3 +1011,13 @@ function easy_sticky_sidebar_settings_disable_google_font($post_data) { ?>
 <?php
 }
 add_action('easy_sticky_sidebar_settings', 'easy_sticky_sidebar_settings_disable_google_font');
+
+// Button icon (now free)
+if (!function_exists('easy_sticky_sidebar_add_button_icon')) {
+    function easy_sticky_sidebar_add_button_icon($stickycta) {
+        if (!empty($stickycta->button_icon)) {
+            printf('<i class="%s"></i>', esc_attr($stickycta->button_icon));
+        }
+    }
+}
+add_action('easy_sticky_sidebar_sticky_cta_button', 'easy_sticky_sidebar_add_button_icon');

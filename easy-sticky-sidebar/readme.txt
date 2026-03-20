@@ -4,7 +4,7 @@ Tags: call button, call now button, call to action, cta, sticky button
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.1
+Stable tag: 2.1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,17 +12,22 @@ WordPress Call To Action builder that creates sticky buttons, call now buttons a
 
 == Description ==
 
-WP CTA is a powerful and easy-to-use WordPress plugin designed to help you create compelling call-to-action elements that drive conversions, increase sales, and generate leads.
+WP CTA is a powerful and easy-to-use WordPress plugin designed to help you create high-converting call-to-action elements that drive clicks, calls, and leads.
+
+With WP CTA, you can quickly add **sticky CTAs and call buttons** to your website, ensuring your most important offers stay visible and accessible at all times. Whether you want to increase phone calls, capture leads, or promote a special offer, WP CTA makes it simple.
+
+The free version includes a **Sticky CTA** and a **Tab CTA (call button / click-to-call)** to give you an instant way to boost engagement. Upgrade to Pro to unlock advanced CTA types, targeting, and conversion-focused features.
 
 = Key Features =
 
-* **3 Pre-built Templates**: Choose from banner, sticky sidebar, and HTML templates
-* **Smart Display Controls**: Show CTAs based on timing, scroll behavior, and user interaction
-* **Easy Customization**: Customize colors, fonts, positioning, and content
-* **Responsive Design**: Works perfectly on all devices
-* **Page Targeting**: Display CTAs on specific pages or site-wide
-* **Development Mode**: Test your CTAs before going live
-* **No Coding Required**: User-friendly interface for easy setup
+* **Sticky CTA (Free):** Keep your call-to-action visible as users scroll your site
+* **Tab CTA (Call Button):** Add a click-to-call style tab that expands on interaction
+* **Smart Display Controls:** Show CTAs based on timing, scroll behavior, and user interaction
+* **Easy Customization:** Customize colors, text, positioning, and content
+* **Responsive Design:** Works perfectly on desktop and mobile devices
+* **Page Targeting:** Display CTAs on specific pages or site-wide
+* **Development Mode:** Test your CTAs before going live
+* **No Coding Required:** Simple and user-friendly interface for fast setup
 
 = Perfect For =
 
@@ -31,20 +36,25 @@ WP CTA is a powerful and easy-to-use WordPress plugin designed to help you creat
 * Affiliate marketing
 * Content promotion
 * Newsletter signups
-* Product launches
+* Service-based businesses (call buttons)
 * Special offers and discounts
 
 = Templates Included =
+**Free Version**
+1. **Sticky CTA: Persistent sidebar or floating CTA
+2. **Tab CTA (Call Button): Click-to-expand call or contact button
 
-1. **Banner Template**: Eye-catching top/bottom banners
-2. **Sticky Sidebar**: Persistent sidebar CTAs
-3. **HTML Template**: Fully customizable HTML CTAs
+**Pro Version**
+* **Floating Buttons:** Call now, contact, or custom actions
+* **Banner / Announcement Bar:** Top or bottom promotional bars
+* **HTML & Shortcode CTAs:** Fully customizable CTA blocks
+* **GDPR Bar:** Consent and compliance notifications
 
 = Easy Setup =
 
 1. Install and activate the plugin
 2. Create your first CTA
-3. Choose a template
+3. Choose a CTA type (sticky or tab)
 4. Customize design and content
 5. Set display conditions
 6. Publish and track results
@@ -54,14 +64,13 @@ WP CTA is a powerful and easy-to-use WordPress plugin designed to help you creat
 Upgrade to [WP CTA Pro](https://wpctapro.com/) for advanced features:
 
 * Unlimited CTAs
-* Advanced targeting options
+* Multiple CTA types (floating, banner, HTML, GDPR, and more)
+* Advanced targeting options (time, scroll, behavior-based)
 * Entrance animations (slide, fade, and more)
-* Smart display triggers (time, scroll, behavior-based)
-* A/B testing
 * Click tracking and analytics
 * Custom CSS editor
 * Priority support
-* And much more!
+* And much more
 
 == Installation ==
 
@@ -109,6 +118,12 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 10. CTA Save and STATS visiblity 
 
 == Changelog ==
+
+= 2.1.2 =
+* Tab CTA launched for free version
+* Live preview fixes
+* New description for new features
+* Minor code improvements
 
 = 2.1.1 =
 * Plugin title update

@@ -43,16 +43,23 @@ class Wordpress_CTA_Pro_Placeholder {
         $elements['hide_image'] = array('hook' => 'easy_sticky_sidebar_cta_image', 'callback' => [$this, 'hide_image'], 'priority' => 3);
 
         $elements['letter_spacing'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_letter_spacing'], 'priority' => 32);
+        if (!has_wordpress_cta_pro()) {
+            $elements['button_padding'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_padding'], 'priority' => 47);
+        }
         $elements['button_round'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_border_round'], 'priority' => 50);
         
         $elements['content_letter_spacing'] = array('hook' => 'easy_sticky_sidebar_content_option', 'callback' => [$this, 'content_letter_spacing'], 'priority' => 12);
-        $elements['content_padding'] = array('hook' => 'easy_sticky_sidebar_content_option', 'callback' => [$this, 'content_padding'], 'priority' => 25);
+        if (!has_wordpress_cta_pro()) {
+            $elements['content_padding'] = array('hook' => 'easy_sticky_sidebar_content_option', 'callback' => [$this, 'content_padding'], 'priority' => 25);
+        }
         
         $elements['line_separator_thickness'] = array('hook' => 'easy_sticky_sidebar_line_separator', 'callback' => [$this, 'line_separator_thickness'], 'priority' => 5);
         
         $elements['call_to_action_show_hide'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_show_hide'], 'priority' => 1);
         $elements['call_to_action_letter_spacing'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_letter_spacing'], 'priority' => 16);
-        $elements['call_to_action_padding'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_padding'], 'priority' => 25);
+        if (!has_wordpress_cta_pro()) {
+            $elements['call_to_action_padding'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_padding'], 'priority' => 25);
+        }
         $elements['call_to_action_link_or_button'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_link_or_button'], 'priority' => 21);
 
         $elements['show_close_button'] = array('hook' => 'easy_sticky_sidebar_close_button_options', 'callback' => [$this, 'close_button_option'], 'priority' => 5);
@@ -392,40 +399,48 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * CTA button letter spacing
 	 * @since 1.4.5
 	 */
-	function button_border_round() {?>
-		<div class="SSuprydp_field_wrap sticky-sidebar-button_radius">
-			<label><?php _e("Button Corners (border radius)", "easy-sticky-sidebar"); ?></label>
-			<div class="wordpress-cta-pro-feature-lock-inline-container">
-				<input type="number" style="width: 50px"> px
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-			</div>
-		</div>
-		<?php
-	}
+    function button_border_round() {?>
+        <div class="SSuprydp_field_wrap sticky-sidebar-button_radius wordpress-cta-pro-element">
+            <label><?php _e("Button Corners (border radius)", "easy-sticky-sidebar"); ?></label>
+            <input type="number" style="width: 50px"> px
+            <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+        </div>
+        <?php
+    }
+
+    /**
+     * CTA button padding (pro)
+     * @since 1.4.5
+     */
+    function button_padding($stickycta) { ?>
+        <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+            <label><?php _e("Padding", "easy-sticky-sidebar"); ?></label>
+            <?php Wordpress_CTA_Free_Utils::get_dimensions_field(''); ?>
+            <?php Wordpress_CTA_Free_Utils::get_inline_lock(['top' => '-2px', 'bottom' => 'auto']) ?>
+        </div>
+    <?php
+    }
 
 	/**
 	 * CTA content padding
 	 * @since 1.4.5
 	 */
 	function content_padding($stickycta) {?>
-		<div class="SSuprydp_field_wrap">
+		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 			<label><?php _e("Padding", "easy-sticky-sidebar"); ?></label>
-			<div class="wordpress-cta-pro-feature-lock-inline-container">
-				<?php Wordpress_CTA_Free_Utils::get_dimensions_field(''); ?>
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock(['top' => '-2px', 'bottom' => 'auto']) ?>
-
-			</div>
+			<?php Wordpress_CTA_Free_Utils::get_dimensions_field(''); ?>
+			<?php Wordpress_CTA_Free_Utils::get_inline_lock(['top' => '-2px', 'bottom' => 'auto']) ?>
 		</div>
 
 <script>
 	jQuery(document).ready(function($) {
-    function updateInputStates() {
+      function updateInputStates() {
         $('.wordpress-cta-pro-feature-lock-inline-container').each(function() {
             // Check if lock element exists in this container
             const hasLock = $(this).find('.wordpress-cta-pro-feature-lock-inline').length > 0;
             
-            // Find all dimension inputs in this container
-            $(this).find('.wordpress-cta-dimension-field .dimension-input').prop('disabled', hasLock);
+            // Disable all inputs/selects/textarea inside locked containers
+            $(this).find('input, select, textarea').prop('disabled', hasLock);
         });
     }
 
@@ -497,12 +512,10 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function call_to_action_padding($stickycta) { ?>
-		<div class="SSuprydp_field_wrap">
+		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 			<label><?php _e("Padding", "easy-sticky-sidebar"); ?></label>
-			<div class="wordpress-cta-pro-feature-lock-inline-container">
-				<?php Wordpress_CTA_Free_Utils::get_dimensions_field(''); ?>
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock(['top' => '-2px', 'bottom' => 'auto']) ?>
-			</div>
+			<?php Wordpress_CTA_Free_Utils::get_dimensions_field(''); ?>
+			<?php Wordpress_CTA_Free_Utils::get_inline_lock(['top' => '-2px', 'bottom' => 'auto']) ?>
 		</div>
 		<?php
 	}

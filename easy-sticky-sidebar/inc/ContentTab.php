@@ -10,6 +10,7 @@ class Wordpress_CTA_Free_Content_Tab {
     public function __construct() {
         add_action( 'easy_sticky_sidebar_content_image', [$this, 'add_image'], 5);
         add_action( 'easy_sticky_sidebar_content_button', [$this, 'button_text'], 10);
+        add_action( 'easy_sticky_sidebar_content_button', [$this, 'button_icon'], 11);
         add_action( 'easy_sticky_sidebar_content_text', [$this, 'content_text'], 15);
 
         add_action( 'easy_sticky_sidebar_content_link_options', [$this, 'call_to_action_text'], 5);
@@ -55,6 +56,26 @@ class Wordpress_CTA_Free_Content_Tab {
     <div class="gap-10"></div>
     <input type="text" name="SSuprydp_button_option_text" class="SSuprydp_input meta_title"
         value="<?php echo esc_attr($stickycta->SSuprydp_button_option_text) ; ?>" placeholder="Enter button text here">
+    </div>
+    <?php
+    }
+
+    /**
+     * CTA button icon field (free)
+     * @since 1.4.5
+     */
+    function button_icon($stickycta) { ?>
+<div class="SSuprydp_field_wrap button_icon">
+    <div class="heading"><?php _e("Button Icon", "easy-sticky-sidebar"); ?></div>
+    <p class="wordpress-cta-instruction"><?php _e('Select a icon for button', 'easy-sticky-sidebar'); ?></p>
+    <div class="gap-10"></div>
+
+    <div class="icon-library-select-button">
+        <input class="button-icon" type="hidden" name="button_icon" value="<?php echo esc_attr($stickycta->button_icon); ?>">
+        <a href="#" class="button btn-primary btn-select-button-icon"><?php _e('Select Icon', 'easy-sticky-sidebar') ?></a>
+        <a href="#" class="button btn-secondary btn-remove-button-icon"><?php _e('Remove Icon', 'easy-sticky-sidebar') ?></a>
+        <i class="icon <?php echo esc_attr($stickycta->button_icon); ?>"></i>
+    </div>
 </div>
 <?php
     }

@@ -769,6 +769,61 @@ jQuery(document).ready(function ($) {
 
     EasyStickySidebarIconLibrary.init();
 
+    // Button icon selector (free/pro) using shared icon library popup.
+    $(document).on('click', '.icon-library-select-button .btn-select-button-icon', function (e) {
+        e.preventDefault();
+        const container = $(this).closest('.icon-library-select-button');
+        EasyStickySidebarIconLibrary.open({
+            selected: container.find('input').val() || '',
+            onSelect: function (icon_class) {
+                container.find('input').val(icon_class).trigger('input').trigger('change');
+                container.find('.icon').attr('class', `icon ${icon_class}`);
+                // Ensure value is inside main form for saving.
+                const form = $('#SSuprydp_form');
+                if (form.length) {
+                    let hidden = form.find('input[name="button_icon"]');
+                    if (!hidden.length) {
+                        hidden = $('<input type="hidden" name="button_icon" />').appendTo(form);
+                    }
+                    hidden.val(icon_class);
+                }
+            }
+        });
+    });
+
+    // Ensure button_icon is part of the main form even before any new selection.
+    const syncButtonIconToForm = () => {
+        const form = $('#SSuprydp_form');
+        if (!form.length) {
+            return;
+        }
+        const iconInput = form.find('.icon-library-select-button input[name="button_icon"]');
+        if (!iconInput.length) {
+            return;
+        }
+        let hidden = form.find('input[name="button_icon"].ess-button-icon-hidden');
+        if (!hidden.length) {
+            hidden = $('<input type="hidden" class="ess-button-icon-hidden" name="button_icon" />').appendTo(form);
+        }
+        hidden.val(iconInput.val() || '');
+    };
+
+    $(document).on('input change', '.icon-library-select-button input[name="button_icon"]', syncButtonIconToForm);
+    syncButtonIconToForm();
+
+    // Remove selected button icon.
+    $(document).on('click', '.icon-library-select-button .btn-remove-button-icon', function (e) {
+        e.preventDefault();
+        const container = $(this).closest('.icon-library-select-button');
+        const input = container.find('input[name="button_icon"]');
+        input.val('').trigger('input').trigger('change');
+        const previewIcon = container.find('.icon');
+        if (previewIcon.length) {
+            previewIcon.attr('class', 'icon');
+        }
+        syncButtonIconToForm();
+    });
+
 
     const FloatingButton = {
         buttons: {},
@@ -1483,15 +1538,22 @@ jQuery(document).ready(function ($) {
         closeButtons.css('background-color', closeColor);
 
         const closeClassTargets = activePane.length ? activePane.find('.easy-sticky-sidebar') : $('#ess-preview-cta, #ess-preview-tab-cta, #ess-preview-html-cta, #ess-preview-banner, #ess-preview-gdpr');
-        closeClassTargets.removeClass('ess-close-button-start ess-close-button-end')
+        closeClassTargets.removeClass('ess-close-button-start ess-close-button-end ess-preview-outside-close')
             .addClass(`ess-close-button-${closePosition}`);
         closeButtons.removeClass('start end outside')
             .addClass(closePosition)
             .toggleClass('outside', closeEdge === 'outside');
 
+        closeClassTargets.each(function () {
+            const $target = $(this);
+            if ($target.find('.btn-ess-close.outside').length) {
+                $target.addClass('ess-preview-outside-close');
+            }
+        });
+
         // Box shadow toggle (Pro)
-        const shadowEnabled = getChecked('enable_box_shadow') || getValue('enable_box_shadow', 'yes') !== 'no';
-        const previewShadow = shadowEnabled ? '0 0 10px 0 rgba(19, 19, 19, .2)' : 'none';
+        const shadowEnabled = getChecked('enable_box_shadow') || getValue('enable_box_shadow', 'no') !== 'no';
+        const previewShadow = shadowEnabled ? '0 0 10px rgba(19, 19, 19, .2)' : '0 0 0 rgba(0, 0, 0, 0)';
         previewCard.find('.ess-preview-stage .easy-sticky-sidebar').css('--ess-preview-shadow', previewShadow);
 
         const tabPreview = $('#ess-preview-tab-cta');
@@ -1504,7 +1566,12 @@ jQuery(document).ready(function ($) {
             tabPreview.addClass('vertical-cta').addClass(`vertical-cta-${ctaPosition}`);
         }
 
-        $('#ess-preview-tab-button-text').text(buttonTextValue);
+        const tabButtonIconValue = getValue('button_icon', '');
+        if (tabButtonIconValue) {
+            $('#ess-preview-tab-button-text').html(`<i class="icon ${tabButtonIconValue}"></i> ${buttonTextValue}`);
+        } else {
+            $('#ess-preview-tab-button-text').text(buttonTextValue);
+        }
         $('#ess-preview-tab-button').css('background-color', getValue('SSuprydp_button_option_backg_color', '#2466d5'));
         $('#ess-preview-tab-button-text').css('color', getValue('SSuprydp_button_option_color', '#ffffff'));
 

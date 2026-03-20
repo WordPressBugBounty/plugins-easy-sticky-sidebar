@@ -29,7 +29,64 @@ jQuery(document).ready(function ($) {
 		});
 	};
 
+	const updateVerticalShrinkOffset = function ($cta, isShrink) {
+		if (!$cta || !$cta.length || !$cta.hasClass('vertical-cta')) {
+			return;
+		}
+
+		const isTop = $cta.hasClass('sticky-cta-position-top');
+		const isBottom = $cta.hasClass('sticky-cta-position-bottom');
+		if (!isTop && !isBottom) {
+			return;
+		}
+
+		const $button = $cta.find('.sticky-sidebar-button').first();
+		if (!$button.length) {
+			return;
+		}
+
+		const ctaHeight = Math.ceil($cta.outerHeight());
+		const buttonHeight = Math.ceil($button.outerHeight());
+		const distanceRaw = getComputedStyle($cta[0]).getPropertyValue('--position_distance') || '0';
+		const distance = parseFloat(distanceRaw) || 0;
+
+		if (!isShrink) {
+			$cta.css('--translateY', '0px');
+			return;
+		}
+
+		const delta = Math.max(0, ctaHeight - buttonHeight - distance);
+		const translateY = isTop ? -delta : delta;
+		$cta.css('--translateY', `${translateY}px`);
+	};
+
+	const ensureTabCtaIcon = function ($cta) {
+		if (!$cta || !$cta.length || !$cta.hasClass('tab-cta')) {
+			return;
+		}
+
+		const iconClass = ($cta.data('button-icon') || '').toString().trim();
+		if (!iconClass) {
+			return;
+		}
+
+		const $label = $cta.find('.sticky-sidebar-button > div').first();
+		if (!$label.length) {
+			return;
+		}
+
+		if ($label.find('i').length) {
+			return;
+		}
+
+		const $icon = $('<i />').addClass(iconClass);
+		$label.prepend(' ').prepend($icon);
+	};
+
 	updateAllButtonMetrics();
+	$('.easy-sticky-sidebar.tab-cta').each(function () {
+		ensureTabCtaIcon($(this));
+	});
 	$(window).on('load resize', function () {
 		updateAllButtonMetrics();
 	});
@@ -59,6 +116,7 @@ jQuery(document).ready(function ($) {
 				if (!CTA_Click.includes(cta_id)) {
 					updateButtonMetrics($(this));
 					$(this).addClass('shrink scrolled');
+					updateVerticalShrinkOffset($(this), true);
 				}
 			});
 		});
@@ -75,7 +133,9 @@ jQuery(document).ready(function ($) {
 			CTA_Click.push(cta_id);
 		}
 
+		const willShrink = !current_cta.hasClass('shrink');
 		current_cta.toggleClass('shrink');
+		updateVerticalShrinkOffset(current_cta, willShrink);
 	});
 
 	$('body').on('click', '.easy-sticky-sidebar a', function () {

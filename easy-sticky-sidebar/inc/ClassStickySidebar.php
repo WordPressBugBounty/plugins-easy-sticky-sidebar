@@ -104,6 +104,8 @@ class SSuprydpStickySidebar
 	 */
 	public function init()
 	{
+		$this->cleanup_pro_settings_if_needed();
+
 		$GLOBALS['CTA_Query'] = new Easy_Sticky_Sidebar_Query();
 
 		new SSuprydpproActions();
@@ -487,6 +489,13 @@ class SSuprydpStickySidebar
 				$dataview['cta_classes'][] = 'ess-close-button-' . $sticky_data->close_button_position;
 			}
 
+			if (function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro()) {
+				$shadow_enabled = isset($sticky_data->enable_box_shadow) ? $sticky_data->enable_box_shadow : 'no';
+				if ($shadow_enabled === 'yes') {
+					$dataview['cta_classes'][] = 'ess-shadow-enabled';
+				}
+			}
+
 			$dataview['cta_classes'] = array_unique($dataview['cta_classes']);
 
 			$dataview['cta_classes'] = apply_filters('easy_sticky_sidebar_class', $dataview['cta_classes'], $sticky_data);
@@ -502,6 +511,76 @@ class SSuprydpStickySidebar
 				$this->track_impression($sticky_data);
 				print SSuprydpStickySidebar()->engine->getView($template, $dataview);
 			}
+		}
+	}
+
+	/**
+	 * Clear pro-only settings when pro is disabled.
+	 * Ensures free users don't retain pro config effects.
+	 */
+	private function cleanup_pro_settings_if_needed()
+	{
+		$pro_active = function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro();
+		$last_status = get_option('ess_last_pro_status', '0');
+
+		if ($pro_active) {
+			if ($last_status !== '1') {
+				update_option('ess_last_pro_status', '1');
+			}
+			return;
+		}
+
+		if ($last_status !== '1') {
+			return;
+		}
+
+		global $wpdb;
+		$pro_keys = [
+			'button_padding',
+			'content_padding',
+			'call_to_action_padding',
+			'button_round',
+			'button_letter_spacing',
+			'content_letter_spacing',
+			'line_separator_thickness',
+			'call_to_action_letter_spacing',
+			'call_to_action_button',
+			'hide_call_to_action',
+			'enable_box_shadow',
+			'display_trigger',
+			'display_trigger_seconds',
+			'display_trigger_scroll',
+			'display_animation',
+			'hide_behavior',
+			'hide_after_seconds',
+			'display_frequency',
+			'after_close_behavior',
+			'after_close_time',
+			'after_close_time_unit',
+			'show_close_button',
+			'close_button_position',
+			'close_button_inside',
+			'close_button_color',
+			'close_button_background',
+			'enable_cta_width',
+			'cta_width',
+			'cta_tablet_width',
+			'cta_mobile_width',
+			'cta_width_unit',
+			'cta_tablet_width_unit',
+			'cta_mobile_width_unit'
+		];
+
+		$placeholders = implode(',', array_fill(0, count($pro_keys), '%s'));
+		$wpdb->query($wpdb->prepare(
+			"DELETE FROM {$wpdb->sticky_cta_options} WHERE option_name IN ($placeholders)",
+			$pro_keys
+		));
+
+		update_option('ess_last_pro_status', '0');
+
+		if (class_exists('Easy_Sticky_CTA_Generate_CSS')) {
+			Easy_Sticky_CTA_Generate_CSS::regenerate_now();
 		}
 	}
 
