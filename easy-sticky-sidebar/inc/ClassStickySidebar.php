@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+	exit;
+}
 
 /*
  * StickySidebar Main class
@@ -173,7 +176,7 @@ class SSuprydpStickySidebar
 		}
 ?>
 <div class="notice notice-warning is-dismissible">
-    <p><?php _e('Please download WP CTA Pro from our website and upgrade!', 'easy-sticky-sidebar'); ?></p>
+    <p><?php esc_html_e('Please download WP CTA Pro from our website and upgrade!', 'easy-sticky-sidebar'); ?></p>
 </div>
 <?php
 	}
@@ -194,7 +197,7 @@ class SSuprydpStickySidebar
 		if (!$attchment_url) {
 			self::SSuprydp_cmedia();
 
-			$SSuprydp_dtime = date("Y-m-d H:i:s");
+			$SSuprydp_dtime = gmdate("Y-m-d H:i:s");
 
 			$currentpath = wp_get_upload_dir();
 
@@ -216,7 +219,7 @@ class SSuprydpStickySidebar
 
 			update_option('easy_sticky_sidebar_default_attachment', $attac_lastid);
 
-			$SSuprydp_wp_attached_file = date('Y') . '/' . date('m') . '/ss_dummy.jpg';
+			$SSuprydp_wp_attached_file = gmdate('Y') . '/' . gmdate('m') . '/ss_dummy.jpg';
 			update_post_meta($attac_lastid, '_wp_attached_file', $SSuprydp_wp_attached_file);
 
 			$SSuprydp_wp_attachment_metadata = self::SSuprydp_mediameta();
@@ -509,7 +512,7 @@ class SSuprydpStickySidebar
 
 			if ($SSuprydp_development == 'live' || ($SSuprydp_development == 'development' && current_user_can('manage_options'))) {
 				$this->track_impression($sticky_data);
-				print SSuprydpStickySidebar()->engine->getView($template, $dataview);
+				print SSuprydpStickySidebar()->engine->getView($template, $dataview); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
 		}
 	}

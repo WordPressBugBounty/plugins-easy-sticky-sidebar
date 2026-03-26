@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+	exit;
+}
 
 /*
  * Wordpress_CTA_Pro_Content tab option
@@ -22,8 +25,8 @@ class Wordpress_CTA_Free_Content_Tab {
      * @since 1.4.5
      */
     public function add_image($stickycta) { ?>
-<div class="heading"><?php _e('Image', 'easy-sticky-sidebar') ?></div>
-<label><?php _e("Please select an image", "easy-sticky-sidebar"); ?></label>
+<div class="heading"><?php esc_html_e('Image', 'easy-sticky-sidebar') ?></div>
+<label><?php esc_html_e("Please select an image", "easy-sticky-sidebar"); ?></label>
 <input type="hidden" name="sticky_s_media" id="sticky_s_media"
     value="<?php echo esc_attr($stickycta->sticky_s_media); ?>">
 
@@ -33,11 +36,11 @@ class Wordpress_CTA_Free_Content_Tab {
 </div>
 <?php } else {?>
 <div class='image-preview-wrapper'>
-    <img id='image-preview' src='<?php echo wp_get_attachment_url($stickycta->sticky_s_media); ?>' height='100'>
+    <img id='image-preview' src='<?php echo esc_url(wp_get_attachment_url($stickycta->sticky_s_media)); ?>' height='100'>
 </div>
 <?php } ?>
 
-<input id="upload_image_button" type="button" class="button" value="<?php echo esc_attr('Edit Image' ); ?>" />
+<input id="upload_image_button" type="button" class="button" value="<?php echo esc_attr__('Edit Image', 'easy-sticky-sidebar'); ?>" />
 <input type='hidden' name='image_attachment_id' id='image_attachment_id'
     value='<?php echo esc_attr($stickycta->image_attachment_id) ; ?>'>
 <?php
@@ -49,9 +52,9 @@ class Wordpress_CTA_Free_Content_Tab {
      */
     function button_text($stickycta) { ?>
 <div class="SSuprydp_field_wrap sticky-sidebar-button_text">
-    <div class="heading"><?php _e("Button Text", "easy-sticky-sidebar"); ?></div>
+    <div class="heading"><?php esc_html_e("Button Text", "easy-sticky-sidebar"); ?></div>
     <p class="wordpress-cta-instruction">
-        <?php _e('Enter text for the toggle button. Use something that will grab your users attention.', 'easy-sticky-sidebar') ?>
+        <?php esc_html_e('Enter text for the toggle button. Use something that will grab your users attention.', 'easy-sticky-sidebar') ?>
     </p>
     <div class="gap-10"></div>
     <input type="text" name="SSuprydp_button_option_text" class="SSuprydp_input meta_title"
@@ -66,14 +69,14 @@ class Wordpress_CTA_Free_Content_Tab {
      */
     function button_icon($stickycta) { ?>
 <div class="SSuprydp_field_wrap button_icon">
-    <div class="heading"><?php _e("Button Icon", "easy-sticky-sidebar"); ?></div>
-    <p class="wordpress-cta-instruction"><?php _e('Select a icon for button', 'easy-sticky-sidebar'); ?></p>
+    <div class="heading"><?php esc_html_e("Button Icon", "easy-sticky-sidebar"); ?></div>
+    <p class="wordpress-cta-instruction"><?php esc_html_e('Select a icon for button', 'easy-sticky-sidebar'); ?></p>
     <div class="gap-10"></div>
 
     <div class="icon-library-select-button">
         <input class="button-icon" type="hidden" name="button_icon" value="<?php echo esc_attr($stickycta->button_icon); ?>">
-        <a href="#" class="button btn-primary btn-select-button-icon"><?php _e('Select Icon', 'easy-sticky-sidebar') ?></a>
-        <a href="#" class="button btn-secondary btn-remove-button-icon"><?php _e('Remove Icon', 'easy-sticky-sidebar') ?></a>
+        <a href="#" class="button btn-primary btn-select-button-icon"><?php esc_html_e('Select Icon', 'easy-sticky-sidebar') ?></a>
+        <a href="#" class="button btn-secondary btn-remove-button-icon"><?php esc_html_e('Remove Icon', 'easy-sticky-sidebar') ?></a>
         <i class="icon <?php echo esc_attr($stickycta->button_icon); ?>"></i>
     </div>
 </div>
@@ -86,9 +89,9 @@ class Wordpress_CTA_Free_Content_Tab {
      */
     function content_text($stickycta) { ?>
 <div class="content-text">
-    <div class="heading"><?php _e("Content Text", "easy-sticky-sidebar");?></div>
+    <div class="heading"><?php esc_html_e("Content Text", "easy-sticky-sidebar");?></div>
     <p class="wordpress-cta-instruction">
-        <?php _e('Enter the content text. Use something that explains why the user should click on the CTA or where the CTA will direct them.', 'easy-sticky-sidebar') ?>
+        <?php esc_html_e('Enter the content text. Use something that explains why the user should click on the CTA or where the CTA will direct them.', 'easy-sticky-sidebar') ?>
     </p>
     <div class="gap-10"></div>
     <textarea type="text" name="SSuprydp_content_option_text" class="SSuprydp_input meta_title"
@@ -104,9 +107,9 @@ class Wordpress_CTA_Free_Content_Tab {
     function call_to_action_text($stickycta) { ?>
 <div class="call-to-action-button-wrapper">
     <div class="SSuprydp_field_wrap sticky-sidebar-link_text">
-        <div class="heading"><?php _e("Link Text", "easy-sticky-sidebar"); ?></div>
+        <div class="heading"><?php esc_html_e("Link Text", "easy-sticky-sidebar"); ?></div>
         <p class="wordpress-cta-instruction">
-            <?php _e('Enter text for the link. Use something like "Try Now" to entice the user to click.', 'easy-sticky-sidebar') ?>
+            <?php esc_html_e('Enter text for the link. Use something like "Try Now" to entice the user to click.', 'easy-sticky-sidebar') ?>
         </p>
         <div class="gap-10"></div>
         <input type="text" name="SSuprydp_action_option_text" id="SSuprydp_action_option_text"
@@ -117,14 +120,14 @@ class Wordpress_CTA_Free_Content_Tab {
     <div class="gap-10"></div>
 
     <div class="SSuprydp_field_wrap">
-        <div class="heading" style="margin-bottom: 5px"><?php _e("URL", "easy-sticky-sidebar");?></div>
+        <div class="heading" style="margin-bottom: 5px"><?php esc_html_e("URL", "easy-sticky-sidebar");?></div>
         <input id="SSuprydp_action_option_url" name="SSuprydp_action_option_url" type="text" placeholder="Enter Url"
             value="<?php echo esc_url($stickycta->SSuprydp_action_option_url);?>" class="SSuprydp_input meta_title" />
     </div><!-- end wrap -->
 
     <!-- Target Blank -->
     <div class="SSuprydp_field_wrap">
-        <h4 class="heading"><?php _e("Target Blank", "easy-sticky-sidebar");?></h4>
+        <h4 class="heading"><?php esc_html_e("Target Blank", "easy-sticky-sidebar");?></h4>
         <p class="wordpress-cta-instruction">Opens page or site in a new tab</p>
         <label class="SSuprydp_switch">
             <input type="checkbox" name="SSuprydp_target_blank" value="Yes"
@@ -134,7 +137,7 @@ class Wordpress_CTA_Free_Content_Tab {
 
     <!-- No Follow -->
     <div class="SSuprydp_field_wrap">
-        <h4 class="heading" style="margin-top:0; margin-bottom: 7px"><?php _e("Nofollow", "easy-sticky-sidebar");?></h4>
+        <h4 class="heading" style="margin-top:0; margin-bottom: 7px"><?php esc_html_e("Nofollow", "easy-sticky-sidebar");?></h4>
         <p class="wordpress-cta-instruction">Tells search engines not to follow the outbound link</p>
         <label class="SSuprydp_switch">
             <input type="checkbox" name="SSuprydp_nofollow" value="Yes"
@@ -151,7 +154,7 @@ class Wordpress_CTA_Free_Content_Tab {
      */
     function tab_cta_url_options($stickycta) { ?>
 <div class="easy-sticky-sidebar-tab-cta-url-options">
-    <h4 class="heading" style="margin-bottom: 0"><?php _e("URL", "easy-sticky-sidebar");?></h4>
+    <h4 class="heading" style="margin-bottom: 0"><?php esc_html_e("URL", "easy-sticky-sidebar");?></h4>
 
     <div class="SSuprydp_field_wrap">
         <label>Call to action url</label>
@@ -182,3 +185,4 @@ class Wordpress_CTA_Free_Content_Tab {
 <?php
     }
 }
+

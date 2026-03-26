@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+	exit;
+}
 
 /**
  * Easy_Sticky_Sidebar_Query

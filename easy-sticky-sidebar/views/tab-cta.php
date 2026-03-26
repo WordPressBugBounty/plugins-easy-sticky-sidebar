@@ -12,14 +12,9 @@ if($btn_backcolor){
 $button_background_color = $btn_backcolor ;
 }
 
-$cta_links_attrs = sprintf('href="%s"', esc_url($ctacontent->tab_cta_url));
-if ($ctacontent->tab_cta_target_blank == 'yes') {
-	$cta_links_attrs .= ' target="_blank"';
-}
-
-if ($ctacontent->tab_cta_nofollow == 'yes') {
-	$cta_links_attrs .= ' rel="nofollow"';
-}
+$cta_link_url = $ctacontent->tab_cta_url;
+$cta_target_blank = ($ctacontent->tab_cta_target_blank == 'yes');
+$cta_nofollow = ($ctacontent->tab_cta_nofollow == 'yes');
 
 $display_trigger = $ctacontent->display_trigger ?? 'immediately';
 $display_trigger_seconds = absint($ctacontent->display_trigger_seconds ?? 0);
@@ -31,20 +26,6 @@ $display_frequency = $ctacontent->display_frequency ?? 'every_time';
 $after_close_behavior = $ctacontent->after_close_behavior ?? 'next_visit';
 $after_close_time = absint($ctacontent->after_close_time ?? 0);
 $after_close_time_unit = $ctacontent->after_close_time_unit ?? 'hours';
-$display_attrs = sprintf(
-    ' data-display-trigger="%s" data-display-trigger-seconds="%d" data-display-trigger-scroll="%d" data-display-animation="%s" data-hide-behavior="%s" data-hide-after-seconds="%d" data-display-frequency="%s" data-after-close-behavior="%s" data-after-close-time="%d" data-after-close-time-unit="%s"',
-    esc_attr($display_trigger),
-    $display_trigger_seconds,
-    $display_trigger_scroll,
-    esc_attr($display_animation),
-    esc_attr($hide_behavior),
-    $hide_after_seconds,
-    esc_attr($display_frequency),
-    esc_attr($after_close_behavior),
-    $after_close_time,
-    esc_attr($after_close_time_unit)
-);
-
 if (in_array($display_trigger, ['after_seconds', 'after_scroll'], true)) {
     $cta_classes[] = 'ess-cta-hidden';
 }
@@ -69,19 +50,30 @@ $position_a = '';
     }
 
 $button_icon_class = trim((string) ($ctacontent->button_icon ?? ''));
-$icon_attr = ' data-button-icon="' . esc_attr($button_icon_class) . '"';
+?>
 
-ob_start(); ?>
-
-<div id="<?php echo 'easy-sticky-sidebar-' . esc_attr($ctacontent->id) ?>" style="<?php echo $position_style;   ?>"
-    class="<?php echo esc_attr(implode(' ', $cta_classes)) ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"<?php echo $icon_attr; ?><?php echo $display_attrs; ?>>
+<div id="<?php echo esc_attr('easy-sticky-sidebar-' . $ctacontent->id); ?>" style="<?php echo esc_attr($position_style); ?>"
+    class="<?php echo esc_attr(implode(' ', $cta_classes)); ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"
+    data-button-icon="<?php echo esc_attr($button_icon_class); ?>"
+    data-display-trigger="<?php echo esc_attr($display_trigger); ?>"
+    data-display-trigger-seconds="<?php echo esc_attr($display_trigger_seconds); ?>"
+    data-display-trigger-scroll="<?php echo esc_attr($display_trigger_scroll); ?>"
+    data-display-animation="<?php echo esc_attr($display_animation); ?>"
+    data-hide-behavior="<?php echo esc_attr($hide_behavior); ?>"
+    data-hide-after-seconds="<?php echo esc_attr($hide_after_seconds); ?>"
+    data-display-frequency="<?php echo esc_attr($display_frequency); ?>"
+    data-after-close-behavior="<?php echo esc_attr($after_close_behavior); ?>"
+    data-after-close-time="<?php echo esc_attr($after_close_time); ?>"
+    data-after-close-time-unit="<?php echo esc_attr($after_close_time_unit); ?>">
     <?php 
  
 ?>
 
     <a class="sticky-sidebar-button"
-        style="color: <?php echo $button_color ?> ; background-color:<?php echo $button_background_color ?>; <?php echo $position_a; ?>"
-        <?php echo $cta_links_attrs; ?>>
+        style="color: <?php echo esc_attr($button_color); ?>; background-color:<?php echo esc_attr($button_background_color); ?>; <?php echo esc_attr($position_a); ?>"
+        href="<?php echo esc_url($cta_link_url); ?>"
+        <?php echo $cta_target_blank ? ' target="_blank"' : ''; ?>
+        <?php echo $cta_nofollow ? ' rel="nofollow"' : ''; ?>>
         <?php
             $button_icon = $button_icon_class !== ''
                 ? '<i class="' . esc_attr($button_icon_class) . '"></i> '
@@ -89,7 +81,7 @@ ob_start(); ?>
             $button_text = trim((string) $ctacontent->SSuprydp_button_option_text);
             $button_text_html = $button_text === '' ? '' : esc_html($button_text);
         ?>
-        <div><?php echo $button_icon . $button_text_html; ?></div>
+        <div><?php echo wp_kses($button_icon . $button_text_html, array('i' => array('class' => array()))); ?></div>
     </a>
     <?php 
 	if (function_exists('wordpress_cta_pro_get_close_button')) { 
@@ -97,5 +89,3 @@ ob_start(); ?>
 	} ?>
 </div>
 <?php
-     
-echo ob_get_clean();

@@ -4,7 +4,7 @@ Tags: call button, call now button, call to action, cta, sticky button
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.1.2
+Stable tag: 2.1.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -40,15 +40,18 @@ The free version includes a **Sticky CTA** and a **Tab CTA (call button / click-
 * Special offers and discounts
 
 = Templates Included =
+
 **Free Version**
-1. **Sticky CTA: Persistent sidebar or floating CTA
-2. **Tab CTA (Call Button): Click-to-expand call or contact button
+
+1. **Sticky CTA:** Persistent sidebar or floating CTA
+2. **Tab CTA (Call Button):** Click-to-expand call or contact button
 
 **Pro Version**
-* **Floating Buttons:** Call now, contact, or custom actions
-* **Banner / Announcement Bar:** Top or bottom promotional bars
-* **HTML & Shortcode CTAs:** Fully customizable CTA blocks
-* **GDPR Bar:** Consent and compliance notifications
+
+1. **Floating Buttons:** Call now, contact, or custom actions
+2. **Banner / Announcement Bar:** Top or bottom promotional bars
+3. **HTML & Shortcode CTAs:** Fully customizable CTA blocks
+4. **GDPR Bar:** Consent and compliance notifications
 
 = Easy Setup =
 
@@ -119,6 +122,11 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 
 == Changelog ==
 
+= 2.1.3 =
+* Security hardening and validation fixes
+* Admin UX and preview safety improvements
+* Code quality and compatibility updates
+
 = 2.1.2 =
 * Tab CTA launched for free version
 * Live preview fixes
@@ -176,6 +184,9 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 * Responsive design
 
 == Upgrade Notice ==
+
+= 2.1.3 =
+Security hardening and compatibility updates.
 
 = 2.0.0 =
 Major admin UX improvements, safer imports, and preview alignment refinements.

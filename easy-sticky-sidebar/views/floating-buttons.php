@@ -50,20 +50,6 @@ $display_frequency = $ctacontent->display_frequency ?? 'every_time';
 $after_close_behavior = $ctacontent->after_close_behavior ?? 'next_visit';
 $after_close_time = absint($ctacontent->after_close_time ?? 0);
 $after_close_time_unit = $ctacontent->after_close_time_unit ?? 'hours';
-$display_attrs = sprintf(
-    ' data-display-trigger="%s" data-display-trigger-seconds="%d" data-display-trigger-scroll="%d" data-display-animation="%s" data-hide-behavior="%s" data-hide-after-seconds="%d" data-display-frequency="%s" data-after-close-behavior="%s" data-after-close-time="%d" data-after-close-time-unit="%s"',
-    esc_attr($display_trigger),
-    $display_trigger_seconds,
-    $display_trigger_scroll,
-    esc_attr($display_animation),
-    esc_attr($hide_behavior),
-    $hide_after_seconds,
-    esc_attr($display_frequency),
-    esc_attr($after_close_behavior),
-    $after_close_time,
-    esc_attr($after_close_time_unit)
-);
-
 if (in_array($display_trigger, ['after_seconds', 'after_scroll'], true)) {
     $cta_classes[] = 'ess-cta-hidden';
 }
@@ -75,14 +61,24 @@ if ($display_animation && $display_animation !== 'none') {
 }
 ?>
 
-<div id="<?php echo 'easy-sticky-sidebar-' . esc_attr($ctacontent->id) ?>" style="<?php echo $position_style;   ?>"
-    class="<?php echo esc_attr(implode(' ', $cta_classes)) ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"<?php echo $display_attrs; ?>>
+<div id="<?php echo esc_attr('easy-sticky-sidebar-' . $ctacontent->id); ?>" style="<?php echo esc_attr($position_style); ?>"
+    class="<?php echo esc_attr(implode(' ', $cta_classes)); ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"
+    data-display-trigger="<?php echo esc_attr($display_trigger); ?>"
+    data-display-trigger-seconds="<?php echo esc_attr($display_trigger_seconds); ?>"
+    data-display-trigger-scroll="<?php echo esc_attr($display_trigger_scroll); ?>"
+    data-display-animation="<?php echo esc_attr($display_animation); ?>"
+    data-hide-behavior="<?php echo esc_attr($hide_behavior); ?>"
+    data-hide-after-seconds="<?php echo esc_attr($hide_after_seconds); ?>"
+    data-display-frequency="<?php echo esc_attr($display_frequency); ?>"
+    data-after-close-behavior="<?php echo esc_attr($after_close_behavior); ?>"
+    data-after-close-time="<?php echo esc_attr($after_close_time); ?>"
+    data-after-close-time-unit="<?php echo esc_attr($after_close_time_unit); ?>">
 
     <ul class="floating-buttons-container" style="">
         <?php foreach ($floating_buttons as $key => $button) :
 			$has_link = !empty($button->url);
 			$class = $has_link ? 'has-link' : '';
-			printf('<li class="floating-button-%d %s">', esc_attr($key), esc_attr($class));
+			printf('<li class="floating-button-%d %s">', absint($key), esc_attr($class));
 
 			ob_start();
 			if ($button->icon) {
@@ -96,7 +92,7 @@ if ($display_animation && $display_animation !== 'none') {
 			$html = ob_get_clean();
 
 			if ($has_link) {
-				$html = sprintf('<a href="%s">%s</a>', esc_url_raw($button->url), $html);
+				$html = sprintf('<a href="%s">%s</a>', esc_url($button->url), $html);
 			}
 
 			echo wp_kses_post($html);

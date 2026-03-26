@@ -76,7 +76,7 @@ $before_tab_content = trim(ob_get_clean());
                     <input type="hidden" name="cta_editor_current_tab" value="<?php echo esc_attr($editor_current_tab); ?>">
                     <?php if ($cta_limit_reached) : ?>
                         <div class="notice notice-warning">
-                            <p><?php _e('Only 3 CTAs are allowed in free version. Please upgrade to Pro to build more CTAs.', 'easy-sticky-sidebar'); ?></p>
+                            <p><?php esc_html_e('Only 3 CTAs are allowed in free version. Please upgrade to Pro to build more CTAs.', 'easy-sticky-sidebar'); ?></p>
                         </div>
                     <?php endif; ?>
 
@@ -88,22 +88,22 @@ $before_tab_content = trim(ob_get_clean());
                         <div class="ess-editor-grid">
                             <div class="ess-main-column">
                                 <section class="SSuprydp_field_wrap cta-name-field ess-card">
-                                    <label class="heading"><?php _e("CTA Name", "easy-sticky-sidebar"); ?></label>
+                                    <label class="heading"><?php esc_html_e("CTA Name", "easy-sticky-sidebar"); ?></label>
                                     <input type="text" name="sidebar_name" class="SSuprydp_input"
                                         value="<?php echo esc_attr($stickycta->sidebar_name); ?>" placeholder="Enter CTA name here">
                                 </section>
 
                                 <div class="status-notice status-notice-off">
-                                    <p><?php _e('Your CTA live status is set to Off and will not show on the front end.', 'easy-sticky-sidebar'); ?></p>
+                                    <p><?php esc_html_e('Your CTA live status is set to Off and will not show on the front end.', 'easy-sticky-sidebar'); ?></p>
                                 </div>
 
                                 <div class="status-notice status-notice-development">
-                                    <p><?php _e('Your CTA live status is set to Development and will show on the front end only for users logged in as admin.', 'easy-sticky-sidebar'); ?></p>
+                                    <p><?php esc_html_e('Your CTA live status is set to Development and will show on the front end only for users logged in as admin.', 'easy-sticky-sidebar'); ?></p>
                                 </div>
 
                                 <section class="ess-live-preview-card ess-card is-preview-loading" aria-busy="true">
                                     <header class="ess-section-head">
-                                        <h2><?php _e('Live Preview', 'easy-sticky-sidebar'); ?></h2>
+                                        <h2><?php esc_html_e('Live Preview', 'easy-sticky-sidebar'); ?></h2>
                                     </header>
 
                                     <div class="ess-preview-canvas">
@@ -262,7 +262,7 @@ $before_tab_content = trim(ob_get_clean());
                                                 esc_attr($key),
                                                 esc_attr($tab_active),
                                                 absint($tab_number),
-                                                $tab_icon,
+                                                wp_kses($tab_icon, array('i' => array('class' => array()))),
                                                 esc_html($tab['label'])
                                             );
                                             $tab_number++;
@@ -285,7 +285,7 @@ $before_tab_content = trim(ob_get_clean());
 
                             <aside class="ess-side-column">
                                 <div class="ess-card ess-save-card">
-                                    <h2 class="wordpress-cta-heading"><?php _e('Publish', 'easy-sticky-sidebar'); ?><span class="status"></span></h2>
+                                    <h2 class="wordpress-cta-heading"><?php esc_html_e('Publish', 'easy-sticky-sidebar'); ?><span class="status"></span></h2>
                                     <div class="ess-publish-status">
                                         <?php easy_sticky_sidebar_get_status_menu($stickycta); ?>
                                     </div>
@@ -297,7 +297,14 @@ $before_tab_content = trim(ob_get_clean());
                                             <?php echo $cta_limit_reached ? 'disabled="disabled" aria-disabled="true"' : ''; ?>>
                                     </div>
                                     <p class="wordpress-cta-instruction ess-publish-help">
-                                        <?php _e('<strong>Change the status of your CTA.</strong><br><strong>Live:</strong> This will show to everyone.<br><strong>Development:</strong> This will only show to admins who are logged in.<br><strong>Off:</strong> Will not show to anyone.', 'easy-sticky-sidebar'); ?>
+                                        <?php
+                                        echo wp_kses_post(
+                                            __(
+                                                '<strong>Change the status of your CTA.</strong><br><strong>Live:</strong> This will show to everyone.<br><strong>Development:</strong> This will only show to admins who are logged in.<br><strong>Off:</strong> Will not show to anyone.',
+                                                'easy-sticky-sidebar'
+                                            )
+                                        );
+                                        ?>
                                     </p>
                                 </div>
 
@@ -310,12 +317,12 @@ $before_tab_content = trim(ob_get_clean());
                                     </div>
                                 <?php else : ?>
                                     <div class="ess-card ess-stat-card">
-                                        <h3><?php _e('CTA Stats', 'easy-sticky-sidebar'); ?></h3>
+                                        <h3><?php esc_html_e('CTA Stats', 'easy-sticky-sidebar'); ?></h3>
                                         <ul>
-                                            <li><span><?php _e('Impressions', 'easy-sticky-sidebar'); ?></span><strong><?php echo esc_html(absint($stickycta->SSuprydp_impressions)); ?></strong></li>
-                                            <li><span><?php _e('Clicks', 'easy-sticky-sidebar'); ?></span><strong><?php echo esc_html(absint($stickycta->SSuprydp_clicks)); ?></strong></li>
-                                            <li><span><?php _e('CTR', 'easy-sticky-sidebar'); ?></span><strong><?php echo esc_html($stickycta->get_ctr()); ?></strong></li>
-                                            <li><span><?php _e('Template', 'easy-sticky-sidebar'); ?></span><strong class="ess-template-label"><?php echo esc_html($current_template_label); ?></strong></li>
+                                            <li><span><?php esc_html_e('Impressions', 'easy-sticky-sidebar'); ?></span><strong><?php echo esc_html(absint($stickycta->SSuprydp_impressions)); ?></strong></li>
+                                            <li><span><?php esc_html_e('Clicks', 'easy-sticky-sidebar'); ?></span><strong><?php echo esc_html(absint($stickycta->SSuprydp_clicks)); ?></strong></li>
+                                            <li><span><?php esc_html_e('CTR', 'easy-sticky-sidebar'); ?></span><strong><?php echo esc_html($stickycta->get_ctr()); ?></strong></li>
+                                            <li><span><?php esc_html_e('Template', 'easy-sticky-sidebar'); ?></span><strong class="ess-template-label"><?php echo esc_html($current_template_label); ?></strong></li>
                                         </ul>
                                     </div>
                                 <?php endif; ?>
@@ -343,7 +350,7 @@ $before_tab_content = trim(ob_get_clean());
     </div>
 </div>
 
-<div id="easy-sticky-sidebar-toast"><?php _e('Clear Your Cache', 'easy-sticky-sidebar'); ?></div>
+<div id="easy-sticky-sidebar-toast"><?php esc_html_e('Clear Your Cache', 'easy-sticky-sidebar'); ?></div>
 
 <script type='text/javascript'>
 jQuery(document).ready(function($) {
@@ -376,3 +383,4 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
+

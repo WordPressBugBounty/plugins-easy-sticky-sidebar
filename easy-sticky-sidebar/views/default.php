@@ -33,20 +33,14 @@ if ('yes' == $ctacontent->collapse_on_page_load) {
 
 $hide_content_text = ($ctacontent->hide_content_text ?? '') === 'yes';
 
-$cta_links_attrs = '';
+$cta_link_url = '';
 $tag = 'div';
 if ($ctacontent->SSuprydp_action_option_url) {
 	$tag = 'a';
-	$cta_links_attrs = sprintf('href="%s"', esc_url_raw($ctacontent->SSuprydp_action_option_url));
+	$cta_link_url = $ctacontent->SSuprydp_action_option_url;
 }
-
-if ($ctacontent->SSuprydp_target_blank == 'Yes') {
-	$cta_links_attrs .= ' target="_blank"';
-}
-
-if ($ctacontent->SSuprydp_nofollow == 'Yes') {
-	$cta_links_attrs .= ' rel="nofollow"';
-}
+$cta_target_blank = ($ctacontent->SSuprydp_target_blank == 'Yes');
+$cta_nofollow = ($ctacontent->SSuprydp_nofollow == 'Yes');
 
 $padding_css = "14px 24px";
 $pro_enabled = function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro();
@@ -98,20 +92,6 @@ $display_frequency = $ctacontent->display_frequency ?? 'every_time';
 $after_close_behavior = $ctacontent->after_close_behavior ?? 'next_visit';
 $after_close_time = absint($ctacontent->after_close_time ?? 0);
 $after_close_time_unit = $ctacontent->after_close_time_unit ?? 'hours';
-$display_attrs = sprintf(
-    ' data-display-trigger="%s" data-display-trigger-seconds="%d" data-display-trigger-scroll="%d" data-display-animation="%s" data-hide-behavior="%s" data-hide-after-seconds="%d" data-display-frequency="%s" data-after-close-behavior="%s" data-after-close-time="%d" data-after-close-time-unit="%s"',
-    esc_attr($display_trigger),
-    $display_trigger_seconds,
-    $display_trigger_scroll,
-    esc_attr($display_animation),
-    esc_attr($hide_behavior),
-    $hide_after_seconds,
-    esc_attr($display_frequency),
-    esc_attr($after_close_behavior),
-    $after_close_time,
-    esc_attr($after_close_time_unit)
-);
-
 if (in_array($display_trigger, ['after_seconds', 'after_scroll'], true)) {
     $cta_classes[] = 'ess-cta-hidden';
 }
@@ -123,11 +103,21 @@ if ($display_animation && $display_animation !== 'none') {
 }
 
 ?>
-<div id="<?php echo esc_attr('easy-sticky-sidebar-' . $ctacontent->id); ?>" style="<?php echo $position_style;   ?>"
-    class="<?php echo esc_attr(implode(' ', $cta_classes)); ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"<?php echo $display_attrs; ?>>
+<div id="<?php echo esc_attr('easy-sticky-sidebar-' . $ctacontent->id); ?>" style="<?php echo esc_attr($position_style); ?>"
+    class="<?php echo esc_attr(implode(' ', $cta_classes)); ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"
+    data-display-trigger="<?php echo esc_attr($display_trigger); ?>"
+    data-display-trigger-seconds="<?php echo esc_attr($display_trigger_seconds); ?>"
+    data-display-trigger-scroll="<?php echo esc_attr($display_trigger_scroll); ?>"
+    data-display-animation="<?php echo esc_attr($display_animation); ?>"
+    data-hide-behavior="<?php echo esc_attr($hide_behavior); ?>"
+    data-hide-after-seconds="<?php echo esc_attr($hide_after_seconds); ?>"
+    data-display-frequency="<?php echo esc_attr($display_frequency); ?>"
+    data-after-close-behavior="<?php echo esc_attr($after_close_behavior); ?>"
+    data-after-close-time="<?php echo esc_attr($after_close_time); ?>"
+    data-after-close-time-unit="<?php echo esc_attr($after_close_time_unit); ?>">
 
     <div class="sticky-sidebar-button"
-        style="background-color:<?php echo esc_attr($button_background_color); ?>; <?php echo $button_alignment_style; ?>">
+        style="background-color:<?php echo esc_attr($button_background_color); ?>; <?php echo esc_attr($button_alignment_style); ?>">
         <div style="color: <?php echo esc_attr($button_color); ?>;">
             <?php do_action('easy_sticky_sidebar_sticky_cta_button', $ctacontent); ?>
         </div>
@@ -139,7 +129,11 @@ if ($display_animation && $display_animation !== 'none') {
     </div>
 
     <<?php echo esc_html($tag); ?> class="sticky-sidebar-content sticky-sidebar-container"
-        <?php echo $cta_links_attrs; ?>>
+        <?php if ($tag === 'a') : ?>
+            href="<?php echo esc_url($cta_link_url); ?>"
+            <?php echo $cta_target_blank ? ' target="_blank"' : ''; ?>
+            <?php echo $cta_nofollow ? ' rel="nofollow"' : ''; ?>
+        <?php endif; ?>>
 
         <?php
 		$image = $ctacontent->sticky_s_media;
@@ -178,7 +172,7 @@ if ($display_animation && $display_animation !== 'none') {
 
                 printf(
                     '<div class="sticky-sidebar-call-to-action sticky-content-inner" style="%s">%s</div>',
-                    $style,
+                    esc_attr($style),
                     wp_kses_post($text)
                 );
             } 
@@ -188,4 +182,4 @@ if ($display_animation && $display_animation !== 'none') {
     </<?php echo esc_html($tag); ?>>
 </div>
 <?php
-echo ob_get_clean();
+echo ob_get_clean(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped

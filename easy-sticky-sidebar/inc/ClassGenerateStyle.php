@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+	exit;
+}
 
 /**
  * Easy_Sticky_CTA_Generate_CSS
@@ -102,7 +105,7 @@ class Easy_Sticky_CTA_Generate_CSS {
         }
 
         if (!empty($styles)) {
-            printf("%s {%s}\n\n", esc_html($wrapper_selector), $styles);
+            printf("%s {%s}\n\n", esc_html($wrapper_selector), esc_html($styles));
         }
     }
 
@@ -117,7 +120,7 @@ class Easy_Sticky_CTA_Generate_CSS {
 
         $font_size = absint($this->item->SSuprydp_button_option_size);
         if ($font_size > 0) {
-            printf("\tfont-size: %spx;\n", $font_size);
+            printf("\tfont-size: %dpx;\n", absint($font_size));
         }
 
         printf("\ttext-align: %s;\n", esc_html($this->item->SSuprydp_button_option_align));
@@ -154,7 +157,7 @@ class Easy_Sticky_CTA_Generate_CSS {
 
         $font_size = absint($this->item->SSuprydp_content_option_size);
         if ($font_size > 0) {
-            printf("\tfont-size: %spx;\n", $font_size);
+            printf("\tfont-size: %dpx;\n", absint($font_size));
         }
 
         if (!empty($this->item->content_background_color)) {
@@ -177,7 +180,7 @@ class Easy_Sticky_CTA_Generate_CSS {
 
         $font_size = absint($this->item->SSuprydp_action_option_size);
         if ($font_size > 0) {
-            printf("\tfont-size: %spx;\n", esc_attr($font_size));
+            printf("\tfont-size: %dpx;\n", absint($font_size));
         }
 
         if (!empty($this->item->link_text_background)) {
@@ -198,20 +201,20 @@ class Easy_Sticky_CTA_Generate_CSS {
 
         $sticky_class = sprintf("#easy-sticky-sidebar-%d.easy-sticky-sidebar", absint($this->item->__get('id')));
 
-        printf("%s {\n", $sticky_class);
+        printf("%s {\n", esc_html($sticky_class));
         if ($this->item->enable_cta_width == 'yes' && absint($this->item->cta_width) > 0 && $this->item->sidebar_template !== 'tab-cta') {
             $unit = empty($this->item->cta_width_unit) ? 'px' : $this->item->cta_width_unit;
-            printf("\t--width: %d%s;\n", absint($this->item->cta_width), $unit);
+            printf("\t--width: %d%s;\n", absint($this->item->cta_width), esc_attr($unit));
         }
 
         do_action('easy_sticky_sidebar_wrapper_style', $this->item);
         echo "}\n\n";
 
         echo '@media screen and (min-width: 768px) and (max-width: 1024px){';
-        printf("%s {\n", $sticky_class);
+        printf("%s {\n", esc_html($sticky_class));
         if ($this->item->enable_cta_width == 'yes' && absint($this->item->cta_tablet_width) > 0) {
             $unit = empty($this->item->cta_tablet_width_unit) ? 'px' : $this->item->cta_tablet_width_unit;
-            printf("\t--width: %d%s;\n", absint($this->item->cta_tablet_width), $unit);
+            printf("\t--width: %d%s;\n", absint($this->item->cta_tablet_width), esc_attr($unit));
         }
 
         do_action('easy_sticky_sidebar_wrapper_style_tablet', $this->item);
@@ -220,10 +223,10 @@ class Easy_Sticky_CTA_Generate_CSS {
         echo '}';
 
         echo '@media screen and (max-width: 767px){';
-        printf("%s {\n", $sticky_class);
+        printf("%s {\n", esc_html($sticky_class));
         if ($this->item->enable_cta_width == 'yes' && absint($this->item->cta_mobile_width) > 0) {
             $unit = empty($this->item->cta_mobile_width_unit) ? 'px' : $this->item->cta_mobile_width_unit;
-            printf("\t--width: %d%s;\n", absint($this->item->cta_mobile_width), $unit);
+            printf("\t--width: %d%s;\n", absint($this->item->cta_mobile_width), esc_attr($unit));
         }
 
         do_action('easy_sticky_sidebar_wrapper_style_mobile', $this->item);
@@ -232,19 +235,19 @@ class Easy_Sticky_CTA_Generate_CSS {
 
         echo '}';
 
-        printf("%s .sticky-sidebar-button {\n", $sticky_class);
+        printf("%s .sticky-sidebar-button {\n", esc_html($sticky_class));
         $this->generate_button_style();
         echo "}\n\n";
 
-        printf("%s .sticky-sidebar-image {\n", $sticky_class);
+        printf("%s .sticky-sidebar-image {\n", esc_html($sticky_class));
         $this->sidebar_image_style();
         echo "}\n\n";
 
-        printf("%s .sticky-sidebar-content {\n", $sticky_class);
+        printf("%s .sticky-sidebar-content {\n", esc_html($sticky_class));
         $this->content_style();
         echo "}\n\n";
 
-        printf("%s .call-to-action {\n", $sticky_class);
+        printf("%s .call-to-action {\n", esc_html($sticky_class));
         $this->call_to_action_style();
         echo "}\n\n";
     }
