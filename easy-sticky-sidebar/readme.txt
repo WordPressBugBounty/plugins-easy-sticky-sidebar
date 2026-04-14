@@ -4,7 +4,7 @@ Tags: call button, call now button, call to action, cta, sticky button
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.2.0
+Stable tag: 2.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -121,6 +121,10 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 
 == Changelog ==
 
+= 2.2.1 =
+* Added a one-time admin feature notification
+* Admin notice dismissal now persists per user
+
 = 2.2.0 =
 * Admin styling tab layout improvements
 * Pro feature lock UI refinements
@@ -188,6 +192,9 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 * Responsive design
 
 == Upgrade Notice ==
+
+= 2.2.1 =
+One-time admin feature notification and dismissal improvements.
 
 = 2.2.0 =
 Admin styling, placement, and Pro feature lock UI improvements.

@@ -3,7 +3,7 @@
 /**
  * Plugin Name: WP CTA - Call Now Button, Sticky Button & Call to Action Builder
  * Description: WordPress Call To Action builder that creates sticky buttons, call now buttons and CTAs to boost clicks, increase sales and generate leads.
- * Version: 2.2.0
+ * Version: 2.2.1
  * Author: WP CTA PRO
  * Text Domain: easy-sticky-sidebar
  * Author URI: https://wpctapro.com/
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
-define('EASY_STICKY_SIDEBAR_VERSION', '2.2.0');
+define('EASY_STICKY_SIDEBAR_VERSION', '2.2.1');
 define('EASY_STICKY_SIDEBAR_PLUGIN_DIR', untrailingslashit(plugin_dir_path(__FILE__)));
 define('EASY_STICKY_SIDEBAR_PLUGIN_URL', untrailingslashit(plugin_dir_url(__FILE__)));
 define('EASY_STICKY_SIDEBAR_PLUGIN_FILE', __FILE__);

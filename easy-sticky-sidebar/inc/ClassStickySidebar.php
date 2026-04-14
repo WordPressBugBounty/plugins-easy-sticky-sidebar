@@ -87,6 +87,8 @@ class Easy_Sticky_Sidebar
 		register_activation_hook(EASY_STICKY_SIDEBAR_PLUGIN_FILE, array($this, 'plugin_install'));
 
 		add_action('admin_notices', [$this, 'wp_cta_pro_upgrade_notice']);
+		add_action('admin_notices', [$this, 'new_features_notice']);
+		add_action('wp_ajax_easy_sticky_sidebar_dismiss_new_features_notice', [$this, 'dismiss_new_features_notice']);
 	}
 
 	/**
@@ -178,6 +180,90 @@ class Easy_Sticky_Sidebar
     <p><?php esc_html_e('Please download WP CTA Pro from our website and upgrade!', 'easy-sticky-sidebar'); ?></p>
 </div>
 <?php
+	}
+
+	/**
+	 * Show one-time new feature notification to admins.
+	 *
+	 * @since 2.2.0
+	 */
+	public function new_features_notice()
+	{
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+
+		$notice_id = 'wpcta_220_new_features';
+		$meta_key = '_easy_sticky_sidebar_dismissed_' . $notice_id;
+		if ('yes' === get_user_meta(get_current_user_id(), $meta_key, true)) {
+			return;
+		}
+
+		$ajax_url = admin_url('admin-ajax.php');
+		$nonce = wp_create_nonce('easy_sticky_sidebar_dismiss_wpcta_220_new_features');
+		$dashboard_url = admin_url('admin.php?page=easy-sticky-sidebars');
+		?>
+		<div class="notice notice-info is-dismissible easy-sticky-sidebar-new-features-notice" data-notice-id="<?php echo esc_attr($notice_id); ?>" data-nonce="<?php echo esc_attr($nonce); ?>">
+			<p>
+				<strong><?php esc_html_e('🚀 WP CTA 2.2.1 is now live', 'easy-sticky-sidebar'); ?></strong>
+			</p>
+			<p>
+				<?php esc_html_e('Enjoy an easier, more user-friendly dashboard with improved placement controls and a smoother, streamlined CTA-building process.', 'easy-sticky-sidebar'); ?>
+			</p>
+			<p>
+				<a class="button button-primary" href="<?php echo esc_url($dashboard_url); ?>"><?php esc_html_e('Open WP CTA', 'easy-sticky-sidebar'); ?></a>
+			</p>
+		</div>
+		<script>
+			(function () {
+				const notice = document.querySelector('.easy-sticky-sidebar-new-features-notice[data-notice-id="<?php echo esc_js($notice_id); ?>"]');
+				if (!notice) {
+					return;
+				}
+
+				notice.addEventListener('click', function (event) {
+					if (!event.target || !event.target.classList.contains('notice-dismiss')) {
+						return;
+					}
+
+					const data = new FormData();
+					data.append('action', 'easy_sticky_sidebar_dismiss_new_features_notice');
+					data.append('notice_id', notice.getAttribute('data-notice-id') || '');
+					data.append('nonce', notice.getAttribute('data-nonce') || '');
+
+					window.fetch('<?php echo esc_url($ajax_url); ?>', {
+						method: 'POST',
+						credentials: 'same-origin',
+						body: data
+					});
+				});
+			}());
+		</script>
+		<?php
+	}
+
+	/**
+	 * Persist one-time new feature notice dismissal per user.
+	 *
+	 * @since 2.2.0
+	 */
+	public function dismiss_new_features_notice()
+	{
+		if (!current_user_can('manage_options')) {
+			wp_send_json_error(array('message' => __('Permission denied.', 'easy-sticky-sidebar')), 403);
+		}
+
+		if (!check_ajax_referer('easy_sticky_sidebar_dismiss_wpcta_220_new_features', 'nonce', false)) {
+			wp_send_json_error(array('message' => __('Security check failed.', 'easy-sticky-sidebar')), 403);
+		}
+
+		$notice_id = isset($_POST['notice_id']) ? sanitize_key(wp_unslash($_POST['notice_id'])) : '';
+		if ('wpcta_220_new_features' !== $notice_id) {
+			wp_send_json_error(array('message' => __('Invalid notice.', 'easy-sticky-sidebar')), 400);
+		}
+
+		update_user_meta(get_current_user_id(), '_easy_sticky_sidebar_dismissed_' . $notice_id, 'yes');
+		wp_send_json_success();
 	}
 
 	/**
