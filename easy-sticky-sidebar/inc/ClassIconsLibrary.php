@@ -50,10 +50,6 @@ class Easy_Sticky_Sidebar_Icons_Library {
             }
         }
 
-        if ( WP_DEBUG ) {
-            return $this->get_icons__DEPRECATED__();
-        }
-
         return $icons;
     }
 

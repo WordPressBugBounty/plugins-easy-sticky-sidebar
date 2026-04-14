@@ -40,7 +40,7 @@ var SSuprydp_Admin;
 
             $(elem).find('input[type="submit"]').attr("disabled", true);
             $this.postFormData(
-                ajaxurl + "?action=process_pages",
+                ajaxurl + "?action=easy_sticky_sidebar_process_pages",
                 "#SSuprydp_form",
                 function (response) {
                     if (response.status == "success") {
@@ -107,7 +107,26 @@ var SSuprydp_Admin;
                 .show();
         },
         postFormData: function (url, form, callback) {
-            var formData = new FormData($(form)[0]);
+            var formNode = $(form)[0];
+            var formData = new FormData(formNode);
+
+            // Keep one deterministic button_icon value to avoid duplicate-field drift.
+            if (formNode) {
+                const selectedTemplatePicker = formNode.querySelector('input[name="sidebar_template_picker"]:checked');
+                if (selectedTemplatePicker && selectedTemplatePicker.value) {
+                    formData.set('sidebar_template', selectedTemplatePicker.value);
+                    formData.set('sidebar_template_user_selection', selectedTemplatePicker.value);
+                }
+
+                const iconValues = Array.from(formNode.querySelectorAll('input[name="button_icon"]'))
+                    .map((input) => `${input.value || ''}`.trim());
+                const hasButtonIconField = iconValues.length > 0;
+                const normalizedIcon = iconValues.slice().reverse().find((value) => value.length > 0) || '';
+                if (hasButtonIconField) {
+                    formData.delete('button_icon');
+                    formData.append('button_icon', normalizedIcon);
+                }
+            }
 
             $.ajax({
                 url: url, // server url
@@ -162,7 +181,9 @@ jQuery(document).ready(function ($) {
             return;
         }
 
-        $.cookie('easy-sticky-sidebar-import-export', href);
+        if (typeof $.cookie === 'function') {
+            $.cookie('easy-sticky-sidebar-import-export', href);
+        }
 
         tab_navs.removeClass('active');
         $(this).addClass('active');
@@ -171,14 +192,197 @@ jQuery(document).ready(function ($) {
         next_tab.show();
     })
 
-    export_tab_item = $.cookie('easy-sticky-sidebar-import-export');
-    if (export_tab_item) {
-        $(`.easy-sticky-sidebar-tab-panel > .tab-nav a[href="${export_tab_item}"]`).trigger('click')
+    if (typeof $.cookie === 'function') {
+        export_tab_item = $.cookie('easy-sticky-sidebar-import-export');
+        if (export_tab_item) {
+            $(`.easy-sticky-sidebar-tab-panel > .tab-nav a[href="${export_tab_item}"]`).trigger('click')
+        }
     }
 
     $('ul.export-cta-list [data-select="all"]').on('change', function () {
         checked = $(this).is(':checked');
         $('ul.export-cta-list input[type="checkbox"]').not($(this)).prop('checked', checked)
+    });
+
+    const isStylingSectionRelevantForTemplate = function ($section, template) {
+        const currentTemplate = (template || 'sticky-cta').toString();
+        const sectionId = ($section.attr('id') || '').toString();
+        const sectionIdLower = sectionId.toLowerCase();
+        const sectionTitle = (($section.children('summary').first().text() || '').toString()).toLowerCase();
+        const hiddenForTabTemplate = [
+            'sticky-cta-banner-image',
+            'cta-adjustment-options',
+            'cta-content-options',
+            'cta-line-separator-options',
+            'cta-link-text-options'
+        ];
+        const hiddenForBannerTemplate = [
+            'sticky-cta-banner-image',
+            'sticky-sidebar-button-options',
+            'cta-adjustment-options'
+        ];
+        const hiddenForHtmlTemplate = [
+            'cta-link-text-options',
+            'sticky-cta-banner-image'
+        ];
+        const hiddenForGdprTemplate = [
+            'cta-link-text-options',
+            'sticky-cta-banner-image'
+        ];
+        const visibleForGdprTemplate = [
+            'cta-content-options',
+            'sticky-sidebar-button-options',
+            'cta-close-button-options',
+            'cta-box-shadow-options',
+            'cta-animation-behaviour-options'
+        ];
+
+        if (currentTemplate === 'tab-cta' && hiddenForTabTemplate.includes(sectionId)) {
+            return false;
+        }
+        if (currentTemplate === 'banner' && hiddenForBannerTemplate.includes(sectionId)) {
+            return false;
+        }
+        if (currentTemplate === 'html' && hiddenForHtmlTemplate.includes(sectionId)) {
+            return false;
+        }
+        if (currentTemplate === 'gdpr' && hiddenForGdprTemplate.includes(sectionId)) {
+            return false;
+        }
+        if (currentTemplate === 'gdpr') {
+            return visibleForGdprTemplate.includes(sectionId);
+        }
+        if (currentTemplate === 'banner') {
+            if (
+                sectionIdLower.includes('sticky-sidebar-button-options') ||
+                sectionIdLower.includes('sticky-cta-banner-image') ||
+                sectionTitle.includes('cta tab options') ||
+                sectionTitle.includes('cta image options')
+            ) {
+                return false;
+            }
+        }
+
+        if (sectionId === 'cta-line-separator-options') {
+            if (currentTemplate !== 'sticky-cta') {
+                return false;
+            }
+
+            const imagePlacement = ($('[name="image_placement"]').val() || 'classic').toString().toLowerCase();
+            if (imagePlacement === 'overlay') {
+                return false;
+            }
+        }
+
+        if ($section.hasClass('html-cta-option')) {
+            return currentTemplate === 'html';
+        }
+
+        if ($section.hasClass('floating-buttons-options') || sectionId === 'section-floating-button-style-options') {
+            return currentTemplate === 'floating-buttons';
+        }
+
+        if (sectionId === 'cta-animation-behaviour-options') {
+            return true;
+        }
+
+        if (sectionId === 'global-style-tab') {
+            return currentTemplate === 'floating-buttons';
+        }
+
+        if (currentTemplate === 'floating-buttons') {
+            return false;
+        }
+
+        if ($section.hasClass('sticky-cta-option')) {
+            return currentTemplate === 'sticky-cta';
+        }
+
+        return true;
+    };
+
+    const refreshStylingSectionVisibility = function () {
+        const currentTemplate = $('[name="sidebar_template"]').val() || 'sticky-cta';
+
+        $('.wordpress-cta-styling-container').each(function () {
+            const $container = $(this);
+            const $panel = $container.children('.ess-settings-tabs').first();
+            const $nav = $panel.children('.ess-settings-tabs-nav').first();
+            const $content = $panel.children('.ess-settings-tabs-content').first();
+            let firstVisibleTarget = '';
+
+            if (!$panel.length || !$nav.length || !$content.length) {
+                return;
+            }
+
+            $content.children('.ess-settings-pane').each(function () {
+                const $pane = $(this);
+                const paneId = ($pane.attr('id') || '').toString();
+                const $section = $pane.children('.easy-sticky-sidebar-fieldset').first();
+                const $button = $nav.children('.ess-settings-tab[data-target="' + paneId + '"]');
+                const isVisible = isStylingSectionRelevantForTemplate($section, currentTemplate);
+
+                $button.toggle(isVisible);
+                $pane.toggle(isVisible);
+                $section.find('input, select, textarea, button').prop('disabled', !isVisible);
+
+                if (!firstVisibleTarget && isVisible) {
+                    firstVisibleTarget = paneId;
+                }
+            });
+
+            const $activeButton = $nav.children('.ess-settings-tab.active:visible').first();
+            const activeTarget = ($activeButton.attr('data-target') || '').toString();
+            if (!activeTarget || !$content.children('#' + activeTarget).is(':visible')) {
+                if (firstVisibleTarget) {
+                    $nav.children('.ess-settings-tab[data-target="' + firstVisibleTarget + '"]').trigger('click');
+                }
+            }
+        });
+    };
+
+    $(document).on('click', '.ess-settings-tabs-nav .ess-settings-tab', function () {
+        const $button = $(this);
+        const targetId = ($button.attr('data-target') || '').toString();
+        if (!targetId) {
+            return;
+        }
+
+        const $nav = $button.closest('.ess-settings-tabs-nav');
+        const $panel = $button.closest('.ess-settings-tabs');
+        const $content = $panel.children('.ess-settings-tabs-content').first();
+
+        $nav.children('.ess-settings-tab').removeClass('active').attr('aria-selected', 'false');
+        $button.addClass('active').attr('aria-selected', 'true');
+        $content.children('.ess-settings-pane').removeClass('active').hide();
+        $content.children('#' + targetId).addClass('active').show();
+    });
+
+    const syncBehaviourConditionalFields = function () {
+        const $behaviourPanel = $('#cta-animation-behaviour-options');
+        if (!$behaviourPanel.length) {
+            return;
+        }
+
+        const displayTrigger = (($behaviourPanel.find('[name="display_trigger"]').first().val() || 'immediately') + '').toLowerCase();
+        $behaviourPanel.find('.ess-display-trigger-seconds').toggle(displayTrigger === 'after_seconds');
+        $behaviourPanel.find('.ess-display-trigger-scroll').toggle(displayTrigger === 'after_scroll');
+
+        const hideBehavior = (($behaviourPanel.find('[name="hide_behavior"]').first().val() || 'none') + '').toLowerCase();
+        $behaviourPanel.find('.ess-hide-after-seconds').toggle(hideBehavior === 'after_seconds');
+
+        const afterCloseBehavior = (($behaviourPanel.find('[name="after_close_behavior"]').first().val() || 'next_visit') + '').toLowerCase();
+        $behaviourPanel.find('.ess-after-close-time').toggle(afterCloseBehavior === 'hide_for_time');
+    };
+
+    $('.wordpress-cta-styling-container').removeClass('ess-settings-tabs-pending').addClass('ess-settings-tabs-enabled');
+    refreshStylingSectionVisibility();
+    syncBehaviourConditionalFields();
+    $(document).on('change', '[name="image_placement"], [name="overlay_position"], [name="sticky_layout"]', function () {
+        refreshStylingSectionVisibility();
+    });
+    $(document).on('change', '#cta-animation-behaviour-options [name="display_trigger"], #cta-animation-behaviour-options [name="hide_behavior"], #cta-animation-behaviour-options [name="after_close_behavior"]', function () {
+        syncBehaviourConditionalFields();
     });
 
 
@@ -214,6 +418,12 @@ jQuery(document).ready(function ($) {
             template: 'sticky-cta'
         },
 
+        /** When true, form field events skip live preview (bulk design-template apply). */
+        previewSuspended: false,
+
+        /** Assigned by sticky CTA editor preview script; runs one refresh after template JSON is applied. */
+        applyTemplatePreviewRefresh: null,
+
         set_state: function (key, value) {
             this.options[key] = value;
             wp.hooks.doAction('easy_sticky_sidebar_updated', this);
@@ -230,10 +440,22 @@ jQuery(document).ready(function ($) {
 
             if (current_template == 'gdpr') {
                 positions = { 'top-left': 'Top Left', 'top-right': 'Top Right', 'bottom-left': 'Bottom Left', 'bottom-right': 'Bottom Right' }
+            } else if (current_template == 'banner') {
+                positions = { left: 'Left', right: 'Right' }
             }
 
             positions = wp.hooks.applyFilters('easy_sticky_sidebar_close_button_positions', positions);
-            const current_position = $('[name="close_button_position"]').attr('data-position');
+            let current_position = $('[name="close_button_position"]').attr('data-position');
+            if (current_template == 'banner') {
+                if (current_position === 'start') {
+                    current_position = 'left';
+                } else if (current_position === 'end') {
+                    current_position = 'right';
+                }
+            }
+            if (!Object.prototype.hasOwnProperty.call(positions, current_position)) {
+                current_position = Object.keys(positions)[0] || current_position;
+            }
 
             const options = Object.keys(positions).map((key) => {
                 const selected_attr = key == current_position ? "selected" : "";
@@ -241,6 +463,7 @@ jQuery(document).ready(function ($) {
             });
 
             $('[name="close_button_position"]').html(options.join(""));
+            $('[name="close_button_position"]').attr('data-position', current_position);
         },
 
         init: function () {
@@ -264,7 +487,7 @@ jQuery(document).ready(function ($) {
 
         sidebar_name_timer = setTimeout(() => {
             jQuery.post(sticky_sidebar.ajax_url, {
-                action: "change_sticky_sidebar_name",
+                action: "easy_sticky_sidebar_change_name",
                 sticky: $(this).data("sticky"),
                 name: $(this).val(),
                 nonce: sticky_sidebar.nonce,
@@ -307,7 +530,7 @@ jQuery(document).ready(function ($) {
         }
 
         const data = {
-            action: "update_cta_status",
+            action: "easy_sticky_sidebar_update_status",
             sticky_id,
             status: status_item.data("status"),
             nonce: sticky_sidebar.nonce,
@@ -331,10 +554,196 @@ jQuery(document).ready(function ($) {
         $('.nav-tab-wrapper.sticky-sidebar-nav-tab-wrapper .nav-tab').first().trigger("click");
     }
 
-    var CTA_Button_Options_HTML = $('#sticky-sidebar-button-options > summary h2').html();
+    var CTA_Button_Options_HTML = ($('#sticky-sidebar-button-options').attr('data-tab-label') || '').toString();
+    const setColorFieldValue = function ($field, value) {
+        if (!$field || !$field.length) {
+            return;
+        }
+        if ($field.hasClass('wp-color-picker')) {
+            try {
+                $field.wpColorPicker('color', value);
+                return;
+            } catch (e) {
+                // fallback below
+            }
+        }
+        $field.val(value).trigger('input').trigger('change');
+    };
+
+    const applyTabCtaEditorDefaults = function () {
+        if (window.EasyStickySidebar && window.EasyStickySidebar.isApplyingPresetTemplate) {
+            return;
+        }
+
+        const textField = $('[name="SSuprydp_button_option_text"]').first();
+        const bgField = $('[name="SSuprydp_button_option_backg_color"]').first();
+        if (!textField.length || !bgField.length) {
+            return;
+        }
+
+        textField.val('Call Now').trigger('input').trigger('change');
+        setColorFieldValue(bgField, '#218400');
+    };
+    const applyStickyCtaEditorDefaults = function () {
+        if (window.EasyStickySidebar && window.EasyStickySidebar.isApplyingPresetTemplate) {
+            return;
+        }
+        const imageModeRaw = `${$('[name="image_placement"]').first().val() || 'classic'}`.toLowerCase();
+        const imageMode = imageModeRaw === 'background' ? 'overlay' : imageModeRaw;
+        const isOverlayMode = imageMode === 'overlay';
+        const pluginBaseUrl = (
+            window.sticky_sidebar &&
+            typeof window.sticky_sidebar.plugin_url === 'string' &&
+            window.sticky_sidebar.plugin_url.length
+        ) ? window.sticky_sidebar.plugin_url.replace(/\/$/, '') : '';
+        const overlayDefaultImage = pluginBaseUrl ? `${pluginBaseUrl}/assets/img/overlay_dummy.webp` : '';
+        const classicDefaultImage = pluginBaseUrl ? `${pluginBaseUrl}/assets/img/ss_dummy.jpg` : '';
+        const defaultTabBg = isOverlayMode ? '#099607' : '#4e0d61';
+        const defaultLinkBg = isOverlayMode ? '#08a800' : '#11265d';
+
+        const textField = $('[name="SSuprydp_button_option_text"]').first();
+        const bgField = $('[name="SSuprydp_button_option_backg_color"]').first();
+        const contentField = $('[name="SSuprydp_content_option_text"]').first();
+        const actionTextField = $('[name="SSuprydp_action_option_text"]').first();
+        const actionBgField = $('[name="link_text_background"]').first();
+        const imageHeightField = $('[name="cta_image_height"]').first();
+        if (!textField.length || !bgField.length) {
+            return;
+        }
+
+        if (isOverlayMode) {
+            textField.val('Have Questions?').trigger('input').trigger('change');
+            if (contentField.length) {
+                contentField.val('Get quick answers and expert guidance tailored to your needs.').trigger('input').trigger('change');
+            }
+            if (actionTextField.length) {
+                actionTextField.val('Get Started').trigger('input').trigger('change');
+            }
+            $('[name="SSuprydp_content_option_font"]').val('Arial').trigger('change');
+            $('[name="SSuprydp_content_option_size"]').val('24').trigger('input').trigger('change');
+            $('[name="SSuprydp_action_option_font"]').val('Archivo:700').trigger('change');
+            $('[name="SSuprydp_action_option_size"]').val('24').trigger('input').trigger('change');
+            $('[name="overlay_button_padding[top]"]').val('5').trigger('input').trigger('change');
+            $('[name="overlay_button_padding[right]"]').val('20').trigger('input').trigger('change');
+            $('[name="overlay_button_padding[bottom]"]').val('5').trigger('input').trigger('change');
+            $('[name="overlay_button_padding[left]"]').val('20').trigger('input').trigger('change');
+            $('[name="overlay_button_padding[unit]"][value="px"]').prop('checked', true).trigger('change');
+            $('[name="overlay_button_radius"]').val('50').trigger('input').trigger('change');
+            $('[name="overlay_backdrop_color"]').val('#ffffff').trigger('change');
+            $('[name="overlay_backdrop_opacity"]').val('70').trigger('input').trigger('change');
+            $('[name="overlay_width"]').val('60').trigger('input').trigger('change');
+            setColorFieldValue($('[name="SSuprydp_content_option_color"]').first(), '#383838');
+            $('[name="content_background_color"]').first().val('').trigger('input').trigger('change');
+            if (overlayDefaultImage) {
+                syncContentImageThumbnail(overlayDefaultImage);
+            }
+            $('[name="image_attachment_id"]').val('0').trigger('change');
+        } else {
+            textField.val('Click Here').trigger('input').trigger('change');
+            if (contentField.length) {
+                contentField.val('This is the Content Area. Put a description here of what you want to promote.').trigger('input').trigger('change');
+            }
+            if (actionTextField.length) {
+                actionTextField.val('Click Here to View').trigger('input').trigger('change');
+            }
+            $('[name="SSuprydp_content_option_size"]').val('20').trigger('input').trigger('change');
+            $('[name="SSuprydp_action_option_size"]').val('20').trigger('input').trigger('change');
+            setColorFieldValue($('[name="SSuprydp_content_option_color"]').first(), '#ffffff');
+            setColorFieldValue($('[name="content_background_color"]').first(), '#250d61');
+            if (classicDefaultImage) {
+                syncContentImageThumbnail(classicDefaultImage);
+            }
+            $('[name="image_attachment_id"]').val('0').trigger('change');
+        }
+
+        setColorFieldValue(bgField, defaultTabBg);
+        setColorFieldValue($('[name="SSuprydp_button_option_color"]').first(), '#ffffff');
+        if (actionBgField.length) {
+            setColorFieldValue(actionBgField, defaultLinkBg);
+        }
+        setColorFieldValue($('[name="SSuprydp_action_option_color"]').first(), '#ffffff');
+        if (imageHeightField.length) {
+            imageHeightField.val(isOverlayMode ? '300' : '200').trigger('input').trigger('change');
+        }
+    };
+
+    // Keep template select in sync with thumbnail selection before any preview/update triggers.
+    const selectedTemplateCardOnLoad = $('#ess-template-selector input[name="sidebar_template_picker"]:checked:not(:disabled)').first();
+    if (selectedTemplateCardOnLoad.length) {
+        $('[name="sidebar_template"]').val(selectedTemplateCardOnLoad.val());
+        $('#sidebar_template_user_selection').val(selectedTemplateCardOnLoad.val());
+    }
 
 
     const positon_options = $('[name="SSuprydp_cta_position"]').html();
+    const setButtonOptionsHeadingByTemplate = function (template) {
+        const currentTemplate = (template || $('[name="sidebar_template"]').val() || 'sticky-cta').toString();
+        let heading = CTA_Button_Options_HTML;
+        if (currentTemplate === 'tab-cta') {
+            heading = 'Tab Button Options';
+        } else if (currentTemplate === 'gdpr') {
+            heading = 'Button Options';
+        }
+
+        $('#sticky-sidebar-button-options').attr('data-tab-label', heading);
+        $('.ess-settings-pane').each(function () {
+            const $pane = $(this);
+            if (!$pane.find('#sticky-sidebar-button-options').length) {
+                return;
+            }
+
+            const paneId = ($pane.attr('id') || '').toString();
+            const $tab = $('.ess-settings-tab[data-target="' + paneId + '"]');
+            if (!$tab.length) {
+                return;
+            }
+
+            const proPillHtml = $tab.find('.ess-pro-pill').length ? ' <span class="ess-pro-pill">PRO</span>' : '';
+            $tab.html(heading + proPillHtml);
+        });
+
+    };
+
+    const toggleHtmlTemplateContentOptions = function (template) {
+        const currentTemplate = (template || $('[name="sidebar_template"]').val() || 'sticky-cta').toString();
+        const isHtmlTemplate = currentTemplate === 'html';
+        const isGdprTemplate = currentTemplate === 'gdpr';
+        const isBannerTemplate = currentTemplate === 'banner';
+
+        // Content tab: link/button URL options are not relevant for HTML/iframe and GDPR CTA.
+        const contentLinkOptions = $('#sticky-cta-content-link-options-container');
+        const showContentLinkOptions = !isHtmlTemplate && !isGdprTemplate;
+        contentLinkOptions.toggle(showContentLinkOptions);
+        contentLinkOptions.find('input, select, textarea, button').prop('disabled', !showContentLinkOptions);
+
+        // Styling tab: CTA/Image height is not relevant for HTML template.
+        const imageHeightField = $('[name="cta_image_height"]');
+        imageHeightField.prop('disabled', isHtmlTemplate);
+        imageHeightField.closest('.SSuprydp_field_wrap').toggle(!isHtmlTemplate);
+
+        // Hide font-size controls for HTML/iframe template.
+        const htmlHiddenControls = $('.hide-on-html-template');
+        htmlHiddenControls.toggle(!isHtmlTemplate);
+        htmlHiddenControls.find('input, select, textarea, button').prop('disabled', isHtmlTemplate);
+
+        // Styling tab: hide CTA Link Text section for GDPR.
+        const ctaLinkTextSection = $('#cta-link-text-options');
+        if (ctaLinkTextSection.length) {
+            ctaLinkTextSection.toggle(!isGdprTemplate);
+            ctaLinkTextSection.find('input, select, textarea, button').prop('disabled', isGdprTemplate);
+        }
+
+        // Styling tab: hide CTA Image Options section for HTML/GDPR/Banner.
+        const ctaImageSection = $('#sticky-cta-banner-image');
+        if (ctaImageSection.length) {
+            const showImageOptions = !isHtmlTemplate && !isGdprTemplate && !isBannerTemplate;
+            ctaImageSection.toggle(showImageOptions);
+            ctaImageSection.find('input, select, textarea, button').prop('disabled', !showImageOptions);
+        }
+
+        setButtonOptionsHeadingByTemplate(currentTemplate);
+    };
+
     $('[name="sidebar_template"]').on("update", function (event, form_data) {
         if (form_data.template == 'banner') {
             $('#cta-content-options').show();
@@ -350,10 +759,14 @@ jQuery(document).ready(function ($) {
         } else {
             $('[name="SSuprydp_cta_position"]').html(positon_options)
         }
+        toggleHtmlTemplateContentOptions(form_data.template);
     })
 
 
+    let sidebarTemplateInitialized = false;
     $('[name="sidebar_template"]').on("change", function () {
+        const isInitialTemplateSync = !sidebarTemplateInitialized;
+        sidebarTemplateInitialized = true;
         const form_data = Object.assign({}, {
             template: $(this).val()
         });
@@ -362,10 +775,14 @@ jQuery(document).ready(function ($) {
 
         $("#SSuprydp_form").attr("data-template", form_data.template);
 
-        if (form_data.template == "tab-cta") {
-            $('#sticky-sidebar-button-options > summary h2').html('Tab Button Options')
-        } else {
-            $('#sticky-sidebar-button-options > summary h2').html(CTA_Button_Options_HTML)
+        setButtonOptionsHeadingByTemplate(form_data.template);
+
+        if (
+            !isInitialTemplateSync &&
+            !(window.EasyStickySidebar && window.EasyStickySidebar.isApplyingPresetTemplate) &&
+            typeof window.easyStickySidebarApplyEditorDefaultsForTemplate === 'function'
+        ) {
+            window.easyStickySidebarApplyEditorDefaultsForTemplate(form_data.template, true);
         }
 
         $('[name="sidebar_template"]').trigger("update", form_data);
@@ -376,90 +793,17 @@ jQuery(document).ready(function ($) {
             order = (index + 1) * 2;
             $(this).css({ order })
         })
-    }).trigger("change");
 
-    // const Easy_Sticky_Sidebar_Positions = {
-    //     position1: 'right',
-    //     position2: 'center',
-
-    //     get_position2_positions: function () {
-
-    //     },
-
-    //     set_position: function (value, target_position = 'position2') {
-    //         this[target_position] = value;
-
-    //         this.update_template();
-    //     },
-
-
-    //     update_template: function () {
-    //         const self = this;
-
-    //         let positions = { left: 'Left', center: 'Center', right: 'Right' }
-    //         if (this.position1 == "left" || this.position1 == "right") {
-    //             let positions = { top: "Top", center: "Center", bottom: "Bottom" };
-    //         }
-
-    //         const options = Object.keys(positions).map((key) => {
-    //             const selected_attr = key == self.position2 ? "selected" : "";
-    //             return `<option value="${key}" ${selected_attr}>${positions[key]}</option>`;
-    //         });
-
-    //         $('[name="horizontal_vertical_position"]').html(options.join(""));
-    //     },
-
-    //     init: function () {
-
-    //     }
-    // }
-
-
-    $('[name="SSuprydp_cta_position"]').on("change", function () {
-        // cta_position = $(this).val();
-
-        // $(this).attr('data-position', cta_position)
-
-        // positions = { left: 'Left', center: 'Center', right: 'Right' }
-        // if (cta_position == "left" || cta_position == "right") {
-        //     positions = { top: "Top", center: "Center", bottom: "Bottom" };
-        // }
-
-        // const current_position = $('[name="horizontal_vertical_position"]').attr("data-position");
-
-        // const options = Object.keys(positions).map((key) => {
-        //     const selected_attr = key == current_position ? "selected" : "";
-        //     return `<option value="${key}" ${selected_attr}>${positions[key]}</option>`;
-        // });
-
-        // $('[name="horizontal_vertical_position"]').html(options.join(""));
-
-        // //text alignment option fields
-        // button_text_alignment = $('[name="SSuprydp_button_option_align"]');
-
-
-        // text_alignments = { left: 'Top', center: 'Center', right: 'Bottom' };
-        // if (cta_position == "top" || cta_position == "bottom") {
-        //     text_alignments = Object.assign(text_alignments, { left: 'Left', right: 'Right' });
-        // }
-
-        // const button_text_alignment_options = Object.keys(text_alignments).map((key) => {
-        //     const selected_attr = key == button_text_alignment.attr('data-align') ? "selected" : "";
-        //     return `<option value="${key}" ${selected_attr}>${text_alignments[key]}</option>`;
-        // });
-
-        // button_text_alignment.html(button_text_alignment_options.join(""));
-
-        // $('[name="horizontal_vertical_position"]').trigger('change')
-
+        refreshStylingSectionVisibility();
     }).trigger("change");
 
     $('[name="horizontal_vertical_position"]').on('change', function () {
         const current_position = $(this).val();
         $(this).attr('data-position', current_position)
+        $('[name="horizontal_vertical_position_value"]').val(current_position);
         $('#cta-horizontal-vertical-position').attr('data-position', current_position);
         $('#cta-horizontal-vertical-position .position2_distance-wrapper > label').attr('data-position', current_position);
-    })
+    }).trigger('change')
 
     $('[name="SSuprydp_button_option_align"]').on('change', function () {
         $(this).attr('data-align', $(this).val())
@@ -484,6 +828,22 @@ jQuery(document).ready(function ($) {
     }).trigger('change');
 
 
+    const syncContentImageThumbnail = function (imageUrl) {
+        const resolved = `${imageUrl || ''}`.trim();
+        if (!resolved.length) {
+            return;
+        }
+
+        const imageField = $('#sticky_s_media');
+        const imagePreview = $('#image-preview');
+        if (imageField.length) {
+            imageField.val(resolved);
+        }
+        if (imagePreview.length) {
+            imagePreview.attr('src', resolved).prop('src', resolved);
+        }
+    };
+
     const DesignTemplate = {
         template: null,
 
@@ -501,6 +861,9 @@ jQuery(document).ready(function ($) {
             }
 
             if (style_only === false) {
+                if (values && values.sidebar_template === 'sticky-cta' && typeof values.image_placement === 'undefined') {
+                    values.image_placement = 'classic';
+                }
                 return values;
             }
 
@@ -524,6 +887,7 @@ jQuery(document).ready(function ($) {
                 e.preventDefault();
                 $('#wordpress-cta-popup-load-design').trigger('close');
                 self.template = {};
+                $('#cta-premade-style').val('');
             })
 
             $('#wordpress-cta-popup-load-design .btn-wordpress-cta-primary').on('click', function (e) {
@@ -531,36 +895,174 @@ jQuery(document).ready(function ($) {
 
                 const style_only = $(this).attr('href') === '#load-style';
                 const values = self.get_values(style_only);
+                const formRoot = $('#SSuprydp_form');
+                const ess = window.EasyStickySidebar;
+                const previewCardEl = $('.ess-live-preview-card');
+                const changedInputs = [];
+                const setPreviewBusy = function (busy) {
+                    if (!formRoot.length || !previewCardEl.length) {
+                        return;
+                    }
+                    if (ess) {
+                        ess.previewSuspended = !!busy;
+                    }
+                    previewCardEl.toggleClass('is-preview-loading', !!busy).attr('aria-busy', busy ? 'true' : 'false');
+                };
 
-                Object.keys(values).forEach((key) => {
-                    input = $(`[name="${key}"]`);
-                    if ($(`[name="${key}"][type="checkbox"]`).length) {
-                        input = $(`[name="${key}"][type="checkbox"]`);
+                const findFieldsByName = function (name) {
+                    return formRoot.find('input[name], select[name], textarea[name]').filter(function () {
+                        return ($(this).attr('name') || '') === name;
+                    });
+                };
+
+                const resetDimensionGroup = function (groupName) {
+                    const groupFields = formRoot.find('input[name], select[name], textarea[name]').filter(function () {
+                        const fieldName = `${$(this).attr('name') || ''}`;
+                        return fieldName.indexOf(`${groupName}[`) === 0;
+                    });
+                    if (!groupFields.length) {
+                        return;
                     }
 
-                    if (input.length) {
-                        type = input.attr('type');
-
-                        if (type == 'checkbox') {
-                            const checked = ['Yes', 'yes', true].includes(values[key]) ? true : false;
-                            input.prop('checked', checked).trigger('change');
-
+                    groupFields.each(function () {
+                        const field = $(this);
+                        const fieldName = `${field.attr('name') || ''}`.toLowerCase();
+                        if (fieldName.endsWith('[unit]')) {
+                            field.val('px');
                         } else {
-                            input.prop('value', values[key]).trigger('change').trigger('input');
-                            if (input.hasClass('wp-color-picker')) {
-                                input.iris('color', values[key]);
-                            }
+                            field.val('');
+                        }
+                        changedInputs.push(field);
+                    });
+                };
 
-                            const is_font = input.next('.font-select');
-                            if (is_font.length) {
-                                input.trigger('setFont', values[key]);
+                try {
+                    if (window.EasyStickySidebar) {
+                        window.EasyStickySidebar.isApplyingPresetTemplate = true;
+                    }
+                    setPreviewBusy(true);
+
+                    // Presets should start from a clean spacing state so stale values don't leak.
+                    resetDimensionGroup('button_padding');
+                    resetDimensionGroup('content_padding');
+
+                    // Keep content visible when loading sticky classic presets.
+                    const normalizedImagePlacement = `${values.image_placement || ''}`.toLowerCase();
+                    const isClassicPreset = ['', 'classic', 'block'].includes(normalizedImagePlacement);
+                    if (isClassicPreset) {
+                        values.hide_content_text = 'no';
+                    }
+
+                    Object.keys(values).forEach((key) => {
+                        let inputs = findFieldsByName(key);
+                        const checkboxInputs = inputs.filter('[type="checkbox"]');
+                        if (checkboxInputs.length) {
+                            inputs = checkboxInputs;
+                        }
+
+                        if (inputs.length) {
+                            if (checkboxInputs.length) {
+                                const checked = ['Yes', 'yes', true, '1', 1].includes(values[key]);
+                                inputs.each(function () {
+                                    const input = $(this);
+                                    input.prop('checked', checked);
+                                    changedInputs.push(input);
+                                });
+                            } else {
+                                inputs.each(function () {
+                                    const input = $(this);
+                                    let nextValue = values[key];
+
+                                    if (key === 'image_placement') {
+                                        const isSelect = (input.prop('tagName') || '').toLowerCase() === 'select';
+                                        const optionValues = isSelect ? input.find('option').map(function () {
+                                            return `${$(this).val() || ''}`.toLowerCase();
+                                        }).get() : [];
+                                        const rawMode = `${values[key] || ''}`.toLowerCase();
+                                        if (isSelect) {
+                                            if (rawMode === 'overlay' && optionValues.includes('background')) {
+                                                nextValue = 'background';
+                                            } else if (rawMode === 'classic' && optionValues.includes('block')) {
+                                                nextValue = 'block';
+                                            }
+                                        } else {
+                                            if (rawMode === 'background') {
+                                                nextValue = 'overlay';
+                                            } else if (rawMode === 'block') {
+                                                nextValue = 'classic';
+                                            }
+                                        }
+                                    }
+
+                                    input.val(nextValue);
+                                    if (input.hasClass('wp-color-picker') && input.iris) {
+                                        input.iris('color', nextValue);
+                                    }
+
+                                    const is_font = input.next('.font-select');
+                                    if (is_font.length) {
+                                        input.trigger('setFont', nextValue);
+                                    }
+                                    changedInputs.push(input);
+                                });
                             }
                         }
-                    }
-                })
+                    });
 
-                $('#image-preview').prop('src', $('#sticky_s_media').val());
-                $('#wordpress-cta-popup-load-design').trigger('close');
+                    const seen = new Set();
+                    changedInputs.forEach(function (input) {
+                        if (!input || !input.length) {
+                            return;
+                        }
+                        const node = input.get(0);
+                        if (!node || seen.has(node)) {
+                            return;
+                        }
+                        seen.add(node);
+                        input.trigger('input').trigger('change');
+                    });
+
+                    // Ensure mode-based option groups refresh immediately after preset apply.
+                    findFieldsByName('image_placement').trigger('change');
+                    findFieldsByName('hide_cta_image').trigger('change');
+                    findFieldsByName('sidebar_template').trigger('change').trigger('update');
+
+                    // Keep content-tab image thumbnail in sync with the loaded preset image.
+                    const presetImageUrl = `${values.sticky_s_media || values.preview_image_url || ''}`.trim();
+                    if (presetImageUrl.length) {
+                        syncContentImageThumbnail(presetImageUrl);
+                    } else {
+                        syncContentImageThumbnail($('#sticky_s_media').val());
+                    }
+                    $('#wordpress-cta-popup-load-design').trigger('close');
+                    $('#cta-premade-style').val('');
+
+                    const finishBulkApply = function () {
+                        setPreviewBusy(false);
+                        if (window.EasyStickySidebar) {
+                            window.EasyStickySidebar.isApplyingPresetTemplate = false;
+                        }
+                        syncContentImageThumbnail($('#sticky_s_media').val());
+                        if (ess && typeof ess.applyTemplatePreviewRefresh === 'function') {
+                            ess.applyTemplatePreviewRefresh();
+                        }
+                    };
+
+                    if (typeof window.requestAnimationFrame === 'function') {
+                        window.requestAnimationFrame(function () {
+                            window.requestAnimationFrame(finishBulkApply);
+                        });
+                    } else {
+                        setTimeout(finishBulkApply, 0);
+                    }
+                } catch (error) {
+                    setPreviewBusy(false);
+                    if (window.EasyStickySidebar) {
+                        window.EasyStickySidebar.isApplyingPresetTemplate = false;
+                    }
+                    $('#wordpress-cta-popup-load-design').trigger('close');
+                    throw error;
+                }
             })
         }
     }
@@ -778,38 +1280,9 @@ jQuery(document).ready(function ($) {
             onSelect: function (icon_class) {
                 container.find('input').val(icon_class).trigger('input').trigger('change');
                 container.find('.icon').attr('class', `icon ${icon_class}`);
-                // Ensure value is inside main form for saving.
-                const form = $('#SSuprydp_form');
-                if (form.length) {
-                    let hidden = form.find('input[name="button_icon"]');
-                    if (!hidden.length) {
-                        hidden = $('<input type="hidden" name="button_icon" />').appendTo(form);
-                    }
-                    hidden.val(icon_class);
-                }
             }
         });
     });
-
-    // Ensure button_icon is part of the main form even before any new selection.
-    const syncButtonIconToForm = () => {
-        const form = $('#SSuprydp_form');
-        if (!form.length) {
-            return;
-        }
-        const iconInput = form.find('.icon-library-select-button input[name="button_icon"]');
-        if (!iconInput.length) {
-            return;
-        }
-        let hidden = form.find('input[name="button_icon"].ess-button-icon-hidden');
-        if (!hidden.length) {
-            hidden = $('<input type="hidden" class="ess-button-icon-hidden" name="button_icon" />').appendTo(form);
-        }
-        hidden.val(iconInput.val() || '');
-    };
-
-    $(document).on('input change', '.icon-library-select-button input[name="button_icon"]', syncButtonIconToForm);
-    syncButtonIconToForm();
 
     // Remove selected button icon.
     $(document).on('click', '.icon-library-select-button .btn-remove-button-icon', function (e) {
@@ -821,7 +1294,6 @@ jQuery(document).ready(function ($) {
         if (previewIcon.length) {
             previewIcon.attr('class', 'icon');
         }
-        syncButtonIconToForm();
     });
 
 
@@ -889,6 +1361,42 @@ jQuery(document).ready(function ($) {
                 buttons.forEach((button, key) => {
                     self.buttons[key] = button;
                 })
+            }
+
+            // Ensure per-button style panels are always present.
+            // If server-rendered styles are missing (or stale), build from
+            // current floating buttons data immediately.
+            const stylePanel = $('#floating-single-button-styles');
+            const hasRenderedStylePanels = stylePanel.find('.easy-sticky-sidebar-fieldset-floating-button').length > 0;
+            if (!hasRenderedStylePanels) {
+                let seededFromRows = false;
+                self.button_container.children('.floating-button-item').each(function () {
+                    const row = $(this);
+                    const buttonId = parseInt(row.attr('data-id'), 10);
+                    if (Number.isNaN(buttonId)) {
+                        return;
+                    }
+                    if (!self.buttons[buttonId]) {
+                        self.buttons[buttonId] = { ...self.button_default_args };
+                    }
+
+                    self.buttons[buttonId].icon = row.find('.button-icon').val() || self.buttons[buttonId].icon || '';
+                    self.buttons[buttonId].text = row.find('.button-text').val() || self.buttons[buttonId].text || '';
+                    self.buttons[buttonId].url = row.find('input[name^="floating_buttons"][name$="[url]"]').val() || self.buttons[buttonId].url || '';
+                    seededFromRows = true;
+                });
+
+                if (!seededFromRows && Object.keys(self.buttons).length === 0) {
+                    // Last-resort fallback: one editable default style item.
+                    self.buttons[0] = { ...self.button_default_args };
+                }
+
+                Object.keys(self.buttons).forEach((key) => {
+                    const buttonId = parseInt(key, 10);
+                    if (!Number.isNaN(buttonId)) {
+                        self.update_buttons(buttonId, 'add');
+                    }
+                });
             }
 
             self.container.on('change', '[type="checkbox"][name="hide_floating_button_text"]', function () {
@@ -1006,12 +1514,20 @@ jQuery(document).ready(function ($) {
     const progress = $('.ess-step-progress');
     const previewCard = $('.ess-live-preview-card');
     let navBgReady = false;
+    let lastPreviewImageUrl = '';
 
     const stripText = function (value) {
         return $('<div>').html(value || '').text().trim();
     };
 
     const getValue = function (name, fallback = '') {
+        if (name === 'image_placement') {
+            const preferredInput = form.find('.cta-image-display-mode[name="image_placement"]').first();
+            if (preferredInput.length) {
+                return preferredInput.val() || fallback;
+            }
+        }
+
         const input = form.find(`[name="${name}"]`).first();
         if (!input.length) {
             return fallback;
@@ -1027,6 +1543,41 @@ jQuery(document).ready(function ($) {
     const getChecked = function (name) {
         const input = form.find(`[name="${name}"][type="checkbox"]`).first();
         return input.length ? input.is(':checked') : false;
+    };
+
+    const toggleStickyImageModeFieldGroups = function () {
+        const mode = (getValue('image_placement', 'classic') || 'classic').toString().toLowerCase();
+        const normalized = mode === 'background' ? 'overlay' : mode;
+        const isOverlay = normalized === 'overlay';
+        const isStickyTemplate = (getValue('sidebar_template', 'sticky-cta') || 'sticky-cta') === 'sticky-cta';
+        const showClassicOnly = isStickyTemplate && !isOverlay;
+        const showOverlayOnly = isStickyTemplate && isOverlay;
+
+        form.find('.cta-image-classic-only')
+            .toggle(showClassicOnly)
+            .find('input, select, textarea, button')
+            .prop('disabled', !showClassicOnly);
+
+        form.find('.cta-image-overlay-only')
+            .toggle(showOverlayOnly)
+            .find('input, select, textarea, button')
+            .prop('disabled', !showOverlayOnly);
+
+        // Hard guard: after switching from templates that hide this control
+        // (for example HTML/GDPR), ensure sticky layout always restores it.
+        const imageHeightWrap = form.find('[name="cta_image_height"]').first().closest('.SSuprydp_field_wrap');
+        if (imageHeightWrap.length) {
+            imageHeightWrap.toggle(isStickyTemplate);
+            imageHeightWrap.find('input, select, textarea, button').prop('disabled', !isStickyTemplate);
+        }
+
+        // Hard guard: hide Content Padding in sticky overlay mode, regardless of source renderer.
+        const contentPaddingWrap = form.find('[name="content_padding[top]"]').first().closest('.SSuprydp_field_wrap');
+        if (contentPaddingWrap.length) {
+            const shouldShowContentPadding = !isStickyTemplate || !isOverlay;
+            contentPaddingWrap.toggle(shouldShowContentPadding);
+            contentPaddingWrap.find('input, select, textarea, button').prop('disabled', !shouldShowContentPadding);
+        }
     };
 
     const setStepState = function () {
@@ -1125,6 +1676,13 @@ jQuery(document).ready(function ($) {
 
     $(window).on('resize', function () {
         moveActiveNavBackground(false);
+        if (!previewInitialized) {
+            return;
+        }
+        requestAnimationFrame(function () {
+            syncPreviewButtonMetrics();
+            syncPreviewOverlayBackgroundOffsets($('#ess-preview-cta'));
+        });
     });
 
     const getPreviewFont = function (rawValue, fallback) {
@@ -1171,6 +1729,73 @@ jQuery(document).ready(function ($) {
         const bottom = getValue(`${fieldName}[bottom]`, '');
         const left = getValue(`${fieldName}[left]`, '');
         const unit = getValue(`${fieldName}[unit]`, 'px') || 'px';
+
+        const values = [top, right, bottom, left];
+        const hasAny = values.some((item) => `${item}`.trim().length > 0);
+        if (!hasAny) {
+            return '';
+        }
+
+        const normalized = values.map((item) => {
+            const raw = `${item}`.trim();
+            if (!raw.length) {
+                return `0${unit}`;
+            }
+
+            if (/^-?\d+(\.\d+)?$/.test(raw)) {
+                return `${raw}${unit}`;
+            }
+
+            return raw;
+        });
+
+        return normalized.join(' ');
+    };
+
+    // Some installs can contain duplicate hidden dimension inputs in DOM.
+    // For CTA link padding, prefer visible/enabled non-empty values first.
+    const getSmartFieldValue = function (name, fallback = '') {
+        const fields = form.find(`[name="${name}"]`);
+        if (!fields.length) {
+            return fallback;
+        }
+
+        const readNonEmpty = function ($collection) {
+            let selected = '';
+            $collection.each(function () {
+                const $field = $(this);
+                const type = ($field.attr('type') || '').toLowerCase();
+
+                if ((type === 'checkbox' || type === 'radio') && !$field.is(':checked')) {
+                    return;
+                }
+
+                const value = `${$field.val() || ''}`.trim();
+                if (value.length > 0) {
+                    selected = value;
+                    return false;
+                }
+            });
+            return selected;
+        };
+
+        const visibleEnabled = fields.filter(':enabled').filter(':visible');
+        const enabled = fields.filter(':enabled');
+
+        return (
+            readNonEmpty(visibleEnabled) ||
+            readNonEmpty(enabled) ||
+            readNonEmpty(fields) ||
+            fallback
+        );
+    };
+
+    const getDimensionCssSmart = function (fieldName) {
+        const top = getSmartFieldValue(`${fieldName}[top]`, '');
+        const right = getSmartFieldValue(`${fieldName}[right]`, '');
+        const bottom = getSmartFieldValue(`${fieldName}[bottom]`, '');
+        const left = getSmartFieldValue(`${fieldName}[left]`, '');
+        const unit = getSmartFieldValue(`${fieldName}[unit]`, 'px') || 'px';
 
         const values = [top, right, bottom, left];
         const hasAny = values.some((item) => `${item}`.trim().length > 0);
@@ -1252,6 +1877,7 @@ jQuery(document).ready(function ($) {
     };
 
     let previewSpinnerTimer = null;
+    let previewInputDebounceTimer = null;
     let previewInitialized = false;
     const resetPreviewButtonMetrics = function ($root) {
         if (!$root || !$root.length) {
@@ -1282,13 +1908,45 @@ jQuery(document).ready(function ($) {
         applyPreviewButtonMetrics($('#ess-preview-html-cta'), $('#ess-preview-html-button'));
     };
 
-    const updatePreview = function () {
-        const isInitialLoad = !previewInitialized;
-        previewInitialized = true;
+    const syncPreviewOverlayBackgroundOffsets = function ($preview) {
+        if (!$preview || !$preview.length) {
+            return;
+        }
 
-        previewCard.addClass('is-preview-loading').attr('aria-busy', 'true');
-        if (previewSpinnerTimer) {
-            clearTimeout(previewSpinnerTimer);
+        if (!$preview.hasClass('image-as-background')) {
+            $preview.css('--ess-overlay-bg-offset-x', '');
+            $preview.css('--ess-overlay-bg-offset-y', '');
+            return;
+        }
+
+        const panel = $preview.find('#ess-preview-overlay-panel').first();
+        if (!panel.length) {
+            $preview.css('--ess-overlay-bg-offset-x', '');
+            $preview.css('--ess-overlay-bg-offset-y', '');
+            return;
+        }
+
+        const offsetX = Math.max(0, Math.round((panel.outerWidth() || 0) * 0.9));
+        const offsetY = Math.max(0, Math.round((panel.outerHeight() || 0) * 0.9));
+        $preview.css('--ess-overlay-bg-offset-x', `${offsetX}px`);
+        $preview.css('--ess-overlay-bg-offset-y', `${offsetY}px`);
+    };
+
+    const updatePreview = function (opts) {
+        if (typeof opts !== 'object' || opts === null) {
+            opts = {};
+        }
+        const waitForHeroImage = opts.waitForHeroImage === true;
+        const isInitialLoad = !previewInitialized;
+        const showSpinner = opts.showSpinner === true || isInitialLoad || waitForHeroImage;
+        previewInitialized = true;
+        toggleStickyImageModeFieldGroups();
+
+        if (showSpinner) {
+            previewCard.addClass('is-preview-loading').attr('aria-busy', 'true');
+            if (previewSpinnerTimer) {
+                clearTimeout(previewSpinnerTimer);
+            }
         }
         const template = getValue('sidebar_template', 'sticky-cta');
         const supportedTemplates = ['sticky-cta', 'tab-cta', 'banner', 'gdpr', 'html', 'floating-buttons'];
@@ -1296,7 +1954,20 @@ jQuery(document).ready(function ($) {
         const isStickyTemplate = activeTemplate === 'sticky-cta';
         const isProActive = typeof has_easy_sticky_sidebar_pro === 'function' ? has_easy_sticky_sidebar_pro() : false;
         const allowedPositions = ['left', 'right', 'top', 'bottom'];
-        const allowedAlignments = ['top', 'center', 'bottom'];
+        const normalizeSecondaryPosition = function (position, alignment) {
+            const primary = (position || 'right').toString().toLowerCase();
+            const secondary = (alignment || 'center').toString().toLowerCase();
+            const isVertical = primary === 'top' || primary === 'bottom';
+            const legacyMap = isVertical
+                ? { top: 'left', center: 'center', bottom: 'right', left: 'left', right: 'right' }
+                : { left: 'top', center: 'center', right: 'bottom', top: 'top', bottom: 'bottom' };
+            const allowed = isVertical ? ['left', 'center', 'right'] : ['top', 'center', 'bottom'];
+            const normalized = Object.prototype.hasOwnProperty.call(legacyMap, secondary)
+                ? legacyMap[secondary]
+                : secondary;
+
+            return allowed.includes(normalized) ? normalized : 'center';
+        };
 
         previewCard.toggleClass('is-preview-disabled', !supportedTemplates.includes(template));
         previewCard.attr('data-preview-template', activeTemplate);
@@ -1311,36 +1982,41 @@ jQuery(document).ready(function ($) {
             previewTemplates.filter('[data-template="sticky-cta"]').show().addClass('is-active');
         }
 
-        // Resize preview stage to fit the active template to avoid clipping.
-        const activeHeight = activePane.length ? activePane.outerHeight(true) : 0;
-        if (activeHeight && activeHeight > 0) {
-            const nextHeight = Math.max(220, activeHeight + 32);
-            previewStage.css('--ess-preview-height', `${nextHeight}px`);
-        }
+        const syncPreviewStageHeight = function () {
+            const currentActivePane = previewTemplates.filter('.is-active:visible').first();
+            const paneHeight = currentActivePane.length ? currentActivePane.outerHeight(true) : 0;
+            if (paneHeight && paneHeight > 0) {
+                const nextHeight = Math.max(120, Math.ceil(paneHeight + 8));
+                previewStage.css('--ess-preview-height', `${nextHeight}px`);
+            }
+        };
+
+        // Initial pass; run again after style updates.
+        syncPreviewStageHeight();
 
         $('.ess-template-label').text(form.find('[name="sidebar_template"] option:selected').text().replace(/\s+\(.*\)$/, ''));
 
         let ctaPosition = getValue('SSuprydp_cta_position', 'right');
-        let ctaAlignment = getValue('horizontal_vertical_position', 'top');
+        let ctaAlignment = getValue('horizontal_vertical_position', 'center');
 
         if (!allowedPositions.includes(ctaPosition)) {
             ctaPosition = 'right';
         }
 
-        if (!allowedAlignments.includes(ctaAlignment)) {
-            ctaAlignment = 'top';
-        }
+        ctaAlignment = normalizeSecondaryPosition(ctaPosition, ctaAlignment);
 
         if (!isProActive) {
             ctaPosition = 'right';
-            ctaAlignment = 'top';
+            ctaAlignment = 'center';
         }
 
-        // Map alignment for top/bottom positions: top->left, center->center, bottom->right.
-        let anchorAlign = ctaAlignment;
-        if (ctaPosition === 'top' || ctaPosition === 'bottom') {
-            anchorAlign = ctaAlignment === 'top' ? 'left' : (ctaAlignment === 'bottom' ? 'right' : 'center');
+        // Floating buttons use a compact preview; keep left/right previews centered in admin.
+        // This avoids inheriting unrelated sticky alignment values (top/bottom) and clipping.
+        if (activeTemplate === 'floating-buttons' && (ctaPosition === 'left' || ctaPosition === 'right')) {
+            ctaAlignment = 'center';
         }
+
+        const anchorAlign = ctaAlignment;
 
         $('.ess-preview-anchor')
             .attr('data-position', ctaPosition)
@@ -1363,26 +2039,55 @@ jQuery(document).ready(function ($) {
 
         const buttonTextValue = getValue('SSuprydp_button_option_text', '');
         const buttonIconValue = getValue('button_icon', '');
+        const imagePlacementRaw = (getValue('image_placement', 'classic') || 'classic').toString().toLowerCase();
+        const imagePlacement = imagePlacementRaw === 'background' ? 'overlay' : imagePlacementRaw;
+        const isOverlayMode = imagePlacement === 'overlay';
+        const pluginBaseUrl = (
+            window.sticky_sidebar &&
+            typeof window.sticky_sidebar.plugin_url === 'string' &&
+            window.sticky_sidebar.plugin_url.length
+        ) ? window.sticky_sidebar.plugin_url.replace(/\/$/, '') : '';
+        const overlayFallbackImage = pluginBaseUrl ? `${pluginBaseUrl}/assets/img/overlay_dummy.webp` : '';
+        const hideImage = getChecked('hide_cta_image')
+            || getValue('hide_cta_image', 'no') === 'yes'
+            || getChecked('SSuprydp_img_hideimg')
+            || getValue('SSuprydp_img_hideimg', 'No') === 'Yes';
+        preview.toggleClass('image-as-background', isOverlayMode);
         if (buttonIconValue) {
             $('#ess-preview-button-text').html(`<i class="icon ${buttonIconValue}"></i> ${buttonTextValue}`);
         } else {
             $('#ess-preview-button-text').text(buttonTextValue);
         }
         $('#ess-preview-content-text').text(stripText(getValue('SSuprydp_content_option_text', 'This is the content area for your sticky CTA.')));
-        $('#ess-preview-link').text(getValue('SSuprydp_action_option_text', 'Click Here to View'));
+        $('#ess-preview-link').text(getValue('SSuprydp_action_option_text', 'Get Started'));
 
-        const image = getValue('sticky_s_media', '');
+        let image = getValue('sticky_s_media', '');
+        if (!image) {
+            image = ($('#image-preview').attr('src') || '').toString();
+        }
+        if (isOverlayMode && image && image.toLowerCase().includes('ss_dummy.jpg')) {
+            image = overlayFallbackImage || image;
+        }
+        if (!image) {
+            image = isOverlayMode ? overlayFallbackImage : classicFallbackImage;
+        }
+        if (hideImage) {
+            image = '';
+        }
+        const previewContentContainer = $('#ess-preview-cta .sticky-sidebar-container').first();
         if (image.length) {
             $('#ess-preview-image-wrap').css('background-image', `url("${image}")`).show();
+            if (isOverlayMode) {
+                previewContentContainer.css('background-image', `url("${image}")`);
+            }
         } else {
             $('#ess-preview-image-wrap').hide();
+            if (isOverlayMode) {
+                previewContentContainer.css('background-image', '');
+            }
         }
 
-        const hideImage = getChecked('hide_cta_image')
-            || getValue('hide_cta_image', 'no') === 'yes'
-            || getChecked('SSuprydp_img_hideimg')
-            || getValue('SSuprydp_img_hideimg', 'No') === 'Yes';
-        if (hideImage) {
+        if (hideImage && !isOverlayMode) {
             $('#ess-preview-image-wrap').hide();
         }
 
@@ -1400,27 +2105,130 @@ jQuery(document).ready(function ($) {
             preview.css('--ess-image-overlay-opacity', '');
         }
 
-        $('#ess-preview-button-wrap').css('background-color', getValue('SSuprydp_button_option_backg_color', '#2466d5'));
+        const defaultTabBackground = isOverlayMode ? '#099607' : '#4e0d61';
+        $('#ess-preview-button-wrap').css('background-color', getValue('SSuprydp_button_option_backg_color', defaultTabBackground));
         $('#ess-preview-button-text').css('color', getValue('SSuprydp_button_option_color', '#ffffff'));
-        $('#ess-preview-content-text').css({
-            'background-color': getValue('content_background_color', '#ffffff'),
-            'color': getValue('SSuprydp_content_option_color', '#1a2940')
-        });
-        $('#ess-preview-link').css({
-            'background-color': getValue('link_text_background', '#e8eef8'),
-            'color': getValue('SSuprydp_action_option_color', '#1c3f87')
-        });
+        if (isOverlayMode) {
+            const overlayPosition = (getValue('overlay_position', 'right') || 'right').toString().toLowerCase();
+            const normalizedOverlayPosition = ['top', 'left', 'bottom', 'right'].includes(overlayPosition) ? overlayPosition : 'right';
+            const alignmentFallback = (normalizedOverlayPosition === 'top' || normalizedOverlayPosition === 'bottom') ? 'center' : normalizedOverlayPosition;
+            let overlayContentAlignment = (getValue('overlay_content_alignment', '') || '').toString().toLowerCase();
+            let overlayButtonAlignment = (getValue('overlay_button_alignment', '') || '').toString().toLowerCase();
+            if (!['left', 'center', 'right'].includes(overlayContentAlignment)) {
+                overlayContentAlignment = alignmentFallback;
+            }
+            if (!['left', 'center', 'right'].includes(overlayButtonAlignment)) {
+                overlayButtonAlignment = alignmentFallback;
+            }
+            const overlayBackdropColor = getValue('overlay_backdrop_color', '#ffffff') || '#ffffff';
+            const overlayBackdropOpacityRaw = parseInt(getValue('overlay_backdrop_opacity', '70'), 10);
+            const overlayBackdropOpacity = Number.isNaN(overlayBackdropOpacityRaw) ? 0.7 : Math.max(0, Math.min(100, overlayBackdropOpacityRaw)) / 100;
+            const overlayWidthRaw = parseInt(getValue('overlay_width', '60'), 10);
+            const overlayWidth = Number.isNaN(overlayWidthRaw) ? 60 : Math.max(20, Math.min(100, overlayWidthRaw));
+            const overlayContentGapRaw = parseInt(getValue('overlay_content_gap', '10'), 10);
+            const overlayContentGap = Number.isNaN(overlayContentGapRaw) ? 10 : Math.max(0, overlayContentGapRaw);
+            const overlayContentPaddingRaw = parseInt(getValue('overlay_content_padding', '12'), 10);
+            const overlayContentPadding = Number.isNaN(overlayContentPaddingRaw) ? 12 : Math.max(0, overlayContentPaddingRaw);
+
+            preview
+                .removeClass('overlay-pos-top overlay-pos-left overlay-pos-bottom overlay-pos-right')
+                .addClass(`overlay-pos-${normalizedOverlayPosition}`);
+
+            preview.css('--ess-overlay-backdrop-color', overlayBackdropColor);
+            preview.css('--ess-overlay-backdrop-opacity', `${overlayBackdropOpacity}`);
+            preview.css('--ess-overlay-size', `${overlayWidth}%`);
+            preview.css('--ess-overlay-content-gap', `${overlayContentGap}px`);
+            const overlayHeightRaw = parseInt(getValue('cta_image_height', '300'), 10);
+            const overlayHeight = Number.isNaN(overlayHeightRaw) ? 200 : Math.max(60, overlayHeightRaw);
+            preview.css('--ess-overlay-height', `${overlayHeight}px`);
+            preview.css('--ess-overlay-content-padding', `${overlayContentPadding}px`);
+            $('#ess-preview-overlay-panel').css('padding', `${overlayContentPadding}px`);
+
+            $('#ess-preview-image-wrap').hide();
+
+            const overlayContentColor = getValue('SSuprydp_content_option_color', '#383838');
+            $('#ess-preview-content-text').css({
+                'background-color': 'transparent',
+                'color': overlayContentColor,
+                'padding': '',
+                'text-align': overlayContentAlignment
+            });
+
+            const overlayButtonPaddingCss = getDimensionCss('overlay_button_padding');
+            const overlayButtonPadVRaw = parseInt(getValue('overlay_button_padding_v', '5'), 10);
+            const overlayButtonPadHRaw = parseInt(getValue('overlay_button_padding_h', '20'), 10);
+            const overlayButtonRadiusRaw = parseInt(getValue('overlay_button_radius', '50'), 10);
+            const overlayButtonPadV = Number.isNaN(overlayButtonPadVRaw) ? 5 : Math.max(0, overlayButtonPadVRaw);
+            const overlayButtonPadH = Number.isNaN(overlayButtonPadHRaw) ? 20 : Math.max(0, overlayButtonPadHRaw);
+            const overlayButtonRadius = Number.isNaN(overlayButtonRadiusRaw) ? 50 : Math.max(0, overlayButtonRadiusRaw);
+            const overlayButtonBg = getValue('link_text_background', '') || getValue('SSuprydp_button_option_backg_color', '#08a800');
+            const overlayButtonColor = getValue('SSuprydp_action_option_color', '') || getValue('SSuprydp_button_option_color', '#ffffff');
+
+            let marginLeft = 'auto';
+            let marginRight = '0';
+            if (overlayButtonAlignment === 'left') {
+                marginLeft = '0';
+                marginRight = 'auto';
+            } else if (overlayButtonAlignment === 'center') {
+                marginLeft = 'auto';
+                marginRight = 'auto';
+            }
+            $('#ess-preview-link').css({
+                'background-color': overlayButtonBg,
+                'color': overlayButtonColor,
+                'text-align': overlayButtonAlignment,
+                'padding': overlayButtonPaddingCss || `${overlayButtonPadV}px ${overlayButtonPadH}px`,
+                'border-radius': `${overlayButtonRadius}px`,
+                'margin-left': marginLeft,
+                'margin-right': marginRight
+            });
+            const previewLink = $('#ess-preview-link').get(0);
+            if (previewLink) {
+                previewLink.style.setProperty('padding', `${overlayButtonPadV}px ${overlayButtonPadH}px`, 'important');
+                previewLink.style.setProperty('border-radius', `${overlayButtonRadius}px`, 'important');
+            }
+            syncPreviewOverlayBackgroundOffsets(preview);
+        } else {
+            preview.removeClass('image-as-background overlay-pos-top overlay-pos-left overlay-pos-bottom overlay-pos-right');
+            preview.css('--ess-overlay-backdrop-color', '');
+            preview.css('--ess-overlay-backdrop-opacity', '');
+            preview.css('--ess-overlay-content-gap', '');
+            preview.css('--ess-overlay-height', '');
+            preview.css('--ess-overlay-size', '');
+            preview.css('--ess-overlay-content-padding', '');
+            preview.css('--ess-overlay-bg-offset-x', '');
+            preview.css('--ess-overlay-bg-offset-y', '');
+            $('#ess-preview-overlay-panel').css('padding', '');
+            previewContentContainer.css('background-image', '');
+
+            $('#ess-preview-content-text').css({
+                'background-color': getValue('content_background_color', 'rgb(37 13 97)'),
+                'color': getValue('SSuprydp_content_option_color', '#ffffff'),
+                'text-align': ''
+            });
+            $('#ess-preview-link').css({
+                'background-color': getValue('link_text_background', '#11265d'),
+                'color': getValue('SSuprydp_action_option_color', '#1c3f87'),
+                'text-align': '',
+                'border-radius': '',
+                'padding': '',
+                'margin-left': '',
+                'margin-right': ''
+            });
+        }
 
         const showLine = getChecked('line_separator_show');
-        if (showLine) {
+        if (showLine && !isOverlayMode) {
             $('#ess-preview-divider').show().css('background-color', getValue('line_separator_color', '#c7d7ef'));
         } else {
             $('#ess-preview-divider').hide();
         }
 
-        const buttonFontSize = parseInt(getNormalizedNumber('SSuprydp_button_option_size', '18'), 10);
-        const contentFontSize = parseInt(getNormalizedNumber('SSuprydp_content_option_size', '17'), 10);
-        const linkFontSize = parseInt(getNormalizedNumber('SSuprydp_action_option_size', '15'), 10);
+        const buttonFontSize = parseInt(getNormalizedNumber('SSuprydp_button_option_size', '24'), 10);
+        const contentFontDefault = isOverlayMode ? '24' : '22';
+        const contentFontSize = parseInt(getNormalizedNumber('SSuprydp_content_option_size', contentFontDefault), 10);
+        const linkFontDefault = isOverlayMode ? '24' : '20';
+        const linkFontSize = parseInt(getNormalizedNumber('SSuprydp_action_option_size', linkFontDefault), 10);
 
         if (!isNaN(buttonFontSize)) {
             $('#ess-preview-button-text').css('font-size', `${buttonFontSize}px`);
@@ -1435,9 +2243,11 @@ jQuery(document).ready(function ($) {
         }
 
         // Keep preview font rendering in sync with style tab Google font values.
-        applyPreviewFont('#ess-preview-button-text', getValue('SSuprydp_button_option_font', 'Open Sans'), 'Open Sans');
-        applyPreviewFont('#ess-preview-content-text', getValue('SSuprydp_content_option_font', 'Open Sans'), 'Open Sans');
-        applyPreviewFont('#ess-preview-link', getValue('SSuprydp_action_option_font', 'Open Sans'), 'Open Sans');
+        applyPreviewFont('#ess-preview-button-text', getValue('SSuprydp_button_option_font', 'Archivo:700'), 'Archivo:700');
+        const contentFontDefaultFamily = isOverlayMode ? 'Arial' : 'Open Sans';
+        applyPreviewFont('#ess-preview-content-text', getValue('SSuprydp_content_option_font', contentFontDefaultFamily), contentFontDefaultFamily);
+        const linkFontDefaultFamily = isOverlayMode ? 'Archivo:700' : 'Open Sans';
+        applyPreviewFont('#ess-preview-link', getValue('SSuprydp_action_option_font', linkFontDefaultFamily), linkFontDefaultFamily);
 
         const isVerticalPosition = ctaPosition === 'top' || ctaPosition === 'bottom';
         const axisMap = { start: 'flex-start', center: 'center', end: 'flex-end' };
@@ -1495,15 +2305,31 @@ jQuery(document).ready(function ($) {
         $('#ess-preview-link').css('letter-spacing', Number.isNaN(linkLetterSpacing) ? '' : `${linkLetterSpacing}px`);
 
         const buttonPadding = getDimensionCss('button_padding');
+        const sharedContentPadding = getDimensionCss('content_padding');
         $('#ess-preview-button-wrap').css('padding', buttonPadding || '');
         $('#ess-preview-tab-button').css('padding', buttonPadding || '');
         $('#ess-preview-html-button').css('padding', buttonPadding || '');
+        $('#ess-preview-html-content-text').css('padding', sharedContentPadding || '');
+        $('#ess-preview-gdpr-text').css('padding', sharedContentPadding || '');
 
-        const contentPadding = getDimensionCss('content_padding');
-        $('#ess-preview-content-text').css('padding', contentPadding || '');
+        if (!isOverlayMode) {
+            const classicDefaultContentPadding = '14px 24px 14px 24px';
+            const resolvedContentPadding = sharedContentPadding || classicDefaultContentPadding;
+            $('#ess-preview-content-text').css('padding', resolvedContentPadding);
+            const previewContent = $('#ess-preview-content-text').get(0);
+            if (previewContent && resolvedContentPadding) {
+                previewContent.style.setProperty('padding', resolvedContentPadding, 'important');
+            }
 
-        const linkPadding = getDimensionCss('call_to_action_padding');
-        $('#ess-preview-link').css('padding', linkPadding || '');
+            const linkPadding = getDimensionCssSmart('call_to_action_padding');
+            const classicDefaultLinkPadding = '14px 24px 14px 24px';
+            const resolvedLinkPadding = linkPadding || classicDefaultLinkPadding;
+            $('#ess-preview-link').css('padding', resolvedLinkPadding);
+            const previewLink = $('#ess-preview-link').get(0);
+            if (previewLink && resolvedLinkPadding) {
+                previewLink.style.setProperty('padding', resolvedLinkPadding, 'important');
+            }
+        }
 
         const buttonRound = parseInt(getValue('button_round', ''), 10);
         if (!Number.isNaN(buttonRound)) {
@@ -1531,16 +2357,16 @@ jQuery(document).ready(function ($) {
         const closePosition = getValue('close_button_position', 'start') || 'start';
         const closeEdgeChecked = getChecked('close_button_edge') || getValue('close_button_edge', 'no') === 'yes';
         const closeEdge = closeEdgeChecked ? 'outside' : '';
-        const closeColor = getValue('close_button_color', '#000000') || '#000000';
+        const closeColor = getValue('close_button_color', '#ffffff') || '#ffffff';
         const closeButtons = activePane.length ? activePane.find('.btn-ess-close') : previewCard.find('.btn-ess-close');
 
         closeButtons.toggle(!!showCloseButton);
         closeButtons.css('background-color', closeColor);
 
         const closeClassTargets = activePane.length ? activePane.find('.easy-sticky-sidebar') : $('#ess-preview-cta, #ess-preview-tab-cta, #ess-preview-html-cta, #ess-preview-banner, #ess-preview-gdpr');
-        closeClassTargets.removeClass('ess-close-button-start ess-close-button-end ess-preview-outside-close')
+        closeClassTargets.removeClass('ess-close-button-start ess-close-button-end ess-close-button-left ess-close-button-right ess-close-button-top-left ess-close-button-top-right ess-close-button-bottom-left ess-close-button-bottom-right ess-preview-outside-close')
             .addClass(`ess-close-button-${closePosition}`);
-        closeButtons.removeClass('start end outside')
+        closeButtons.removeClass('start end left right top-left top-right bottom-left bottom-right outside')
             .addClass(closePosition)
             .toggleClass('outside', closeEdge === 'outside');
 
@@ -1551,8 +2377,8 @@ jQuery(document).ready(function ($) {
             }
         });
 
-        // Box shadow toggle (Pro)
-        const shadowEnabled = getChecked('enable_box_shadow') || getValue('enable_box_shadow', 'no') !== 'no';
+        // Box shadow toggle (Pro only)
+        const shadowEnabled = isProActive && (getChecked('enable_box_shadow') || getValue('enable_box_shadow', 'no') === 'yes');
         const previewShadow = shadowEnabled ? '0 0 10px rgba(19, 19, 19, .2)' : '0 0 0 rgba(0, 0, 0, 0)';
         previewCard.find('.ess-preview-stage .easy-sticky-sidebar').css('--ess-preview-shadow', previewShadow);
 
@@ -1567,24 +2393,32 @@ jQuery(document).ready(function ($) {
         }
 
         const tabButtonIconValue = getValue('button_icon', '');
+        const tabButtonTextValue = (buttonTextValue && `${buttonTextValue}`.trim().length)
+            ? buttonTextValue
+            : 'Call Now';
         if (tabButtonIconValue) {
-            $('#ess-preview-tab-button-text').html(`<i class="icon ${tabButtonIconValue}"></i> ${buttonTextValue}`);
+            $('#ess-preview-tab-button-text').html(`<i class="icon ${tabButtonIconValue}"></i> ${tabButtonTextValue}`);
         } else {
-            $('#ess-preview-tab-button-text').text(buttonTextValue);
+            $('#ess-preview-tab-button-text').text(tabButtonTextValue);
         }
-        $('#ess-preview-tab-button').css('background-color', getValue('SSuprydp_button_option_backg_color', '#2466d5'));
+        $('#ess-preview-tab-button').css('background-color', getValue('SSuprydp_button_option_backg_color', '#218400'));
         $('#ess-preview-tab-button-text').css('color', getValue('SSuprydp_button_option_color', '#ffffff'));
 
         if (!isNaN(buttonFontSize)) {
             $('#ess-preview-tab-button-text').css('font-size', `${buttonFontSize}px`);
         }
 
-        applyPreviewFont('#ess-preview-tab-button-text', getValue('SSuprydp_button_option_font', 'Open Sans'), 'Open Sans');
+        applyPreviewFont('#ess-preview-tab-button-text', getValue('SSuprydp_button_option_font', 'Arial'), 'Arial');
 
         const floatingPreview = $('#ess-preview-floating-cta');
         floatingPreview
             .removeClass('sticky-cta-position-left sticky-cta-position-right sticky-cta-position-top sticky-cta-position-bottom vertical-cta vertical-cta-top vertical-cta-bottom')
             .addClass(`sticky-cta-position-${ctaPosition}`);
+        // Keep floating preview stable inside admin canvas (no slide-out transform math).
+        floatingPreview.css('top', '');
+        floatingPreview.css('bottom', '');
+        floatingPreview.css('--ess-preview-float-x', '0px');
+        floatingPreview.css('--ess-preview-float-y', '0px');
 
         if (ctaPosition === 'top' || ctaPosition === 'bottom') {
             floatingPreview.addClass('vertical-cta').addClass(`vertical-cta-${ctaPosition}`);
@@ -1623,6 +2457,8 @@ jQuery(document).ready(function ($) {
         } else {
             floatingPreview.css('font-size', '');
         }
+
+        applyPreviewFont('#ess-preview-floating-list, #ess-preview-floating-list a', getValue('default_font_family', 'Arial'), 'Arial');
 
         const fallbackButtons = [
             { id: 0, text: 'Call Us', icon: 'fa-solid fa-phone' },
@@ -1685,9 +2521,19 @@ jQuery(document).ready(function ($) {
         const bannerLink = $('#ess-preview-banner-link');
 
         bannerText.text(stripText(getValue('SSuprydp_content_option_text', 'Your banner message goes here.')));
+        // Keep banner preview defaults aligned with frontend defaults.
+        const bannerBarBgDefault = '#000000';
+        const bannerBarFgDefault = '#ffffff';
+        const resolveBannerPreviewBackground = function (raw) {
+            const trimmed = (raw || '').toString().trim();
+            if (!trimmed) {
+                return bannerBarBgDefault;
+            }
+            return trimmed;
+        };
         bannerPreview.css({
-            'background-color': getValue('content_background_color', '#f8fafc'),
-            'color': getValue('SSuprydp_content_option_color', '#1f2a44'),
+            'background-color': resolveBannerPreviewBackground(getValue('content_background_color', '')),
+            'color': getValue('SSuprydp_content_option_color', bannerBarFgDefault),
             'display': 'block',
             'justify-content': '',
             'align-items': '',
@@ -1697,15 +2543,19 @@ jQuery(document).ready(function ($) {
         const bannerFontSize = parseInt(getValue('SSuprydp_content_option_size', ''), 10);
         bannerText.css('font-size', Number.isNaN(bannerFontSize) ? '' : `${bannerFontSize}px`);
         bannerText.css('letter-spacing', Number.isNaN(contentLetterSpacing) ? '' : `${contentLetterSpacing}px`);
-        const bannerPadding = getDimensionCss('content_padding');
+        const bannerPadding = getDimensionCss('content_padding') || getDimensionCss('banner_content_padding');
+        const bannerButtonPadding = getDimensionCss('banner_button_padding');
+        const bannerButtonMargin = getDimensionCss('banner_button_margin');
         bannerPreview.css('padding', bannerPadding || '');
 
         bannerLink.text(getValue('SSuprydp_action_option_text', 'Learn More'));
         bannerLink.css({
-            'color': getValue('SSuprydp_action_option_color', '#ffffff'),
+            'color': getValue('SSuprydp_action_option_color', bannerBarFgDefault),
             'font-size': Number.isNaN(linkFontSize) ? '' : `${linkFontSize}px`,
             'letter-spacing': Number.isNaN(linkLetterSpacing) ? '' : `${linkLetterSpacing}px`,
-            'padding': linkPadding || '',
+            'margin': '',
+            'padding': '',
+            'border-radius': '',
             'display': ''
         });
 
@@ -1718,11 +2568,17 @@ jQuery(document).ready(function ($) {
         bannerLink.css('background-color', '');
         if (isBannerButton) {
             bannerLink.css('background-color', linkBackground);
-            bannerLink.css('padding', linkPadding || '');
+            bannerLink.css('padding', bannerButtonPadding || '');
+            bannerLink.css('margin', bannerButtonMargin || '');
+            const bannerButtonRadius = parseInt(getValue('banner_button_border_radius', ''), 10);
+            bannerLink.css('border-radius', Number.isNaN(bannerButtonRadius) ? '' : `${Math.max(0, bannerButtonRadius)}px`);
             bannerLink.css('display', 'inline-block');
         } else {
             bannerLink.css('padding', '');
-            bannerLink.css('display', 'inline');
+            bannerLink.css('margin', bannerButtonMargin || '');
+            bannerLink.css('border-radius', '');
+            // Keep inline-block so link margins (including top/bottom) remain visible.
+            bannerLink.css('display', 'inline-block');
         }
 
         bannerLink.toggle(!hideCallToAction);
@@ -1734,21 +2590,50 @@ jQuery(document).ready(function ($) {
         const gdprText = $('#ess-preview-gdpr-text');
         const gdprAccept = $('#ess-preview-gdpr-accept');
         const gdprDecline = $('#ess-preview-gdpr-decline');
+        gdprPreview.css('--width', previewWidth);
 
         gdprText.text(stripText(getValue('SSuprydp_content_option_text', 'We use cookies to improve your experience.')));
+        const gdprBoxRadius = parseInt(getValue('gdpr_box_radius', ''), 10);
         gdprPreview.css({
             'background-color': getValue('content_background_color', '#1f2937'),
+            'color': getValue('SSuprydp_content_option_color', '#f8fafc'),
+            'padding': sharedContentPadding || '30px 35px',
+            'border-radius': Number.isNaN(gdprBoxRadius) ? '' : `${Math.max(0, gdprBoxRadius)}px`
+        });
+        gdprText.css({
+            'font-size': Number.isNaN(contentFontSize) ? '' : `${contentFontSize}px`,
+            'letter-spacing': Number.isNaN(contentLetterSpacing) ? '' : `${contentLetterSpacing}px`,
             'color': getValue('SSuprydp_content_option_color', '#f8fafc')
         });
+        applyPreviewFont('#ess-preview-gdpr-text', getValue('SSuprydp_content_option_font', 'Open Sans'), 'Open Sans');
 
         gdprAccept.text(getValue('SSuprydp_button_option_text', 'Got it.'));
+        const acceptDefaultColor = getValue('SSuprydp_button_option_color', '#ffffff');
+        const acceptDefaultBg = getValue('SSuprydp_button_option_backg_color', '#1d5fd1');
+        const acceptHoverColor = getValue('button1_text_hover', '');
+        const acceptHoverBg = getValue('button1_background_hover', '');
         gdprAccept.css({
-            'background-color': getValue('SSuprydp_button_option_backg_color', '#1d5fd1'),
-            'color': getValue('SSuprydp_button_option_color', '#ffffff'),
+            'background-color': acceptDefaultBg,
+            'color': acceptDefaultColor,
             'font-size': Number.isNaN(buttonFontSize) ? '' : `${buttonFontSize}px`,
             'letter-spacing': Number.isNaN(buttonLetterSpacing) ? '' : `${buttonLetterSpacing}px`,
             'border-radius': Number.isNaN(buttonRound) ? '' : `${Math.max(0, buttonRound)}px`
         });
+        gdprAccept.off('.essGdprHover')
+            .on('mouseenter.essGdprHover', function () {
+                if (acceptHoverColor) {
+                    $(this).css('color', acceptHoverColor);
+                }
+                if (acceptHoverBg) {
+                    $(this).css('background-color', acceptHoverBg);
+                }
+            })
+            .on('mouseleave.essGdprHover', function () {
+                $(this).css({
+                    'color': acceptDefaultColor,
+                    'background-color': acceptDefaultBg
+                });
+            });
 
         applyPreviewFont('#ess-preview-gdpr-accept', getValue('SSuprydp_button_option_font', 'Open Sans'), 'Open Sans');
 
@@ -1760,13 +2645,32 @@ jQuery(document).ready(function ($) {
         const button2FontSize = parseInt(getNormalizedNumber('button2_font_size', ''), 10);
         const button2LetterSpacing = parseInt(getValue('button2_letter_spacing', ''), 10);
         const button2Radius = parseInt(getValue('button2_radius', ''), 10);
+        const declineDefaultBg = getValue('button2_background_color', '#111827');
+        const declineDefaultColor = getValue('button2_text_color', '#ffffff');
+        const declineHoverColor = getValue('button_decline_text_hover', '');
+        const declineHoverBg = getValue('button_decline_background_hover', '');
         gdprDecline.css({
-            'background-color': getValue('button2_background_color', '#111827'),
-            'color': getValue('button2_text_color', '#ffffff'),
+            'background-color': declineDefaultBg,
+            'color': declineDefaultColor,
             'font-size': Number.isNaN(button2FontSize) ? '' : `${button2FontSize}px`,
             'letter-spacing': Number.isNaN(button2LetterSpacing) ? '' : `${button2LetterSpacing}px`,
             'border-radius': Number.isNaN(button2Radius) ? '' : `${Math.max(0, button2Radius)}px`
         });
+        gdprDecline.off('.essGdprHover')
+            .on('mouseenter.essGdprHover', function () {
+                if (declineHoverColor) {
+                    $(this).css('color', declineHoverColor);
+                }
+                if (declineHoverBg) {
+                    $(this).css('background-color', declineHoverBg);
+                }
+            })
+            .on('mouseleave.essGdprHover', function () {
+                $(this).css({
+                    'color': declineDefaultColor,
+                    'background-color': declineDefaultBg
+                });
+            });
 
         applyPreviewFont('#ess-preview-gdpr-decline', getValue('button2_font_family', 'Open Sans'), 'Open Sans');
 
@@ -1806,67 +2710,169 @@ jQuery(document).ready(function ($) {
         htmlButton.css('background-color', htmlButtonBg);
 
         htmlButtonText.css('color', getValue('SSuprydp_button_option_color', '#ffffff'));
+        const htmlContentColor = getValue('SSuprydp_content_option_color', '#000000');
         htmlContent.css({
             'background-color': getValue('content_background_color', '#ffffff'),
-            'color': getValue('SSuprydp_content_option_color', '#1a2940')
+            'color': htmlContentColor
+        });
+        htmlContent.find('*').each(function () {
+            this.style.setProperty('color', htmlContentColor, 'important');
         });
 
         if (!isNaN(buttonFontSize)) {
             htmlButtonText.css('font-size', `${buttonFontSize}px`);
         }
 
-        if (!isNaN(contentFontSize)) {
-            htmlContent.css('font-size', `${contentFontSize}px`);
-        }
+        // HTML/iframe mode keeps content sizing from user HTML/CSS, not global font-size control.
 
         applyPreviewFont('#ess-preview-html-button-text', getValue('SSuprydp_button_option_font', 'Open Sans'), 'Open Sans');
         applyPreviewFont('#ess-preview-html-content-text', getValue('SSuprydp_content_option_font', 'Open Sans'), 'Open Sans');
 
-        const keepHtmlOpen = getValue('keep_html_cta_open', 'no') === 'yes';
-        htmlPreview.toggleClass('shrink', !keepHtmlOpen);
+        const ctaHeightEnabled = getChecked('enable_cta_height') || getValue('enable_cta_height', 'no') === 'yes';
+        const ctaHeightValue = parseFloat(getValue('cta_height', ''));
+        const ctaHeightUnit = (getValue('cta_height_unit', 'px') || 'px').toString();
+        const resolvedCtaHeight = (ctaHeightEnabled && !Number.isNaN(ctaHeightValue) && ctaHeightValue > 0)
+            ? `${ctaHeightValue}${ctaHeightUnit}`
+            : '';
+
+        const previewHeightTargets = $('#ess-preview-cta, #ess-preview-tab-cta, #ess-preview-html-cta, #ess-preview-banner, #ess-preview-gdpr');
+        previewHeightTargets.css('height', resolvedCtaHeight);
+
+        // Keep image/background height independent from CTA wrapper height.
+        const previewStickyContent = $('#ess-preview-cta .sticky-sidebar-content');
+        if (resolvedCtaHeight) {
+            previewStickyContent.css({
+                'height': '100%',
+                'min-height': '0'
+            });
+        } else {
+            previewStickyContent.css({
+                'height': '',
+                'min-height': ''
+            });
+        }
+
+        const collapseOnPageLoad = getValue('collapse_on_page_load', 'no') === 'yes';
+        htmlPreview.toggleClass('shrink', collapseOnPageLoad);
 
         requestAnimationFrame(() => {
             syncPreviewButtonMetrics();
-            requestAnimationFrame(syncPreviewButtonMetrics);
+            syncPreviewOverlayBackgroundOffsets($('#ess-preview-cta'));
+            syncPreviewStageHeight();
         });
 
+        // Guard pass: on some sites another late script mutates preview styles
+        // after render completion. Re-assert classic sticky link/content paddings.
+        const enforceClassicStickyPreviewPadding = function () {
+            if (activeTemplate !== 'sticky-cta' || isOverlayMode) {
+                return;
+            }
+
+            const contentPadding = getDimensionCss('content_padding') || '14px 24px 14px 24px';
+            const linkPadding = getDimensionCss('call_to_action_padding') || '14px 24px 14px 24px';
+            const contentEl = $('#ess-preview-content-text').get(0);
+            const linkEl = $('#ess-preview-link').get(0);
+
+            if (contentEl) {
+                contentEl.style.setProperty('padding', contentPadding, 'important');
+            }
+            if (linkEl) {
+                linkEl.style.setProperty('padding', linkPadding, 'important');
+            }
+        };
+        // Do not run this continuously during editing; only run during/after
+        // explicit preview loading cycles where late third-party scripts can override styles.
+        if (showSpinner) {
+            setTimeout(enforceClassicStickyPreviewPadding, 0);
+            setTimeout(enforceClassicStickyPreviewPadding, 60);
+        }
+
         const finishPreviewLoading = function () {
+            if (!showSpinner) {
+                return;
+            }
+            enforceClassicStickyPreviewPadding();
             previewCard.removeClass('is-preview-loading').attr('aria-busy', 'false');
         };
 
-        if (isInitialLoad) {
+        if (showSpinner) {
             const previewImageUrl = image.length ? image : '';
-            let imagePending = false;
+            const imageChanged = !!previewImageUrl && previewImageUrl !== lastPreviewImageUrl;
+            const shouldWaitForImage = (isInitialLoad || waitForHeroImage) && imageChanged;
 
             if (previewImageUrl) {
-                imagePending = true;
-                const preload = new Image();
-                preload.onload = preload.onerror = function () {
-                    imagePending = false;
-                    previewSpinnerTimer = setTimeout(finishPreviewLoading, 200);
-                };
-                preload.src = previewImageUrl;
+                lastPreviewImageUrl = previewImageUrl;
             }
 
-            if (!imagePending) {
-                previewSpinnerTimer = setTimeout(finishPreviewLoading, 300);
+            if (shouldWaitForImage) {
+                const preload = new Image();
+                preload.onload = preload.onerror = function () {
+                    previewSpinnerTimer = setTimeout(finishPreviewLoading, 40);
+                };
+                preload.src = previewImageUrl;
+            } else {
+                previewSpinnerTimer = setTimeout(finishPreviewLoading, 40);
             }
-        } else {
-            previewSpinnerTimer = setTimeout(finishPreviewLoading, 180);
         }
     };
 
-    form.on('input change', 'input, textarea, select', function () {
-        updatePreview();
+    if (window.EasyStickySidebar) {
+        window.EasyStickySidebar.applyTemplatePreviewRefresh = function () {
+            updatePreview({ waitForHeroImage: true });
+        };
+    }
+
+    form.on('input change', 'input, textarea, select', function (e) {
+        if (window.EasyStickySidebar && window.EasyStickySidebar.previewSuspended) {
+            return;
+        }
+        const target = e.target;
+        if (target && target.name === 'sidebar_name') {
+            return;
+        }
+
+        // Height should update immediately while typing (no blur required).
+        if (target && target.name === 'cta_image_height' && e.type === 'input') {
+            if (previewInputDebounceTimer) {
+                clearTimeout(previewInputDebounceTimer);
+            }
+            updatePreview({ showSpinner: false });
+            return;
+        }
+
+        // Fast path for normal editing: no spinner and debounce typing to reduce work.
+        if (e.type === 'input') {
+            if (previewInputDebounceTimer) {
+                clearTimeout(previewInputDebounceTimer);
+            }
+            previewInputDebounceTimer = setTimeout(function () {
+                updatePreview({ showSpinner: false });
+            }, 60);
+            return;
+        }
+
+        updatePreview({ showSpinner: false });
     });
 
-    form.on('change', '#sticky_s_media, #image_attachment_id, [name="sidebar_template"]', function () {
-        updatePreview();
+    form.on('change', '#sticky_s_media, #image_attachment_id, [name="sidebar_template"]', function (e) {
+        const target = e && e.target ? e.target : null;
+        if (target && target.name === 'sticky_s_media') {
+            syncContentImageThumbnail($(target).val());
+        }
+        if (window.EasyStickySidebar && window.EasyStickySidebar.previewSuspended) {
+            return;
+        }
+        updatePreview({ showSpinner: true, waitForHeroImage: true });
     });
 
     // Font selector dropdowns update values programmatically; ensure preview refreshes immediately.
     form.on('click', '.font-select a, .font-select li', function () {
-        setTimeout(updatePreview, 0);
+        setTimeout(function () {
+            if (window.EasyStickySidebar && window.EasyStickySidebar.previewSuspended) {
+                return;
+            }
+            updatePreview({ showSpinner: false });
+        }, 0);
     });
 
     // Preview-only interaction: mimic frontend hide/show by toggling shrink.

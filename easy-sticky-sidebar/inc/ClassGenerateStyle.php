@@ -4,11 +4,11 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Easy_Sticky_CTA_Generate_CSS
+ * Easy_Sticky_Sidebar_Generate_CSS
  * @package sticky-sidebar
  * @since   1.3.6
  */
-class Easy_Sticky_CTA_Generate_CSS {
+class Easy_Sticky_Sidebar_Generate_CSS {
 
     // Declare the property to avoid dynamic property creation deprecated warning
     protected $item;
@@ -24,13 +24,13 @@ class Easy_Sticky_CTA_Generate_CSS {
     public function generate_css_file() {
         $upload_dir = wp_get_upload_dir();
         $css_file = $upload_dir['basedir'] . '/sticky-sidebar-generated.css';
-        $has_pro = function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro();
+        $has_pro = function_exists('easy_sticky_sidebar_has_pro') && easy_sticky_sidebar_has_pro();
         $current_status = $has_pro ? '1' : '0';
-        $last_status = get_option('ess_last_pro_status', '');
+        $last_status = get_option('easy_sticky_sidebar_last_pro_status', '');
 
         if (!file_exists($css_file) || $last_status !== $current_status) {
             $this->generate_style();
-            update_option('ess_last_pro_status', $current_status);
+            update_option('easy_sticky_sidebar_last_pro_status', $current_status);
         }
     }
 
@@ -42,7 +42,7 @@ class Easy_Sticky_CTA_Generate_CSS {
 
         ob_start();
         foreach ($results as $item) {
-            $this->item = new WP_Sticky_CTA_Data($item);
+            $this->item = new Easy_Sticky_Sidebar_CTA_Data($item);
             $this->generate_wrapper_style($this->item);
             $this->template_style();
             do_action('easy_sticky_sidebar_generate_css', $this->item, $this);
@@ -52,7 +52,15 @@ class Easy_Sticky_CTA_Generate_CSS {
 
         $styles = ob_get_clean();
 
-        file_put_contents(wp_upload_dir()['basedir'] . '/sticky-sidebar-generated.css', $styles);
+        global $wp_filesystem;
+        if (!function_exists('WP_Filesystem')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+        WP_Filesystem();
+
+        if ($wp_filesystem) {
+            $wp_filesystem->put_contents(wp_upload_dir()['basedir'] . '/sticky-sidebar-generated.css', $styles, FS_CHMOD_FILE);
+        }
     }
 
     public static function regenerate_now() {
@@ -129,8 +137,8 @@ class Easy_Sticky_CTA_Generate_CSS {
             printf("\tbackground-color: %s;\n", esc_html($this->item->SSuprydp_button_option_backg_color));
         }
 
-        if (function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro()) {
-            Wordpress_CTA_Free_Utils::get_dimensions_output($sticky_cta->button_padding, 'padding-%');
+        if (function_exists('easy_sticky_sidebar_has_pro') && easy_sticky_sidebar_has_pro()) {
+            Easy_Sticky_Sidebar_Utils::get_dimensions_output($sticky_cta->button_padding, 'padding-%');
         }
 
         do_action('easy_sticky_sidebar_generate_button_style', $this->item);
@@ -164,8 +172,16 @@ class Easy_Sticky_CTA_Generate_CSS {
             printf("background-color: %s;\n", esc_attr($this->item->content_background_color));
         }
 
-        if (function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro()) {
-            Wordpress_CTA_Free_Utils::get_dimensions_output($this->item->content_padding, 'padding-%');
+        $image_mode = strtolower((string) ($this->item->image_placement ?? 'classic'));
+        if ($image_mode === 'background') {
+            $image_mode = 'overlay';
+        }
+        $is_sticky_classic = $this->item->sidebar_template === 'sticky-cta' && $image_mode !== 'overlay';
+
+        // Classic sticky CTA content padding is handled by runtime/view styles.
+        // Do not emit generated CSS padding for this mode.
+        if (!$is_sticky_classic && function_exists('easy_sticky_sidebar_has_pro') && easy_sticky_sidebar_has_pro()) {
+            Easy_Sticky_Sidebar_Utils::get_dimensions_output($this->item->content_padding, 'padding-%');
         }
 
         do_action('easy_sticky_sidebar_generate_content_style', $this->item);
@@ -187,15 +203,23 @@ class Easy_Sticky_CTA_Generate_CSS {
             printf("background-color: %s;\n", esc_attr($this->item->link_text_background));
         }
 
-        if (function_exists('has_wordpress_cta_pro') && has_wordpress_cta_pro()) {
-            Wordpress_CTA_Free_Utils::get_dimensions_output($this->item->call_to_action_padding, 'padding-%');
+        $image_mode = strtolower((string) ($this->item->image_placement ?? 'classic'));
+        if ($image_mode === 'background') {
+            $image_mode = 'overlay';
+        }
+        $is_sticky_classic = $this->item->sidebar_template === 'sticky-cta' && $image_mode !== 'overlay';
+
+        // Classic sticky CTA link/button padding is handled by runtime/view styles.
+        // Do not emit generated CSS padding for this mode.
+        if (!$is_sticky_classic) {
+            Easy_Sticky_Sidebar_Utils::get_dimensions_output($this->item->call_to_action_padding, 'padding-%');
         }
 
         do_action('easy_sticky_sidebar_generate_call_to_action_style', $this->item);
     }
 
     function template_style() {
-        if (!in_array($this->item->sidebar_template, ['sticky-cta', 'tab-cta', 'html'])) {
+        if (!in_array($this->item->sidebar_template, ['sticky-cta', 'tab-cta', 'html', 'gdpr'])) {
             return;
         }
 
@@ -246,6 +270,12 @@ class Easy_Sticky_CTA_Generate_CSS {
         printf("%s .sticky-sidebar-content {\n", esc_html($sticky_class));
         $this->content_style();
         echo "}\n\n";
+
+        if ($this->item->sidebar_template === 'html' && !empty($this->item->SSuprydp_content_option_color)) {
+            printf("%s .sticky-sidebar-text, %s .sticky-sidebar-text * {\n", esc_html($sticky_class), esc_html($sticky_class));
+            printf("\tcolor: %s !important;\n", esc_attr($this->item->SSuprydp_content_option_color));
+            echo "}\n\n";
+        }
 
         printf("%s .call-to-action {\n", esc_html($sticky_class));
         $this->call_to_action_style();

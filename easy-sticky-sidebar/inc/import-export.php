@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly 
 }
 
-class Wordpress_CTA_Import_Export {
+class Easy_Sticky_Sidebar_Import_Export {
 
 	public function __construct() {
 		$this->export_cta();
@@ -35,7 +35,7 @@ class Wordpress_CTA_Import_Export {
 		);
 
 		array_walk($results, function (&$item) {
-			$item = new WP_Sticky_CTA_Data($item);
+			$item = new Easy_Sticky_Sidebar_CTA_Data($item);
 			// Convert to array and remove protected properties
 			$item_array = $item->to_array();
 			unset($item_array['id'], $item_array['image_attachment_id'], $item_array['locations']);
@@ -204,7 +204,7 @@ class Wordpress_CTA_Import_Export {
 
 		$sidebars = $wpdb->get_results("SELECT * FROM $wpdb->sticky_cta");
 		array_walk($sidebars, function (&$item) {
-			$item = new WP_Sticky_CTA_Data($item);
+			$item = new Easy_Sticky_Sidebar_CTA_Data($item);
 		}); ?>
 		<div class="wrap wrap-easy-sticky-sidebar">
 			<?php easy_sticky_sidebar_get_header(['class' => 'medium']) ?>
@@ -274,4 +274,4 @@ class Wordpress_CTA_Import_Export {
 	}
 }
 
-return new Wordpress_CTA_Import_Export();
+return new Easy_Sticky_Sidebar_Import_Export();

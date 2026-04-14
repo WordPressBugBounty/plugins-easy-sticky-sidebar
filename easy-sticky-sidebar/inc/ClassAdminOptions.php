@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 
-class SSuprydpStickySidebarOptions {
+class Easy_Sticky_Sidebar_Options {
 
     /**
      * Holds the values to be used in the fields callbacks
@@ -21,7 +21,7 @@ class SSuprydpStickySidebarOptions {
      * Start up
      */
     public function __construct() {
-        add_action('admin_menu', array($this, 'addSubmenuPages'));
+        add_action('admin_menu', array($this, 'add_submenu_pages'));
         $this->handle_cta_action();
 
         add_action('admin_footer', [$this, 'pro_feature_popup']);
@@ -31,6 +31,10 @@ class SSuprydpStickySidebarOptions {
     }
 
     function handle_settings() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
         $post_data = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
         if (!isset($post_data['_wpnonce'])) {
@@ -46,7 +50,7 @@ class SSuprydpStickySidebarOptions {
         $settings_data = apply_filters('easy_sticky_sidebar_settings_post_data', $post_data);
         update_option('easy_sticky_sidebar_settings', $settings_data);
 
-        $generate = new Easy_Sticky_CTA_Generate_CSS();
+        $generate = new Easy_Sticky_Sidebar_Generate_CSS();
         $generate->generate_style();
     }
 
@@ -79,16 +83,19 @@ class SSuprydpStickySidebarOptions {
     /**
      * add submenu pages in admin menu
      */
-    public function addSubmenuPages() {
+    public function add_submenu_pages() {
+        if (function_exists('easy_sticky_sidebar_has_pro') && easy_sticky_sidebar_has_pro()) {
+            return;
+        }
+
         require_once EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/inc/sticky-sidebar-list.php';
 
         $sidebars = new Easy_Sticky_Sidebar_List();
-        add_menu_page('WP CTA', 'WP CTA', 'manage_options', 'easy-sticky-sidebars', apply_filters('sticky_sidebar_main_menu', [$sidebars, 'output']), 'dashicons-megaphone');
+        add_menu_page('WP CTA', 'WP CTA', 'manage_options', 'easy-sticky-sidebars', apply_filters('easy_sticky_sidebar_main_menu', [$sidebars, 'output']), 'dashicons-megaphone');
 
-        $sidebar_list_menu = add_submenu_page('easy-sticky-sidebars', 'WP CTA Dashboard', 'WP CTA Dashboard', 'manage_options', 'easy-sticky-sidebars', apply_filters('sticky_sidebar_main_menu', [$sidebars, 'output']));
+        $sidebar_list_menu = add_submenu_page('easy-sticky-sidebars', 'WP CTA Dashboard', 'WP CTA Dashboard', 'manage_options', 'easy-sticky-sidebars', apply_filters('easy_sticky_sidebar_main_menu', [$sidebars, 'output']));
         add_action("load-$sidebar_list_menu", [$sidebars, 'screen_option']);
 
-        // Allow unlimited CTAs - removed restriction
         add_submenu_page('easy-sticky-sidebars', 'Add New', 'Add New', 'manage_options', 'add-easy-sticky-sidebar', [$this, 'add_new_cta_page']);
 
         $this->export_import = require_once EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/inc/import-export.php';
@@ -103,9 +110,9 @@ class SSuprydpStickySidebarOptions {
 
         // add_submenu_page('easy-sticky-sidebars', esc_html__('How to use Wordpress CTA', 'easy-sticky-sidebar'), esc_html__('How To Use', 'easy-sticky-sidebar'), 'manage_options', 'https://wpctapro.com/help/', 499);
 
-        add_submenu_page('easy-sticky-sidebars', esc_html__('How to use Wordpress CTA', 'easy-sticky-sidebar'), esc_html__('How To Use', 'easy-sticky-sidebar'), 'manage_options', 'how-to-use-wordpress-cta', [$this, 'how_to_use_wordpress_cta']);
+        add_submenu_page('easy-sticky-sidebars', esc_html__('How to use Wordpress CTA', 'easy-sticky-sidebar'), esc_html__('How To Use', 'easy-sticky-sidebar'), 'manage_options', 'how-to-use-wordpress-cta', [$this, 'how_to_use']);
 
-        add_submenu_page('easy-sticky-sidebars', 'Edit CTA', 'Edit CTA', 'manage_options', 'edit-easy-sticky-sidebar', [$this, 'SSuprydp_AddFormSetting'], 500);
+        add_submenu_page('easy-sticky-sidebars', 'Edit CTA', 'Edit CTA', 'manage_options', 'edit-easy-sticky-sidebar', [$this, 'render_form_settings'], 500);
     }
 
     /**
@@ -114,12 +121,36 @@ class SSuprydpStickySidebarOptions {
 
     public function add_new_cta_page() {
         $default_attachment = get_option('easy_sticky_sidebar_default_attachment');
+        $overlay_default_image = EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/overlay_dummy.webp';
         $data = array(
             'sticky_id' => 0,
             'editor_current_tab' => 'sticky-sidebar-template',
-            'stickycta' => new WP_Sticky_CTA_Data([
-                'sticky_s_media' => wp_get_attachment_image_url($default_attachment),
-                'image_attachment_id' => $default_attachment,
+            'stickycta' => new Easy_Sticky_Sidebar_CTA_Data([
+                'sticky_s_media' => $overlay_default_image,
+                'image_attachment_id' => 0,
+                'image_placement' => 'overlay',
+                'overlay_position' => 'left',
+                'SSuprydp_button_option_text' => 'Have Questions?',
+                'SSuprydp_content_option_text' => 'Get quick answers and expert guidance tailored to your needs.',
+                'SSuprydp_action_option_text' => 'Get Started',
+                'SSuprydp_button_option_backg_color' => '#099607',
+                'SSuprydp_button_option_font' => 'Archivo:700',
+                'SSuprydp_button_option_size' => '24',
+                'SSuprydp_action_option_font' => 'Archivo:700',
+                'SSuprydp_action_option_size' => '24',
+                'SSuprydp_content_option_font' => 'Arial',
+                'SSuprydp_content_option_size' => '24',
+                'SSuprydp_content_option_color' => '#383838',
+                'link_text_background' => '#08a800',
+                'overlay_button_padding' => array(
+                    'top' => 5,
+                    'right' => 20,
+                    'bottom' => 5,
+                    'left' => 20,
+                    'unit' => 'px',
+                ),
+                'overlay_button_radius' => 50,
+                'cta_image_height' => '300',
             ])
         );
 
@@ -139,10 +170,10 @@ class SSuprydpStickySidebarOptions {
             $data['form_attributes'][] = sprintf('%s="%s"', $attribute, esc_attr($value));
         }
 
-        print SSuprydpStickySidebar()->engine->getView('add_pages', $data); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        print easy_sticky_sidebar()->engine->get_view('add_pages', $data); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 
-    public function how_to_use_wordpress_cta() {
+    public function how_to_use() {
         // Define the text and button
         $button_text = 'View Help Page';
         $page_url = 'https://wpctapro.com/help/';
@@ -171,7 +202,7 @@ document.getElementById("cta-button").addEventListener("click", function() {
     /**
      * add bulk pages
      */
-    public function SSuprydp_AddFormSetting() {
+    public function render_form_settings() {
         global $wpdb;
 
         $sticky_id = isset($_GET['id']) ? absint($_GET['id']) : 0;
@@ -181,7 +212,26 @@ document.getElementById("cta-button").addEventListener("click", function() {
             return include_once EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/views/sidebar-404.php';
         }
 
-        $stickycta = new WP_Sticky_CTA_Data($record);
+        $stickycta = new Easy_Sticky_Sidebar_CTA_Data($record);
+
+        // Ensure editor template selection reflects latest persisted option value.
+        $saved_template = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT option_value FROM {$wpdb->prefix}sticky_cta_options WHERE sticky_cta_id = %d AND option_name = %s ORDER BY ID DESC LIMIT 1",
+                $sticky_id,
+                'sidebar_template'
+            )
+        );
+        $saved_template = maybe_unserialize($saved_template);
+        if (function_exists('easy_sticky_sidebar_normalize_template_key')) {
+            $saved_template = easy_sticky_sidebar_normalize_template_key($saved_template, '');
+        }
+        if (is_string($saved_template) && $saved_template !== '') {
+            $available_templates = function_exists('easy_sticky_sidebar_templates') ? array_keys((array) easy_sticky_sidebar_templates()) : [];
+            if (empty($available_templates) || in_array($saved_template, $available_templates, true)) {
+                $stickycta->sidebar_template = $saved_template;
+            }
+        }
 
         $data['stickycta'] = $stickycta;
         $data['sticky_id'] = $stickycta->__get('id') ? $stickycta->__get('id') : 0;
@@ -211,7 +261,7 @@ document.getElementById("cta-button").addEventListener("click", function() {
             $data['form_attributes'][] = sprintf('%s="%s"', $attribute, esc_attr($value));
         }
 
-        print SSuprydpStickySidebar()->engine->getView('add_pages', $data); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+        print easy_sticky_sidebar()->engine->get_view('add_pages', $data); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 
     /**
@@ -228,13 +278,13 @@ document.getElementById("cta-button").addEventListener("click", function() {
      * @since 1.4.5
      */
     public function pro_feature_popup() {
-        $wordpress_cta_page = strpos(get_current_screen()->id, 'easy-sticky-sidebar');
-        if ($wordpress_cta_page === false) {
+        $is_plugin_page = strpos(get_current_screen()->id, 'easy-sticky-sidebar');
+        if ($is_plugin_page === false) {
             return;
         } ?>
 <div id="wordpress-cta-pro-feature-popup" class="wordpress-cta-popup">
     <div class="popup-content">
-        <?php wordpress_cta_pro_get_block(); ?>
+        <?php easy_sticky_sidebar_pro_get_block(); ?>
         <span class="close"></span>
     </div>
 </div>
@@ -246,8 +296,8 @@ document.getElementById("cta-button").addEventListener("click", function() {
      * @since 1.0.4
      */
     public function load_design_template_popup() {
-        $wordpress_cta_page = strpos(get_current_screen()->id, 'easy-sticky-sidebar');
-        if ($wordpress_cta_page === false) {
+        $is_plugin_page = strpos(get_current_screen()->id, 'easy-sticky-sidebar');
+        if ($is_plugin_page === false) {
             return;
         } ?>
 <div id="wordpress-cta-popup-load-design" class="wordpress-cta-popup">
@@ -272,7 +322,7 @@ document.getElementById("cta-button").addEventListener("click", function() {
      * @since 1.5.6
      */
     public function settings() {
-        $settings = Wordpress_CTA_Free_Utils::get_settings();
+        $settings = Easy_Sticky_Sidebar_Utils::get_settings();
         if (!empty($_POST)) {
             $settings = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
         }

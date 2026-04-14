@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 $cta_classes[] = 'easy-sticky-sidebar ess-floating-buttons';
 
 
-$floating_buttons = Wordpress_CTA_Free_Floating_Buttons::get_buttons($ctacontent);
+$floating_buttons = Easy_Sticky_Sidebar_Floating_Buttons::get_buttons($ctacontent);
 
 if (sizeof($floating_buttons) === 0) {
 	return;
@@ -25,7 +25,9 @@ if ($hide_text) {
 
 
 
-$horizontal_vertical_position = $ctacontent->dynamic_properties['horizontal_vertical_position'];
+$horizontal_vertical_position = function_exists('easy_sticky_sidebar_normalize_secondary_position')
+	? easy_sticky_sidebar_normalize_secondary_position($ctacontent->SSuprydp_cta_position ?? 'right', $ctacontent->horizontal_vertical_position ?? '', 'center')
+	: strtolower((string) ($ctacontent->horizontal_vertical_position ?? 'center'));
 
    
 $position_style = '';

@@ -2,15 +2,11 @@
 if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly 
 }
-$btn_color = $ctacontent->SSuprydp_button_option_color;
-if($btn_color){
-$button_color = $btn_color ;
-}
+$button_color = (string) ($ctacontent->SSuprydp_button_option_color ?? '');
+$button_color = trim($button_color) !== '' ? $button_color : '#fff';
 
-$btn_backcolor = $ctacontent->SSuprydp_button_option_backg_color;
-if($btn_backcolor){
-$button_background_color = $btn_backcolor ;
-}
+$button_background_color = (string) ($ctacontent->SSuprydp_button_option_backg_color ?? '');
+$button_background_color = trim($button_background_color) !== '' ? $button_background_color : '#218400';
 
 $cta_link_url = $ctacontent->tab_cta_url;
 $cta_target_blank = ($ctacontent->tab_cta_target_blank == 'yes');
@@ -36,7 +32,9 @@ if ($display_animation && $display_animation !== 'none') {
     $cta_classes[] = 'ess-cta-hidden';
 }
 
-$horizontal_vertical_position = $ctacontent->dynamic_properties['horizontal_vertical_position'];
+$horizontal_vertical_position = function_exists('easy_sticky_sidebar_normalize_secondary_position')
+    ? easy_sticky_sidebar_normalize_secondary_position($ctacontent->SSuprydp_cta_position ?? 'right', $ctacontent->horizontal_vertical_position ?? '', 'center')
+    : strtolower((string) ($ctacontent->horizontal_vertical_position ?? 'center'));
 $position_style = '';
 $position_a = '';
     if($ctacontent->SSuprydp_cta_position == 'left' || $ctacontent->SSuprydp_cta_position == 'right'){
@@ -49,7 +47,28 @@ $position_a = '';
         }
     }
 
-$button_icon_class = trim((string) ($ctacontent->button_icon ?? ''));
+$button_alignment_value = strtolower((string) ($ctacontent->button_alignment ?? ''));
+if (!in_array($button_alignment_value, ['start', 'center', 'end'], true)) {
+    $legacy_align = strtolower((string) ($ctacontent->SSuprydp_button_option_align ?? 'left'));
+    $legacy_map = ['left' => 'start', 'center' => 'center', 'right' => 'end', 'top' => 'start', 'middle' => 'center', 'bottom' => 'end'];
+    $button_alignment_value = $legacy_map[$legacy_align] ?? 'start';
+}
+$axis_map = ['start' => 'flex-start', 'center' => 'center', 'end' => 'flex-end'];
+$axis_align = $axis_map[$button_alignment_value] ?? 'flex-start';
+$is_vertical_position = in_array($ctacontent->SSuprydp_cta_position, ['top', 'bottom'], true);
+$justify_value = $is_vertical_position ? 'center' : $axis_align;
+$align_items_value = $is_vertical_position ? $axis_align : 'center';
+$text_align_value = $button_alignment_value === 'start' ? 'left' : ($button_alignment_value === 'end' ? 'right' : 'center');
+$button_alignment_style = sprintf(
+    'text-align:%s; display:flex; flex-direction:column; align-items:%s; justify-content:%s;',
+    esc_attr($text_align_value),
+    esc_attr($align_items_value),
+    esc_attr($justify_value)
+);
+
+$button_icon_class = function_exists('easy_sticky_sidebar_normalize_icon_class')
+    ? easy_sticky_sidebar_normalize_icon_class($ctacontent->button_icon ?? '')
+    : trim((string) ($ctacontent->button_icon ?? ''));
 ?>
 
 <div id="<?php echo esc_attr('easy-sticky-sidebar-' . $ctacontent->id); ?>" style="<?php echo esc_attr($position_style); ?>"
@@ -70,15 +89,18 @@ $button_icon_class = trim((string) ($ctacontent->button_icon ?? ''));
 ?>
 
     <a class="sticky-sidebar-button"
-        style="color: <?php echo esc_attr($button_color); ?>; background-color:<?php echo esc_attr($button_background_color); ?>; <?php echo esc_attr($position_a); ?>"
+        style="color: <?php echo esc_attr($button_color); ?>; background-color:<?php echo esc_attr($button_background_color); ?>; <?php echo esc_attr($position_a); ?> <?php echo esc_attr($button_alignment_style); ?>"
         href="<?php echo esc_url($cta_link_url); ?>"
         <?php echo $cta_target_blank ? ' target="_blank"' : ''; ?>
         <?php echo $cta_nofollow ? ' rel="nofollow"' : ''; ?>>
         <?php
             $button_icon = $button_icon_class !== ''
-                ? '<i class="' . esc_attr($button_icon_class) . '"></i> '
+                ? '<i class="icon ' . esc_attr($button_icon_class) . '"></i> '
                 : '';
             $button_text = trim((string) $ctacontent->SSuprydp_button_option_text);
+            if ($button_text === '') {
+                $button_text = 'Call Now';
+            }
             $button_text_html = $button_text === '' ? '' : esc_html($button_text);
         ?>
         <div><?php echo wp_kses($button_icon . $button_text_html, array('i' => array('class' => array()))); ?></div>

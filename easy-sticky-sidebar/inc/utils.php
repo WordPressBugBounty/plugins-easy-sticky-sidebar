@@ -4,7 +4,7 @@
  * Helper functions 
  * @since 1.4.5
  */
-class Wordpress_CTA_Free_Utils {
+class Easy_Sticky_Sidebar_Utils {
     /**
      * Update image
      * @since 1.5.6
@@ -41,7 +41,7 @@ class Wordpress_CTA_Free_Utils {
         }
 
 
-        $get_templates = wordpress_cta_get_design_templates();
+        $get_templates = easy_sticky_sidebar_get_design_templates();
         if (!isset($get_templates[$template_key])) {
             return $key;
         }
@@ -91,7 +91,7 @@ class Wordpress_CTA_Free_Utils {
      * @return void
      */
     public static function pro_tab_class($action) {
-        if (has_wordpress_cta_pro()) {
+        if (easy_sticky_sidebar_has_pro()) {
             return '';
         }
 
@@ -109,7 +109,7 @@ class Wordpress_CTA_Free_Utils {
                 if (isset($callback['function'][0])) {
                     $object = $callback['function'][0];
 
-                    if (!is_a($object, 'Wordpress_CTA_Pro_Placeholder')) {
+                    if (!is_a($object, 'Easy_Sticky_Sidebar_Pro_Placeholder')) {
                         $is_pro = false;
                     }
                 }
@@ -130,7 +130,7 @@ class Wordpress_CTA_Free_Utils {
      */
     public static function get_inline_lock($styles = []) {
         // Don't show lock if pro plugin is active
-        $pro_active = has_wordpress_cta_pro();
+        $pro_active = easy_sticky_sidebar_has_pro();
         if ($pro_active) {
             return;
         }
@@ -240,7 +240,7 @@ class Wordpress_CTA_Free_Utils {
 
             <li class="input-link dashicons dashicons-admin-links"></li>
 
-            <li><?php easy_sticky_sidebar_get_unit_input($names['unit'], $values->unit); ?></li>
+            <li><?php easy_sticky_sidebar_get_unit_input($names['unit'], $values->unit, '', ['px']); ?></li>
         </ul>
 <?php
     }

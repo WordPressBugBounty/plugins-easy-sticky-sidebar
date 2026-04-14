@@ -4,11 +4,11 @@ if (!defined('ABSPATH')) {
 }
 
 /*
- * Wordpress_CTA_Pro_Content tab option
+ * Content tab options
  * @package sticky-sidebar/inc
  * @since 1.4.5
  */
-class Wordpress_CTA_Free_Content_Tab {
+class Easy_Sticky_Sidebar_Content_Tab {
 
     public function __construct() {
         add_action( 'easy_sticky_sidebar_content_image', [$this, 'add_image'], 5);
@@ -36,7 +36,7 @@ class Wordpress_CTA_Free_Content_Tab {
 </div>
 <?php } else {?>
 <div class='image-preview-wrapper'>
-    <img id='image-preview' src='<?php echo esc_url(wp_get_attachment_url($stickycta->sticky_s_media)); ?>' height='100'>
+    <img id='image-preview' src='<?php echo esc_url(wp_get_attachment_url($stickycta->image_attachment_id)); ?>' height='100'>
 </div>
 <?php } ?>
 
@@ -52,9 +52,9 @@ class Wordpress_CTA_Free_Content_Tab {
      */
     function button_text($stickycta) { ?>
 <div class="SSuprydp_field_wrap sticky-sidebar-button_text">
-    <div class="heading"><?php esc_html_e("Button Text", "easy-sticky-sidebar"); ?></div>
+    <div class="heading"><?php esc_html_e("CTA Tab Text", "easy-sticky-sidebar"); ?></div>
     <p class="wordpress-cta-instruction">
-        <?php esc_html_e('Enter text for the toggle button. Use something that will grab your users attention.', 'easy-sticky-sidebar') ?>
+        <?php esc_html_e('Enter short, action-oriented text for the CTA tab. Keep it concise and engaging to encourage clicks.', 'easy-sticky-sidebar') ?>
     </p>
     <div class="gap-10"></div>
     <input type="text" name="SSuprydp_button_option_text" class="SSuprydp_input meta_title"
@@ -69,8 +69,8 @@ class Wordpress_CTA_Free_Content_Tab {
      */
     function button_icon($stickycta) { ?>
 <div class="SSuprydp_field_wrap button_icon">
-    <div class="heading"><?php esc_html_e("Button Icon", "easy-sticky-sidebar"); ?></div>
-    <p class="wordpress-cta-instruction"><?php esc_html_e('Select a icon for button', 'easy-sticky-sidebar'); ?></p>
+    <div class="heading"><?php esc_html_e("CTA Tab Icon", "easy-sticky-sidebar"); ?></div>
+    <p class="wordpress-cta-instruction"><?php esc_html_e('Select an icon to display on the CTA tab.', 'easy-sticky-sidebar'); ?></p>
     <div class="gap-10"></div>
 
     <div class="icon-library-select-button">
@@ -107,9 +107,9 @@ class Wordpress_CTA_Free_Content_Tab {
     function call_to_action_text($stickycta) { ?>
 <div class="call-to-action-button-wrapper">
     <div class="SSuprydp_field_wrap sticky-sidebar-link_text">
-        <div class="heading"><?php esc_html_e("Link Text", "easy-sticky-sidebar"); ?></div>
+        <div class="heading"><?php esc_html_e("Button Label", "easy-sticky-sidebar"); ?></div>
         <p class="wordpress-cta-instruction">
-            <?php esc_html_e('Enter text for the link. Use something like "Try Now" to entice the user to click.', 'easy-sticky-sidebar') ?>
+            <?php esc_html_e('Enter action-oriented text for the CTA button (e.g., “Try Now”, “Get Started”, “Claim Offer”).', 'easy-sticky-sidebar') ?>
         </p>
         <div class="gap-10"></div>
         <input type="text" name="SSuprydp_action_option_text" id="SSuprydp_action_option_text"

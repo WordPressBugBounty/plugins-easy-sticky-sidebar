@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
  * @since   1.2.0
  */
 
-class SSuprydpproActions {
+class Easy_Sticky_Sidebar_Actions {
 
 	/**
 	 * StickySidebar Constructor.
@@ -17,9 +17,10 @@ class SSuprydpproActions {
 	function __construct() {
 		$public_ajax_actions = array(
 			'easy_sticky_sidebar_get_click',
+			'easy_sticky_sidebar_track_impressions',
 		);
 
-		foreach ($this->AjaxActions() as $key => $action) {
+		foreach ($this->get_ajax_actions() as $key => $action) {
 			add_action("wp_ajax_{$action['name']}", [$this, $action['callback']]);
 
 			if (in_array($action['name'], $public_ajax_actions, true)) {
@@ -28,8 +29,8 @@ class SSuprydpproActions {
 		}
 
 		// Fixed: Removed wp_ajax_nopriv_ hooks for security - only authenticated users can access these functions
-		add_action('wp_ajax_update_cta_status', [$this, 'update_cta_status']);
-		add_action('wp_ajax_change_sticky_sidebar_name', [$this, 'change_sticky_sidebar_name']);
+		add_action('wp_ajax_easy_sticky_sidebar_update_status', [$this, 'update_cta_status']);
+		add_action('wp_ajax_easy_sticky_sidebar_change_name', [$this, 'change_sticky_sidebar_name']);
 		
 		// Removed tracking functionality - keeping analytics as pro features
 
@@ -51,7 +52,13 @@ class SSuprydpproActions {
 
 		$post_data = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
-		$sticky_id = $post_data['sticky_id'];
+		$sticky_id = isset($post_data['sticky_id']) ? absint($post_data['sticky_id']) : 0;
+		$status = isset($post_data['status']) ? sanitize_text_field($post_data['status']) : '';
+
+		$allowed_statuses = ['live', 'development', 'off'];
+		if (!in_array($status, $allowed_statuses, true)) {
+			wp_send_json(['success' => false, 'error' => esc_html__('Invalid status value.', 'easy-sticky-sidebar')]);
+		}
 
 		$sticky = $wpdb->get_row($wpdb->prepare("SELECT * FROM $wpdb->sticky_cta WHERE id = %d", $sticky_id));
 		if (!$sticky) {
@@ -60,7 +67,7 @@ class SSuprydpproActions {
 
 		$wpdb->update(
 			$wpdb->sticky_cta,
-			array('SSuprydp_development' => $post_data['status']),
+			array('SSuprydp_development' => $status),
 			array('id' => $sticky_id),
 			array('%s'),
 			array('%d')
@@ -101,17 +108,18 @@ class SSuprydpproActions {
 	}
 
 	/*
-     * SSuprydpStickySidebar ajax handlers
+     * AJAX action definitions
      *
      * @return Array
      */
 
-	private function AjaxActions() {
+	private function get_ajax_actions() {
 		return [
-			['name' => 'process_pages', 'callback' => 'processPages'],
-			['name' => 'ajax_check', 'callback' => 'ajaxCheck'],
-			['name' => 'validate_data', 'callback' => 'validateData'],
-			['name' => 'easy_sticky_sidebar_get_click', 'callback' => 'easyStickySidebarGetClick'],
+			['name' => 'easy_sticky_sidebar_process_pages', 'callback' => 'process_pages'],
+			['name' => 'easy_sticky_sidebar_ajax_check', 'callback' => 'ajax_check'],
+			['name' => 'easy_sticky_sidebar_validate_data', 'callback' => 'validate_data'],
+			['name' => 'easy_sticky_sidebar_get_click', 'callback' => 'track_click'],
+			['name' => 'easy_sticky_sidebar_track_impressions', 'callback' => 'track_impressions'],
 		];
 	}
 
@@ -121,7 +129,11 @@ class SSuprydpproActions {
 	 *
 	 * @return void
 	 */
-	public function easyStickySidebarGetClick() {
+	public function track_click() {
+		if (!check_ajax_referer('easy_sticky_sidebar_front_nonce', 'nonce', false)) {
+			wp_send_json_success();
+		}
+
 		global $wpdb;
 
 		$sticky_id = isset($_POST['sticky_id']) ? absint($_POST['sticky_id']) : 0;
@@ -144,6 +156,39 @@ class SSuprydpproActions {
 		wp_send_json_success();
 	}
 
+	/**
+	 * Track CTA impressions via AJAX (non-blocking).
+	 *
+	 * @return void
+	 */
+	public function track_impressions() {
+		if (!check_ajax_referer('easy_sticky_sidebar_front_nonce', 'nonce', false)) {
+			wp_send_json_success();
+		}
+
+		$current_user = wp_get_current_user();
+		$has_admin_role = array_intersect(['administrator', 'editor'], (array) $current_user->roles);
+		if (!empty($has_admin_role)) {
+			wp_send_json_success();
+		}
+
+		$ids = isset($_POST['ids']) && is_array($_POST['ids']) ? array_map('absint', $_POST['ids']) : [];
+		$ids = array_filter($ids);
+		if (empty($ids)) {
+			wp_send_json_success();
+		}
+
+		global $wpdb;
+		foreach ($ids as $sticky_id) {
+			$wpdb->query($wpdb->prepare(
+				"UPDATE $wpdb->sticky_cta SET SSuprydp_impressions = SSuprydp_impressions + 1 WHERE id = %d",
+				$sticky_id
+			));
+		}
+
+		wp_send_json_success();
+	}
+
 	function content_filter($tags, $context) {
 		$tags['iframe'] = array(
 			'src'               => true,
@@ -162,7 +207,7 @@ class SSuprydpproActions {
 	 * @global type $wpdb
 	 * @return JSON
 	 */
-	public function processPages() {
+	public function process_pages() {
 		if (!isset($_POST)) {
 			wp_send_json(['status' => 'failed', 'message' => 'Data missing']);
 		}
@@ -179,12 +224,103 @@ class SSuprydpproActions {
 		$postdata = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 		$sticky_id = isset($postdata['sticky_id']) ? absint($postdata['sticky_id']) : 0;
 
-		// Ensure button_icon is captured (free feature now).
-		if (isset($_POST['button_icon'])) {
-			$postdata['button_icon'] = sanitize_text_field(wp_unslash($_POST['button_icon']));
+		// Keep template persistence deterministic for thumbnail-based picker UI.
+		// Use sidebar_template when posted; otherwise fallback to sidebar_template_picker.
+		$posted_template = '';
+		// Priority matters:
+		// 1) sidebar_template_picker (actual selected thumbnail radio)
+		// 2) sidebar_template (hidden/native select mirror)
+		// 3) sidebar_template_user_selection (legacy hidden mirror)
+		if (isset($_POST['sidebar_template_picker'])) {
+			$posted_template = sanitize_text_field(wp_unslash($_POST['sidebar_template_picker']));
+		} elseif (isset($_POST['sidebar_template'])) {
+			$posted_template = sanitize_text_field(wp_unslash($_POST['sidebar_template']));
+		} elseif (isset($_POST['sidebar_template_user_selection'])) {
+			$posted_template = sanitize_text_field(wp_unslash($_POST['sidebar_template_user_selection']));
+		}
+		$available_templates = function_exists('easy_sticky_sidebar_templates') ? array_keys((array) easy_sticky_sidebar_templates()) : [];
+		if ($posted_template !== '') {
+			$posted_template = function_exists('easy_sticky_sidebar_normalize_template_key')
+				? easy_sticky_sidebar_normalize_template_key($posted_template, '')
+				: $posted_template;
+			if ($posted_template !== '' && (empty($available_templates) || in_array($posted_template, $available_templates, true))) {
+				$postdata['sidebar_template'] = $posted_template;
+			}
+		}
+		// Never let an update silently reset template to default because of missing/malformed template payload.
+		if (empty($postdata['sidebar_template']) && $sticky_id > 0) {
+			global $wpdb;
+			$existing_template = $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT option_value FROM {$wpdb->prefix}sticky_cta_options WHERE sticky_cta_id = %d AND option_name = %s ORDER BY ID DESC LIMIT 1",
+					$sticky_id,
+					'sidebar_template'
+				)
+			);
+			$existing_template = maybe_unserialize($existing_template);
+			if (function_exists('easy_sticky_sidebar_normalize_template_key')) {
+				$existing_template = easy_sticky_sidebar_normalize_template_key($existing_template, '');
+			}
+			if (is_string($existing_template) && $existing_template !== '') {
+				if (empty($available_templates) || in_array($existing_template, $available_templates, true)) {
+					$postdata['sidebar_template'] = $existing_template;
+				}
+			}
 		}
 
-		if (!has_wordpress_cta_pro() && $sticky_id === 0) {
+		// Ensure button_icon is captured (free feature now).
+		if (isset($_POST['button_icon'])) {
+			$button_icon = sanitize_text_field(wp_unslash($_POST['button_icon']));
+			if (function_exists('easy_sticky_sidebar_normalize_icon_class')) {
+				$button_icon = easy_sticky_sidebar_normalize_icon_class($button_icon);
+			}
+			$postdata['button_icon'] = $button_icon;
+		}
+
+		// Ensure sticky overlay fields are saved reliably (admin + frontend parity).
+		if (isset($_POST['image_placement'])) {
+			$postdata['image_placement'] = sanitize_text_field(wp_unslash($_POST['image_placement']));
+		}
+		if (isset($_POST['overlay_position'])) {
+			$postdata['overlay_position'] = sanitize_text_field(wp_unslash($_POST['overlay_position']));
+		}
+		if (isset($_POST['overlay_content_alignment'])) {
+			$overlay_content_alignment = sanitize_text_field(wp_unslash($_POST['overlay_content_alignment']));
+			$postdata['overlay_content_alignment'] = in_array($overlay_content_alignment, ['left', 'center', 'right'], true) ? $overlay_content_alignment : 'center';
+		}
+		if (isset($_POST['overlay_button_alignment'])) {
+			$overlay_button_alignment = sanitize_text_field(wp_unslash($_POST['overlay_button_alignment']));
+			$postdata['overlay_button_alignment'] = in_array($overlay_button_alignment, ['left', 'center', 'right'], true) ? $overlay_button_alignment : 'center';
+		}
+		if (isset($_POST['overlay_backdrop_color'])) {
+			$postdata['overlay_backdrop_color'] = sanitize_hex_color(wp_unslash($_POST['overlay_backdrop_color'])) ?: '#000000';
+		}
+		if (isset($_POST['overlay_backdrop_opacity'])) {
+			$postdata['overlay_backdrop_opacity'] = max(0, min(100, absint(wp_unslash($_POST['overlay_backdrop_opacity']))));
+		}
+		if (isset($_POST['overlay_content_gap'])) {
+			$postdata['overlay_content_gap'] = max(0, absint(wp_unslash($_POST['overlay_content_gap'])));
+		}
+		if (isset($_POST['overlay_content_padding'])) {
+			$postdata['overlay_content_padding'] = max(0, absint(wp_unslash($_POST['overlay_content_padding'])));
+		}
+		$horizontal_vertical_position = '';
+		if (isset($_POST['horizontal_vertical_position'])) {
+			$horizontal_vertical_position = sanitize_text_field(wp_unslash($_POST['horizontal_vertical_position']));
+		} elseif (isset($_POST['horizontal_vertical_position_value'])) {
+			$horizontal_vertical_position = sanitize_text_field(wp_unslash($_POST['horizontal_vertical_position_value']));
+		}
+		if ($horizontal_vertical_position !== '') {
+			$cta_position = '';
+			if (isset($_POST['SSuprydp_cta_position'])) {
+				$cta_position = sanitize_text_field(wp_unslash($_POST['SSuprydp_cta_position']));
+			}
+			$postdata['horizontal_vertical_position'] = function_exists('easy_sticky_sidebar_normalize_secondary_position')
+				? easy_sticky_sidebar_normalize_secondary_position($cta_position, $horizontal_vertical_position, 'center')
+				: (in_array($horizontal_vertical_position, ['top', 'center', 'bottom'], true) ? $horizontal_vertical_position : 'center');
+		}
+
+		if (!easy_sticky_sidebar_has_pro() && $sticky_id === 0) {
 			global $wpdb;
 			$cta_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}sticky_cta");
 			if ($cta_count >= 3) {
@@ -199,9 +335,9 @@ class SSuprydpproActions {
 		$postdata['SSuprydp_content_option_text'] = wp_kses_stripslashes(wp_kses_post($_POST['SSuprydp_content_option_text'], wp_kses_allowed_html()));
 		remove_filter('wp_kses_allowed_html', [$this, 'content_filter'], 2);
 
-		$postdata['SSuprydp_content_option_text'] = apply_filters('wordpress_cta_free/cta_content', $postdata['SSuprydp_content_option_text'], $postdata);
+		$postdata['SSuprydp_content_option_text'] = apply_filters('easy_sticky_sidebar/cta_content', $postdata['SSuprydp_content_option_text'], $postdata);
 
-		$switch_fields = apply_filters('wordpress_cta_free/swtich_inputs', ['SSuprydp_target_blank', 'SSuprydp_nofollow', 'SSuprydp_shrink', 'SSuprydp_shrink_tablet', 'SSuprydp_shrink_mobile', 'SSuprydp_dis_desktop', 'SSuprydp_dis_tablet', 'SSuprydp_dis_mobile', 'SSuprydp_img_hideimg', 'SSuprydp_hideimg_tablet', 'SSuprydp_hideimg_mobile']);
+		$switch_fields = apply_filters('easy_sticky_sidebar/switch_inputs', ['SSuprydp_target_blank', 'SSuprydp_nofollow', 'SSuprydp_shrink', 'SSuprydp_shrink_tablet', 'SSuprydp_shrink_mobile', 'SSuprydp_dis_desktop', 'SSuprydp_dis_tablet', 'SSuprydp_dis_mobile', 'SSuprydp_img_hideimg', 'SSuprydp_hideimg_tablet', 'SSuprydp_hideimg_mobile']);
 
 		while ($switch = current($switch_fields)) {
 			next($switch_fields);
@@ -217,12 +353,82 @@ class SSuprydpproActions {
 			unset($postdata['sticky_id']);
 
 			$postdata['id'] = $sticky_id;
-			easy_sticky_sidebar_insert($postdata);
+			$saved_id = easy_sticky_sidebar_insert($postdata);
+
+			// Hard guarantee: persist CTA template explicitly in options table.
+			// This prevents template reset on reload when mixed field sources exist.
+			if (!empty($postdata['sidebar_template'])) {
+				$persist_id = absint($saved_id ? $saved_id : $sticky_id);
+				if ($persist_id > 0) {
+					global $wpdb;
+					// Remove any stale duplicates first.
+					$wpdb->query(
+						$wpdb->prepare(
+							"DELETE FROM {$wpdb->prefix}sticky_cta_options WHERE sticky_cta_id = %d AND option_name = %s",
+							$persist_id,
+							'sidebar_template'
+						)
+					);
+
+					$template_row = array(
+						'sticky_cta_id' => $persist_id,
+						'option_name' => 'sidebar_template',
+						'option_value' => maybe_serialize((string) $postdata['sidebar_template']),
+					);
+					$template_format = array('%d', '%s', '%s');
+					$wpdb->insert($wpdb->sticky_cta_options, $template_row, $template_format);
+				}
+			}
 
 			wp_send_json(['status' => 'success', 'message' => 'Saved']);
 		}
 
+		// Tab CTA defaults (only when values are empty/legacy defaults).
+		if (($postdata['sidebar_template'] ?? '') === 'tab-cta') {
+			$this->apply_tab_cta_defaults($postdata);
+		}
+
 		wp_send_json(['status' => 'failed', 'message' => 'Data missing']);
+	}
+
+	/**
+	 * Apply Tab CTA defaults when user has not saved custom tab styling/text yet.
+	 *
+	 * @param array<string,mixed> $postdata
+	 * @return void
+	 */
+	private function apply_tab_cta_defaults(array &$postdata) {
+		$text = isset($postdata['SSuprydp_button_option_text']) ? trim((string) $postdata['SSuprydp_button_option_text']) : '';
+		$text_lc = strtolower($text);
+		if ($text === '' || in_array($text_lc, ['click here', 'tab cta'], true)) {
+			$postdata['SSuprydp_button_option_text'] = 'Call Now';
+		}
+
+		$font = isset($postdata['SSuprydp_button_option_font']) ? trim((string) $postdata['SSuprydp_button_option_font']) : '';
+		$font_lc = strtolower(str_replace('+', ' ', $font));
+		if (
+			$font === '' ||
+			strpos($font_lc, 'open sans') !== false ||
+			strpos($font_lc, 'archivo') !== false
+		) {
+			$postdata['SSuprydp_button_option_font'] = 'Arial';
+		}
+
+		$size_raw = isset($postdata['SSuprydp_button_option_size']) ? (string) $postdata['SSuprydp_button_option_size'] : '';
+		$size_val = absint(preg_replace('/[^0-9.]/', '', $size_raw));
+		if ($size_val <= 0 || in_array($size_val, [20, 24], true)) {
+			$postdata['SSuprydp_button_option_size'] = '24';
+		}
+
+		$text_color = isset($postdata['SSuprydp_button_option_color']) ? strtolower(trim((string) $postdata['SSuprydp_button_option_color'])) : '';
+		if ($text_color === '' || in_array($text_color, ['#fff', '#ffffff'], true)) {
+			$postdata['SSuprydp_button_option_color'] = '#fff';
+		}
+
+		$background_color = isset($postdata['SSuprydp_button_option_backg_color']) ? strtolower(trim((string) $postdata['SSuprydp_button_option_backg_color'])) : '';
+		if ($background_color === '' || in_array($background_color, ['#4e0d61', '#2466d5'], true)) {
+			$postdata['SSuprydp_button_option_backg_color'] = '#218400';
+		}
 	}
 
 	public function redirect_after_creating_new_sidebar($postdata, $sticky_id, $new) {
@@ -234,7 +440,7 @@ class SSuprydpproActions {
 	/**
 	 * actions init ajaxCheck
 	 */
-	public function ajaxCheck() {
+	public function ajax_check() {
 		global $wpdb;
 
 		if (!check_ajax_referer('_nonce_easy_sticky_sidebar', '_wpnonce', false)) {
@@ -296,12 +502,12 @@ class SSuprydpproActions {
 	 * @param array $postdata
 	 * @return array
 	 */
-	public function validateData() {
+	public function validate_data() {
 
 		$postdata = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
 		$return = ['errors' => null, 'where' => null];
-		$button_text = SSuprydpStickySidebar()->engine->getValue('SSuprydp_button_option_text', $postdata, false);
+		$button_text = easy_sticky_sidebar()->engine->getValue('SSuprydp_button_option_text', $postdata, false);
 
 		if (!$button_text) {
 			$return['page_name'] = __("Please enter button text", "easy-sticky-sidebar");

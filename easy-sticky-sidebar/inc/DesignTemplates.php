@@ -4,10 +4,60 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Normalize preset template fields for current builder defaults.
+ * This keeps free/pro presets compatible with mode-specific classic/overlay behavior.
+ *
+ * @since 2.4.0
+ *
+ * @param array $template Template config.
+ * @return array
+ */
+function easy_sticky_sidebar_normalize_design_template(array $template) {
+	$sidebar_template = strtolower((string) ($template['sidebar_template'] ?? 'sticky-cta'));
+	if ($sidebar_template !== 'sticky-cta') {
+		return $template;
+	}
+
+	$image_mode = strtolower((string) ($template['image_placement'] ?? 'classic'));
+	if ($image_mode === 'background') {
+		$image_mode = 'overlay';
+	}
+	if (!in_array($image_mode, array('classic', 'overlay'), true)) {
+		$image_mode = 'classic';
+	}
+	$template['image_placement'] = $image_mode;
+
+	if (empty($template['overlay_position'])) {
+		$template['overlay_position'] = 'right';
+	}
+
+	if ($image_mode === 'overlay') {
+		$template['SSuprydp_button_option_backg_color'] = $template['SSuprydp_button_option_backg_color'] ?? '#099607';
+		$template['link_text_background'] = $template['link_text_background'] ?? '#08a800';
+		$template['SSuprydp_content_option_color'] = $template['SSuprydp_content_option_color'] ?? '#383838';
+		$template['SSuprydp_content_option_font'] = $template['SSuprydp_content_option_font'] ?? 'Arial';
+		$template['SSuprydp_content_option_size'] = $template['SSuprydp_content_option_size'] ?? '24';
+		$template['SSuprydp_action_option_font'] = $template['SSuprydp_action_option_font'] ?? 'Archivo:700';
+		$template['SSuprydp_action_option_size'] = $template['SSuprydp_action_option_size'] ?? '24';
+		$template['overlay_button_padding_v'] = $template['overlay_button_padding_v'] ?? 5;
+		$template['overlay_button_padding_h'] = $template['overlay_button_padding_h'] ?? 20;
+		$template['overlay_button_radius'] = $template['overlay_button_radius'] ?? 50;
+	} else {
+		$template['SSuprydp_button_option_backg_color'] = $template['SSuprydp_button_option_backg_color'] ?? '#4e0d61';
+		$template['link_text_background'] = $template['link_text_background'] ?? '#11265d';
+		$template['SSuprydp_content_option_color'] = $template['SSuprydp_content_option_color'] ?? '#ffffff';
+		$template['SSuprydp_content_option_size'] = $template['SSuprydp_content_option_size'] ?? '20';
+		$template['SSuprydp_action_option_size'] = $template['SSuprydp_action_option_size'] ?? '20';
+	}
+
+	return $template;
+}
+
+/**
  * Wordpress CTA design template
  * @since 1.4.5
  */
-function wordpress_cta_get_design_templates() {
+function easy_sticky_sidebar_get_design_templates() {
 
 	$styles = array(
 		'fitness1' => [
@@ -69,7 +119,6 @@ function wordpress_cta_get_design_templates() {
 			'gdpr_decline_target' => 'no',
 			'call_to_action_button' => 'no',
 			'sticky_cta_disable_collapse' => 'No',
-			'keep_html_cta_open' => 'No',
 			'html_cta_disable_collapse' => 'No',
 			'enable_cta_height' => 'No',
 		],
@@ -107,12 +156,11 @@ function wordpress_cta_get_design_templates() {
 			'collapse_on_page_load' => 'no',
 			'cta_position_horizontal' => 'right',
 			'cta_width' => '525',
-			'cta_image_height' => '250',
+			'cta_image_height' => '200',
 			'button_round' => '5',
 			'button2_text' => 'Decline',
 			'exclude_locations' => 'Array',
 			'html_cta_disable_collapse' => 'No',
-			'keep_html_cta_open' => 'No',
 			'sticky_cta_disable_collapse' => 'No',
 			'custom_css' => '',
 			'close_button_edge' => 'no',
@@ -172,7 +220,7 @@ function wordpress_cta_get_design_templates() {
 		'bakery1' => array(
 		'name' => 'Bakery',
 			'preview_image_url' => EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/bakery.jpg',
-			'preview_image_path' => EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/bakery.jpg',
+			'preview_image_path' => EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/img/bakery.jpg',
 			'SSuprydp_button_option_text' => 'Bake Sale',
 			'SSuprydp_button_option_backg_color' => '#fbc86d',
 			'SSuprydp_button_option_font' => 'Montserrat:900italic',
@@ -231,7 +279,6 @@ function wordpress_cta_get_design_templates() {
 			'line_separator_thickness' => '3',
 			'call_to_action_button' => 'no',
 			'sticky_cta_disable_collapse' => 'yes',
-			'keep_html_cta_open' => 'No',
 			'html_cta_disable_collapse' => 'No',
 			'enable_cta_height' => 'No',
 		),
@@ -240,7 +287,7 @@ function wordpress_cta_get_design_templates() {
 		'healthcare1' => array(
 		'name' => 'Healthcare',
 			'preview_image_url' => EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/healthcare.png',
-			'preview_image_path' => EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/healthcare.png',
+			'preview_image_path' => EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/img/healthcare.png',
 			'SSuprydp_button_option_text' => 'Free Consultation',
 			'SSuprydp_button_option_backg_color' => '#b1d4e0',
 			'SSuprydp_button_option_font' => 'Open Sans',
@@ -322,7 +369,6 @@ function wordpress_cta_get_design_templates() {
 			'cta_tablet_height_unit' => 'px',
 			'cta_mobile_height' => '',
 			'cta_mobile_height_unit' => 'px',
-			'keep_html_cta_open' => 'No',
 			'html_cta_disable_collapse' => 'No',
 			'enable_cta_height' => 'No',
 		),
@@ -389,7 +435,6 @@ function wordpress_cta_get_design_templates() {
 			'line_separator_thickness' => '2',
 			'call_to_action_button' => 'no',
 			'sticky_cta_disable_collapse' => 'No',
-			'keep_html_cta_open' => 'No',
 			'html_cta_disable_collapse' => 'No',
 			'enable_cta_height' => 'No',
 		),
@@ -462,10 +507,13 @@ function wordpress_cta_get_design_templates() {
 		'real-estate1' => ['name' => 'Real Estate', 'is_pro' => true]
 	);
 
-	$styles = apply_filters('wordpress_cta_free/design_templates', $styles);
+	$styles = apply_filters('easy_sticky_sidebar/design_templates', $styles);
 
 	foreach ($styles as $key => &$style_template) {
 		$key = sanitize_title($key);
+		if (is_array($style_template)) {
+			$style_template = easy_sticky_sidebar_normalize_design_template($style_template);
+		}
 
 		$style_template['image_attachment_id'] = $key;
 		if (isset($style_template['preview_image_url'])) {

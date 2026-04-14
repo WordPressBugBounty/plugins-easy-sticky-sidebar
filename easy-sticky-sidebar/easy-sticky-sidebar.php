@@ -3,7 +3,7 @@
 /**
  * Plugin Name: WP CTA - Call Now Button, Sticky Button & Call to Action Builder
  * Description: WordPress Call To Action builder that creates sticky buttons, call now buttons and CTAs to boost clicks, increase sales and generate leads.
- * Version: 2.1.3
+ * Version: 2.2.0
  * Author: WP CTA PRO
  * Text Domain: easy-sticky-sidebar
  * Author URI: https://wpctapro.com/
@@ -18,31 +18,27 @@ if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
-define('EASY_STICKY_SIDEBAR_VERSION', '2.1.3');
+define('EASY_STICKY_SIDEBAR_VERSION', '2.2.0');
 define('EASY_STICKY_SIDEBAR_PLUGIN_DIR', untrailingslashit(plugin_dir_path(__FILE__)));
 define('EASY_STICKY_SIDEBAR_PLUGIN_URL', untrailingslashit(plugin_dir_url(__FILE__)));
 define('EASY_STICKY_SIDEBAR_PLUGIN_FILE', __FILE__);
 define('EASY_STICKY_SIDEBAR_PLUGIN_BASENAME', plugin_basename(__FILE__));
 
-// Include the main UltimatePageBuilder class.
-if (!class_exists('SSuprydpClassStickySidebar')) {
+if (!class_exists('Easy_Sticky_Sidebar')) {
 	include_once EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/inc/ClassStickySidebar.php';
 }
 
 /**
- * Main instance of SSuprydpStickySidebar.
- *
- * Returns the main instance of SSuprydpStickySidebar.
+ * Main instance of Easy_Sticky_Sidebar.
  *
  * @since  1.2.0
- * @return ClassStickySidebar
+ * @return Easy_Sticky_Sidebar
  */
-function SSuprydpStickySidebar()
+function easy_sticky_sidebar()
 {
-	return SSuprydpStickySidebar::instance();
+	return Easy_Sticky_Sidebar::instance();
 }
 
-// Global for backwards compatibility.
-$GLOBALS['SSuprydp_shortcodes'] = SSuprydpStickySidebar();
+$GLOBALS['easy_sticky_sidebar'] = easy_sticky_sidebar();
 
 

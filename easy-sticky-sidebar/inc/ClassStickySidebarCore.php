@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) {
  * @since   1.2.0
  */
 
-class SSuprydpStickySidebarCore {
+class Easy_Sticky_Sidebar_Core {
     /**
      * class constructor 
      */
@@ -22,14 +22,14 @@ class SSuprydpStickySidebarCore {
      * @throws ApiException on a non 2xx response
      * @return HTML
      */
-    public function getView($viewname, array $data = []) {
+    public function get_view($viewname, array $data = []) {
         if (!empty($data)) {
             foreach ($data as $key => $value) {
                 $$key = $value;
             }
         }
 
-		$viewpath = apply_filters( 'easty_sticky_sidebar_view_template', get_stylesheet_directory() . "/sticky-sidebar/{$viewname}.php", $data);
+		$viewpath = apply_filters( 'easy_sticky_sidebar_view_template', get_stylesheet_directory() . "/sticky-sidebar/{$viewname}.php", $data);
         if (!file_exists($viewpath)) {
             $viewpath = EASY_STICKY_SIDEBAR_PLUGIN_DIR . "/views/{$viewname}.php";
         }

@@ -268,7 +268,7 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
 
         // Security check
         if (isset($_POST['_wpnonce']) && !empty($_POST['sidebar'])) {
-            $nonce  = filter_input(INPUT_POST, '_wpnonce', FILTER_SANITIZE_STRING);
+            $nonce  = filter_input(INPUT_POST, '_wpnonce', FILTER_SANITIZE_SPECIAL_CHARS);
             $action = 'bulk-' . $this->_args['plural'];
 
             if (!wp_verify_nonce($nonce, $action))
@@ -307,18 +307,21 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
         // Process bulk actions if any
         $this->process_bulk_action();
 
-        $per_page = $this->get_items_per_page('sidebar_per_page', 15);
+        $limit = easy_sticky_sidebar_has_pro() ? 999 : 3;
 
-        $sidebars = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}sticky_cta ORDER BY id LIMIT 0, 3");
-        $total_sidebar = $wpdb->num_rows;
+        $sidebars = $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}sticky_cta ORDER BY id LIMIT 0, %d",
+            $limit
+        ));
+        $total_sidebar = count($sidebars);
 
         $this->items = array_map(function ($sidebar) {
-            return new WP_Sticky_CTA_Data($sidebar);
+            return new Easy_Sticky_Sidebar_CTA_Data($sidebar);
         }, $sidebars);
 
         $this->set_pagination_args(array(
             'total_items' => $total_sidebar,
-            'per_page'    => $per_page
+            'per_page'    => $limit
         ));
 
         $this->_column_headers = array($this->get_columns());
@@ -344,7 +347,7 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
                     ?>
         </form>
 
-        <?php if (!has_wordpress_cta_pro()) : ?>
+        <?php if (!easy_sticky_sidebar_has_pro()) : ?>
         <div class="wordpress-cta-advertisement">
             <span class="div-two">
                 <a href="https://wpctapro.com/" target="_blank"><img

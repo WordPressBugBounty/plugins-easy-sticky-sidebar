@@ -3,35 +3,14 @@ if (!defined('ABSPATH')) {
 	exit;
 }
 /*
- * Wordpress_CTA_Pro_Content
+ * Pro field placeholders
  * @package sticky-sidebar/inc
  * @since 1.4.5
  */
 
-class Wordpress_CTA_Pro_Placeholder {
+class Easy_Sticky_Sidebar_Pro_Placeholder {
     public function __construct() {
-        add_filter('wordpress_cta_free/pro_fields', [$this, 'register_placeholder'], 1);
-        add_filter('easy_sticky_sidebar_tabs', [$this, 'add_display_setting_tab'], 12);
-    }
-
-    public function add_display_setting_tab($tabs) {
-        if (!isset($tabs['display-setting'])) {
-            $tabs['display-setting'] = [
-                'label' => __("Display Behaviour", 'easy-sticky-sidebar'),
-                'callback' => [$this, 'display_setting_tab'],
-                'priority' => 6
-            ];
-        }
-
-        if (isset($tabs['responsive']) && (!isset($tabs['display-setting']) || $tabs['display-setting']['priority'] <= $tabs['responsive']['priority'])) {
-            $tabs['responsive']['priority'] = 7;
-        }
-
-        if (isset($tabs['css']) && (!isset($tabs['display-setting']) || $tabs['display-setting']['priority'] <= $tabs['css']['priority'])) {
-            $tabs['css']['priority'] = 8;
-        }
-
-        return $tabs;
+        add_filter('easy_sticky_sidebar/pro_fields', [$this, 'register_placeholder'], 1);
     }
 
     public function register_placeholder($elements) {
@@ -39,140 +18,40 @@ class Wordpress_CTA_Pro_Placeholder {
         
 		$elements['cta_location'] = array('hook' => 'easy_sticky_sidebar_form_cta_location', 'callback' => [$this, 'cta_location']);
         
-        $elements['html_cta_disable_collapse'] = array('hook' => 'easy_sticky_sidebar_cta_scroll_options', 'callback' => [$this, 'disable_collapse']);
+        if (!easy_sticky_sidebar_has_pro()) {
+            $elements['html_cta_disable_collapse'] = array('hook' => 'easy_sticky_sidebar_cta_scroll_options', 'callback' => [$this, 'disable_collapse']);
+            $elements['cta_height'] = array('hook' => 'easy_sticky_sidebar_cta_height', 'callback' => [$this, 'cta_height']);
+        }
 
         $elements['cta_width'] = array('hook' => 'easy_sticky_sidebar_cta_adjustment', 'callback' => [$this, 'cta_width']);
 
         $elements['hide_image'] = array('hook' => 'easy_sticky_sidebar_cta_image', 'callback' => [$this, 'hide_image'], 'priority' => 3);
 
-        $elements['letter_spacing'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_letter_spacing'], 'priority' => 32);
-        if (!has_wordpress_cta_pro()) {
+        $elements['letter_spacing'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_letter_spacing'], 'priority' => 45);
+        if (!easy_sticky_sidebar_has_pro()) {
             $elements['button_padding'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_padding'], 'priority' => 47);
         }
         $elements['button_round'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_border_round'], 'priority' => 50);
         
-        $elements['content_letter_spacing'] = array('hook' => 'easy_sticky_sidebar_content_option', 'callback' => [$this, 'content_letter_spacing'], 'priority' => 12);
-        if (!has_wordpress_cta_pro()) {
+        $elements['content_letter_spacing'] = array('hook' => 'easy_sticky_sidebar_content_option', 'callback' => [$this, 'content_letter_spacing'], 'priority' => 22);
+        if (!easy_sticky_sidebar_has_pro()) {
             $elements['content_padding'] = array('hook' => 'easy_sticky_sidebar_content_option', 'callback' => [$this, 'content_padding'], 'priority' => 25);
         }
         
-        $elements['line_separator_thickness'] = array('hook' => 'easy_sticky_sidebar_line_separator', 'callback' => [$this, 'line_separator_thickness'], 'priority' => 5);
+        $elements['line_separator_thickness'] = array('hook' => 'easy_sticky_sidebar_line_separator', 'callback' => [$this, 'line_separator_thickness'], 'priority' => 15);
         
         $elements['call_to_action_show_hide'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_show_hide'], 'priority' => 1);
-        $elements['call_to_action_letter_spacing'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_letter_spacing'], 'priority' => 16);
-        if (!has_wordpress_cta_pro()) {
-            $elements['call_to_action_padding'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_padding'], 'priority' => 25);
+        $elements['call_to_action_letter_spacing'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_letter_spacing'], 'priority' => 2);
+        if (!easy_sticky_sidebar_has_pro()) {
+            $elements['call_to_action_padding'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_padding'], 'priority' => 3);
         }
-        $elements['call_to_action_link_or_button'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_link_or_button'], 'priority' => 21);
+        $elements['call_to_action_link_or_button'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_link_or_button'], 'priority' => 4);
 
         $elements['show_close_button'] = array('hook' => 'easy_sticky_sidebar_close_button_options', 'callback' => [$this, 'close_button_option'], 'priority' => 5);
         $elements['enable_box_shadow'] = array('hook' => 'easy_sticky_sidebar_box_shadow_options', 'callback' => [$this, 'box_shadow_toggle'], 'priority' => 1);
 		
         return $elements;
     }
-
-    public function display_setting_tab($stickycta) { ?>
-        <h4 class="wordpress-cta-heading"><?php esc_html_e("Display Setting", "easy-sticky-sidebar"); ?></h4>
-        <div class="wordpress-cta-pro-features">
-
-            <div class="SSuprydp_field_wrap">
-                <h4 class="heading"><?php esc_html_e("Show CTA", "easy-sticky-sidebar"); ?></h4>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
-                <label><?php esc_html_e("Trigger", "easy-sticky-sidebar"); ?></label>
-                <select name="display_trigger" disabled>
-                    <option><?php esc_html_e("Show immediately", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Show after X seconds", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Show after X% scroll", "easy-sticky-sidebar"); ?></option>
-                </select>
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container ess-display-trigger-seconds">
-                <label><?php esc_html_e("After X seconds", "easy-sticky-sidebar"); ?></label>
-                <input type="number" style="width: 80px" disabled>
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container ess-display-trigger-scroll">
-                <label><?php esc_html_e("After X% scroll", "easy-sticky-sidebar"); ?></label>
-                <input type="number" style="width: 80px" disabled> %
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
-                <label><?php esc_html_e("Animation", "easy-sticky-sidebar"); ?></label>
-                <select name="display_animation" disabled>
-                    <option><?php esc_html_e("None", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Fade in", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Slide up", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Slide down", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Slide left", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Slide right", "easy-sticky-sidebar"); ?></option>
-                </select>
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-
-            <div class="SSuprydp_field_wrap" style="margin-top: 14px;">
-                <h4 class="heading"><?php esc_html_e("Hide CTA", "easy-sticky-sidebar"); ?></h4>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
-                <label><?php esc_html_e("Auto Hide", "easy-sticky-sidebar"); ?></label>
-                <select name="hide_behavior" disabled>
-                    <option><?php esc_html_e("Don't auto hide", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Hide after X seconds", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Hide near page bottom", "easy-sticky-sidebar"); ?></option>
-                </select>
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container ess-hide-after-seconds">
-                <label><?php esc_html_e("Hide after X seconds", "easy-sticky-sidebar"); ?></label>
-                <input type="number" style="width: 80px" disabled>
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-
-            <div class="SSuprydp_field_wrap" style="margin-top: 14px;">
-                <h4 class="heading"><?php esc_html_e("Display Frequency", "easy-sticky-sidebar"); ?></h4>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
-                <label><?php esc_html_e("Frequency", "easy-sticky-sidebar"); ?></label>
-                <select name="display_frequency" disabled>
-                    <option><?php esc_html_e("Show every time", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Show once per visit", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Show once every 24 hours", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Show once every 7 days", "easy-sticky-sidebar"); ?></option>
-                </select>
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-
-            <div class="SSuprydp_field_wrap" style="margin-top: 14px;">
-                <h4 class="heading"><?php esc_html_e("After Close", "easy-sticky-sidebar"); ?></h4>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
-                <label><?php esc_html_e("Behavior", "easy-sticky-sidebar"); ?></label>
-                <select name="after_close_behavior" disabled>
-                    <option><?php esc_html_e("Show again next visit", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Don't show again for X time", "easy-sticky-sidebar"); ?></option>
-                </select>
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container ess-after-close-time">
-                <label><?php esc_html_e("Don't show again for", "easy-sticky-sidebar"); ?></label>
-                <input type="number" style="width: 80px" disabled>
-                <select name="after_close_time_unit" disabled>
-                    <option><?php esc_html_e("Hours", "easy-sticky-sidebar"); ?></option>
-                    <option><?php esc_html_e("Days", "easy-sticky-sidebar"); ?></option>
-                </select>
-                <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-            </div>
-        </div>
-    <?php }
 
 	/**
 	 * Show statistics
@@ -219,11 +98,11 @@ class Wordpress_CTA_Pro_Placeholder {
 				<label>Include</label>
 			
 				<?php 
-				$location_types = wordpress_cta_get_location_types();
+				$location_types = easy_sticky_sidebar_get_location_types();
 
 				echo '<select name="%name%[%number%][type]">';
 				foreach ($location_types as $group => $locations) {
-					echo '<optgroup label="' . esc_attr(wordpress_cta_location_group($group)) . '">';
+					echo '<optgroup label="' . esc_attr(easy_sticky_sidebar_location_group($group)) . '">';
 					foreach ($locations as $lkey => $location) {
 						$value = $group . ':' . $lkey;
 						printf('<option value="%s">%s</option>', esc_attr($value), esc_html($location));
@@ -234,11 +113,22 @@ class Wordpress_CTA_Pro_Placeholder {
 				?>
 				<ul class="location-field-container" id="cta-locations" data-btn-add="#btn-add-location" data-name="locations"></ul>
 
+			</div>
+			<div class="ess-placement-pro-group">
+				<div class="SSuprydp_field_wrap location-field-wrapper">
 				<div class="SSuprydp_field_wrap location-field-wrapper wordpress-cta-pro-element">
 				<a class="button-primary button-large" id="btn-add-location" style="margin-top:20px"><?php esc_html_e('Add condition', 'easy-sticky-sidebar') ?></a>
-
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
 				</div>
+				</div>
+			<div class="gap-10"></div>
+
+			<div class="SSuprydp_field_wrap location-field-wrapper wordpress-cta-pro-element">
+				<label>Exclude</label>
+				<ul class="location-field-container" id="cta-exclude-locations" data-btn-add="#btn-add-exclude-location" data-name="exclude_locations"></ul>
+				<a class="button-primary button-large" id="btn-add-exclude-location"><?php esc_html_e('Add condition', 'easy-sticky-sidebar') ?> </a>
+
+			</div>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock(); ?>
 			</div>
 			<script>
     (function($) {
@@ -268,15 +158,6 @@ class Wordpress_CTA_Pro_Placeholder {
         });
     })(jQuery);
     </script>  
-			<div class="gap-10"></div>
-
-			<div class="SSuprydp_field_wrap location-field-wrapper wordpress-cta-pro-element">
-				<label>Exclude</label>
-				<ul class="location-field-container" id="cta-exclude-locations" data-btn-add="#btn-add-exclude-location" data-name="exclude_locations"></ul>
-				<a class="button-primary button-large" id="btn-add-exclude-location"><?php esc_html_e('Add condition', 'easy-sticky-sidebar') ?> </a>
-
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-			</div>
 		</div>
 		<?php
 	}
@@ -286,15 +167,13 @@ class Wordpress_CTA_Pro_Placeholder {
      * @since 1.4.5
      */
     function disable_collapse($stickycta) { ?>
-        <div class="SSuprydp_field_wrap keep_html_cta_open-option wordpress-cta-pro-element bo">
-		
-		<label class="SSuprydp_switch">
-			<h4 class="heading h"><?php esc_html_e('Disable Collapse (Keep CTA open after scroll)', 'easy-sticky-sidebar'); ?></h4>
-           <input type="checkbox"> </label>
-
-			<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-		
-		<!-- end wrap -->
+        <div class="SSuprydp_field_wrap wordpress-cta-pro-element bo">
+            <label class="SSuprydp_switch">
+                <h4 class="heading h"><?php esc_html_e('Disable Collapse (Keep CTA open after scroll)', 'easy-sticky-sidebar'); ?></h4>
+                <input type="checkbox">
+            </label>
+            <?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
+        </div>
         <?php
     }
 
@@ -303,56 +182,71 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
     public function cta_width($stickycta) {?>
-	
-		<div class="wordpress-cta-pro-features bli">
-			
-            <div class="SSuprydp_field_wrap wordpress-cta-pro-element " style="margin-top:20px">
-			
-				<h4 class="heading h"><?php esc_html_e('Enable CTA Width', 'easy-sticky-sidebar') ?></h4>
-				<label class="SSuprydp_switch has-label" style="margin-bottom: 0">      
-                    <input type="checkbox">
-					</label>
-					<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-               
+		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+			<h4 class="heading h"><?php esc_html_e('Enable CTA Width', 'easy-sticky-sidebar') ?></h4>
+			<label class="SSuprydp_switch has-label" style="margin-bottom: 0">
+                <input type="checkbox">
+			</label>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
+        </div>
 
+        <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+            <label class="h"><?php esc_html_e('CTA Width', 'easy-sticky-sidebar') ?></label>
+            <input style="width: 50px;text-align:right" type="number">
+            <?php easy_sticky_sidebar_get_unit_input(''); ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
+        </div>
 
-			
-			
-            </div>
+        <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+            <label class="h"><?php esc_html_e('CTA Tablet Width', 'easy-sticky-sidebar') ?></label>
+            <input style="width: 50px;text-align:right" type="number">
+            <?php easy_sticky_sidebar_get_unit_input(''); ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
+        </div>
 
-            <div id="ess-cta-width">	
-                <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
-                    <label class="h"><?php esc_html_e('CTA Width', 'easy-sticky-sidebar') ?>
-					<br>
-                    <input style="width: 50px;text-align:right" type="number">
-                    <?php easy_sticky_sidebar_get_unit_input(''); ?>
-					</label>
-
-					<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-                </div>
-
-                <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
-                    <label class="h"><?php esc_html_e('CTA Tablet Width', 'easy-sticky-sidebar') ?>
-					<br>
-                    <input style="width: 50px;text-align:right" type="number">
-                    <?php easy_sticky_sidebar_get_unit_input(''); ?>
-					</label>
-					<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-					
-                </div>
-
-                <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
-				<label class="h"><?php esc_html_e('CTA Mobile Width', 'easy-sticky-sidebar') ?>
-				<br>
-                    <input style="width: 50px;text-align:right" type="number">
-                   
-					</label>
-					<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-                </div>
-				
-            </div>
+        <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+			<label class="h"><?php esc_html_e('CTA Mobile Width', 'easy-sticky-sidebar') ?></label>
+            <input style="width: 50px;text-align:right" type="number">
+            <?php easy_sticky_sidebar_get_unit_input(''); ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
         </div>
 		<?php	
+    }
+
+    /**
+	 * Add CTA height field (locked in free).
+	 * @since 2.4.2
+	 */
+    public function cta_height($stickycta) {?>
+		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+			<h4 class="heading h"><?php esc_html_e('Enable CTA Height', 'easy-sticky-sidebar') ?></h4>
+			<label class="SSuprydp_switch has-label" style="margin-bottom: 0">
+                <input type="checkbox">
+			</label>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
+        </div>
+
+        <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+            <label class="h"><?php esc_html_e('CTA Height', 'easy-sticky-sidebar') ?></label>
+            <input style="width: 50px;text-align:right" type="number">
+            <?php easy_sticky_sidebar_get_unit_input(''); ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
+        </div>
+
+        <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+            <label class="h"><?php esc_html_e('CTA Tablet Height', 'easy-sticky-sidebar') ?></label>
+            <input style="width: 50px;text-align:right" type="number">
+            <?php easy_sticky_sidebar_get_unit_input(''); ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
+        </div>
+
+        <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+			<label class="h"><?php esc_html_e('CTA Mobile Height', 'easy-sticky-sidebar') ?></label>
+            <input style="width: 50px;text-align:right" type="number">
+            <?php easy_sticky_sidebar_get_unit_input(''); ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
+        </div>
+		<?php
     }
 
     /**
@@ -360,26 +254,21 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function hide_image() { ?>
-		<div class="wordpress-cta-pro-features">
-			
+			<div class="ess-image-settings-pro-group">
 			<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 			<label class="h"><?php esc_html_e('Hide / Show Image', 'easy-sticky-sidebar') ?></label>
 				<label class="SSuprydp_switch has-label h">
 				<input type="checkbox" class="checkbox-hide-show"> 
 					
 				</label>
-				
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
 			</div>
-			<?php
 
-			?>
 			<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 				<label class="h"><?php esc_html_e('Image Height', 'easy-sticky-sidebar') ?></label>
 				<input style="width: 50px;text-align:right" type="number"> px
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
 			</div>
-		</div>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock(); ?>
+			</div>
 		<?php
 	}
 
@@ -388,12 +277,10 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function button_letter_spacing() { ?>
-		<div class="SSuprydp_field_wrap sticky-sidebar-button_letter_spacing">
+		<div class="ess-tab-settings-pro-group">
+		<div class="SSuprydp_field_wrap sticky-sidebar-button_letter_spacing wordpress-cta-pro-element">
 			<label><?php esc_html_e("Letter Spacing", "easy-sticky-sidebar"); ?></label>
-			<div class="wordpress-cta-pro-feature-lock-inline-container">
-				<input type="number" style="width: 50px"> px
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-			</div>
+			<input type="number" style="width: 50px"> px
 		</div>
 		<?php
 	}
@@ -406,7 +293,8 @@ class Wordpress_CTA_Pro_Placeholder {
         <div class="SSuprydp_field_wrap sticky-sidebar-button_radius wordpress-cta-pro-element">
             <label><?php esc_html_e("Button Corners (border radius)", "easy-sticky-sidebar"); ?></label>
             <input type="number" style="width: 50px"> px
-            <?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+        </div>
+        <?php Easy_Sticky_Sidebar_Utils::get_inline_lock(); ?>
         </div>
         <?php
     }
@@ -418,8 +306,7 @@ class Wordpress_CTA_Pro_Placeholder {
     function button_padding($stickycta) { ?>
         <div class="SSuprydp_field_wrap wordpress-cta-pro-element">
             <label><?php esc_html_e("Padding", "easy-sticky-sidebar"); ?></label>
-            <?php Wordpress_CTA_Free_Utils::get_dimensions_field(''); ?>
-            <?php Wordpress_CTA_Free_Utils::get_inline_lock(['top' => '-2px', 'bottom' => 'auto']) ?>
+            <?php Easy_Sticky_Sidebar_Utils::get_dimensions_field(''); ?>
         </div>
     <?php
     }
@@ -429,10 +316,17 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function content_padding($stickycta) {?>
-		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
+		<?php
+		$wrapper_classes = array('SSuprydp_field_wrap', 'wordpress-cta-pro-element');
+		if (($stickycta->sidebar_template ?? '') === 'sticky-cta') {
+			$wrapper_classes[] = 'cta-image-classic-only';
+		}
+		?>
+		<div class="<?php echo esc_attr(implode(' ', $wrapper_classes)); ?>">
 			<label><?php esc_html_e("Padding", "easy-sticky-sidebar"); ?></label>
-			<?php Wordpress_CTA_Free_Utils::get_dimensions_field(''); ?>
-			<?php Wordpress_CTA_Free_Utils::get_inline_lock(['top' => '-2px', 'bottom' => 'auto']) ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_dimensions_field(''); ?>
+		</div>
+		<?php Easy_Sticky_Sidebar_Utils::get_inline_lock(); ?>
 		</div>
 
 <script>
@@ -470,12 +364,10 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function content_letter_spacing() {?>
-		<div class="SSuprydp_field_wrap">
+		<div class="ess-content-settings-pro-group">
+		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 			<label><?php esc_html_e("Letter Spacing", "easy-sticky-sidebar"); ?></label>
-			<div class="wordpress-cta-pro-feature-lock-inline-container">
-				<input type="number" style="width: 50px" disabled> px
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-			</div>
+			<input type="number" style="width: 50px" disabled> px
 		</div>
 		<?php
 	}
@@ -485,12 +377,12 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function line_separator_thickness() {?>
-		<div class="SSuprydp_field_wrap">
+		<div class="ess-line-separator-pro-group">
+		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 			<label><?php esc_html_e("Line Thickness", "easy-sticky-sidebar"); ?></label>
-			<div class="wordpress-cta-pro-feature-lock-inline-container">
-				<input type="number" style="width: 50px"> px
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-			</div>
+			<input type="number" style="width: 50px"> px
+		</div>
+		<?php Easy_Sticky_Sidebar_Utils::get_inline_lock(); ?>
 		</div>
 		<?php
 	}
@@ -500,12 +392,12 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function call_to_action_show_hide() { ?>
-		<div class="SSuprydp_field_wrap wordpress-cta-pro-feature-lock-inline-container">
+		<div class="ess-button-settings-pro-group">
+		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 			<h3 class="heading" style="margin-top:0; margin-bottom: 5px"><?php esc_html_e('Display Link Text', 'easy-sticky-sidebar') ?></h3>
 			<label class="SSuprydp_switch">
 				<input type="checkbox" class="checkbox-hide-show"> 
 			</label>
-			<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
 		</div>
 		<?php
 	}
@@ -517,8 +409,7 @@ class Wordpress_CTA_Pro_Placeholder {
 	function call_to_action_padding($stickycta) { ?>
 		<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 			<label><?php esc_html_e("Padding", "easy-sticky-sidebar"); ?></label>
-			<?php Wordpress_CTA_Free_Utils::get_dimensions_field(''); ?>
-			<?php Wordpress_CTA_Free_Utils::get_inline_lock(['top' => '-2px', 'bottom' => 'auto']) ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_dimensions_field(''); ?>
 		</div>
 		<?php
 	}
@@ -528,11 +419,12 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function call_to_action_link_or_button($stickycta) { ?>
-		<div class="SSuprydp_field_wrap call-to-action-button wordpress-cta-pro-feature-lock-inline-container">
+		<div class="SSuprydp_field_wrap call-to-action-button wordpress-cta-pro-element">
 			<label class="SSuprydp_switch has-label">
 				<input type="checkbox"><?php esc_html_e('Button', 'easy-sticky-sidebar') ?>
 			</label>
-			<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+		</div>
+		<?php Easy_Sticky_Sidebar_Utils::get_inline_lock(); ?>
 		</div>
 		<?php
 	}
@@ -542,12 +434,9 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function call_to_action_letter_spacing() {?>
-		<div class="SSuprydp_field_wrap call-to-action-letter-spacing">
+		<div class="SSuprydp_field_wrap call-to-action-letter-spacing wordpress-cta-pro-element">
 			<label><?php esc_html_e("Letter Spacing", "easy-sticky-sidebar"); ?></label>
-			<div class="wordpress-cta-pro-feature-lock-inline-container">
-				<input type="number" style="width: 50px"> px
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
-			</div>
+			<input type="number" style="width: 50px"> px
 		</div>
 		<?php
 	}
@@ -557,20 +446,18 @@ class Wordpress_CTA_Pro_Placeholder {
 	 * @since 1.4.5
 	 */
 	function close_button_option() { ?>
-		<div class="wordpress-cta-pro-features">
-			
 			<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 			<label class="h"><?php esc_html_e('Show/Hide Close Button', 'easy-sticky-sidebar') ?></label>
 				<label class="SSuprydp_switch has-label h">
 					<input type="checkbox">
 				</label>
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+				<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
 			</div>
 		
 			<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
 				<label class="h"><?php esc_html_e("Color", "easy-sticky-sidebar"); ?></label>
 				<input type="text" class="sticky-sidebar-colorpicker" />
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+				<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
 			</div>
 		
 			<div class="SSuprydp_field_wrap wordpress-cta-pro-element">
@@ -579,7 +466,7 @@ class Wordpress_CTA_Pro_Placeholder {
 					<option value="start">Top / Left</option>
 					<option value="end">Bottom / Right</option>
 				</select>
-				<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+				<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
 			</div>
 		
 			<div class="SSuprydp_field_wrap close-button-edge wordpress-cta-pro-element bir-main">
@@ -589,7 +476,6 @@ class Wordpress_CTA_Pro_Placeholder {
 				</label>
 					
 			</div>
-		</div>
 		<?php
 	}
 
@@ -603,7 +489,7 @@ class Wordpress_CTA_Pro_Placeholder {
 			<label class="SSuprydp_switch has-label h">
 				<input type="checkbox">
 			</label>
-			<?php Wordpress_CTA_Free_Utils::get_inline_lock() ?>
+			<?php Easy_Sticky_Sidebar_Utils::get_inline_lock() ?>
 		</div>
 	<?php
 	}

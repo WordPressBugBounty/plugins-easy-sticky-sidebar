@@ -1,7 +1,4 @@
 <?php
-
-namespace EasyStickySidebar;
-
 if (!defined('ABSPATH')) {
 	exit;
 }
@@ -10,7 +7,7 @@ if (!defined('ABSPATH')) {
  * Filter Class for templates
  * @since 1.5.0
  */
-class TemplateFilters {
+class Easy_Sticky_Sidebar_Template_Filters {
     /**
      * Constructor
      */

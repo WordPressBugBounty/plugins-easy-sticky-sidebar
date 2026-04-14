@@ -4,7 +4,7 @@
  * Migrate Data class
  * @since 1.4.5
  */
-class Wordpress_CTA_Migrate {
+class Easy_Sticky_Sidebar_Migrate {
 
     /**
      * CTA Items
@@ -68,7 +68,7 @@ class Wordpress_CTA_Migrate {
      * @since 1.5.2
      */
     public function update_image() {
-        $design_template_images = get_option('wordpress_cta_design_template_images', []);
+        $design_template_images = get_option('easy_sticky_sidebar_design_template_images', []);
         if ( empty($design_template_images)) {
             return;
         }
@@ -83,7 +83,7 @@ class Wordpress_CTA_Migrate {
             unset($design_template_images[$template_key]);
         }
 
-        update_option('wordpress_cta_design_template_images', $design_template_images);
+        update_option('easy_sticky_sidebar_design_template_images', $design_template_images);
     }
 
     /**
@@ -95,7 +95,7 @@ class Wordpress_CTA_Migrate {
             return;
         }
 
-        $generate = new Easy_Sticky_CTA_Generate_CSS();
+        $generate = new Easy_Sticky_Sidebar_Generate_CSS();
         $generate->generate_style();
     }
 }

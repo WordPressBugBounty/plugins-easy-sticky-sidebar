@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
  * @package sticky-sidebar
  * @since   1.3.6
  */
-class WP_Sticky_CTA_Data {
+class Easy_Sticky_Sidebar_CTA_Data {
     private $sticky_data = null;
     
     // Main class properties
@@ -31,21 +31,21 @@ class WP_Sticky_CTA_Data {
     protected $image_attachment_id = "0";
     protected $SSuprydp_button_option_text = "Click Here";
     protected $SSuprydp_button_option_backg_color = "#4e0d61";
-    protected $SSuprydp_button_option_font = "Open Sans";
+    protected $SSuprydp_button_option_font = "Archivo:700";
     protected $SSuprydp_button_option_weight = "400";
-    protected $SSuprydp_button_option_size = "20";
+    protected $SSuprydp_button_option_size = "24";
     protected $SSuprydp_button_option_align = "left";
     protected $SSuprydp_button_option_color = "#fff";
     protected $SSuprydp_content_option_text = "";
     protected $SSuprydp_content_option_font = "Open Sans";
     protected $SSuprydp_content_option_weight = "800";
-    protected $SSuprydp_content_option_size = "25";
-    protected $SSuprydp_content_option_color = "#fff";
+    protected $SSuprydp_content_option_size = "22";
+    protected $SSuprydp_content_option_color = "#383838";
     protected $SSuprydp_divider_option_color = "#1b7ccc";
     protected $SSuprydp_action_option_text = "Click Here to View";
     protected $SSuprydp_action_option_font = "Open Sans";
     protected $SSuprydp_action_option_weight = "500";
-    protected $SSuprydp_action_option_size = "19";
+    protected $SSuprydp_action_option_size = "20";
     protected $SSuprydp_action_option_color = "#fff";
     protected $SSuprydp_action_option_url = "https://wpctapro.com/";
     protected $SSuprydp_target_blank = "No";
@@ -65,9 +65,11 @@ class WP_Sticky_CTA_Data {
     
     // Store all dynamic properties in this array
     protected $dynamic_properties = [];
+    // Track which options are explicitly saved in sticky_cta_options.
+    protected $saved_option_keys = [];
 
     function __construct($sticky_data = []) {
-        $this->sticky_data = (object) wp_parse_args($sticky_data, apply_filters( 'wordpress_sticky_cta_defaults', array(
+        $this->sticky_data = (object) wp_parse_args($sticky_data, apply_filters( 'easy_sticky_sidebar_cta_defaults', array(
             'id' => 0,
             "SSuprydp_impressions"=>"0",
             "SSuprydp_clicks"=>"0",
@@ -87,21 +89,21 @@ class WP_Sticky_CTA_Data {
             "image_attachment_id"=>"0",
             "SSuprydp_button_option_text"=>"Click Here",
             "SSuprydp_button_option_backg_color"=>"#4e0d61",
-            "SSuprydp_button_option_font"=>"Open Sans",
+            "SSuprydp_button_option_font"=>"Archivo:700",
             "SSuprydp_button_option_weight"=>"400",
-            "SSuprydp_button_option_size"=>"20",
+            "SSuprydp_button_option_size"=>"24",
             "SSuprydp_button_option_align"=>"left",
             "SSuprydp_button_option_color"=>"#fff",
             "SSuprydp_content_option_text"=>"This is the Content Area. Put a description here of what you want to promote.",
             "SSuprydp_content_option_font"=>"Open Sans",
             "SSuprydp_content_option_weight"=>"800",
-            "SSuprydp_content_option_size"=>"25",
-            "SSuprydp_content_option_color"=>"#fff",
+            "SSuprydp_content_option_size"=>"22",
+            "SSuprydp_content_option_color"=>"#383838",
             "SSuprydp_divider_option_color"=>"#1b7ccc",
             "SSuprydp_action_option_text"=>"Click Here to View",
             "SSuprydp_action_option_font"=>"Open Sans",
             "SSuprydp_action_option_weight"=>"500",
-            "SSuprydp_action_option_size"=>"19",
+            "SSuprydp_action_option_size"=>"20",
             "SSuprydp_action_option_color"=>"#fff",
             "SSuprydp_action_option_url"=> "https://wpctapro.com/",
             "SSuprydp_target_blank"=>"No",
@@ -126,23 +128,22 @@ class WP_Sticky_CTA_Data {
             }
         }
 
+        $this->apply_template_aware_defaults();
+
         $this->SSuprydp_content_option_text = stripslashes($this->SSuprydp_content_option_text);
 
         unset($this->sticky_data);
     }
     public function to_array_without_id() {
-        $data = [];
-    
-        // Get all dynamic properties
-        if (isset($this->dynamic_properties) && is_array($this->dynamic_properties)) {
-            $data = $this->dynamic_properties;
-        }
-    
-        // Remove 'id' if it exists
-        if (isset($data['id'])) {
-            unset($data['id']);
-        }
-    
+        $data = $this->to_array();
+
+        // Remove identifiers/internal trackers that should never be persisted as CTA options.
+        unset($data['id']);
+        unset($data['sticky_data']);
+        unset($data['dynamic_properties']);
+        unset($data['saved_option_keys']);
+        unset($data['post_data']);
+
         return $data;
     }
     
@@ -184,6 +185,30 @@ class WP_Sticky_CTA_Data {
     }
 
     /**
+     * Support isset()/empty() on magic properties.
+     * Without this, empty($obj->prop) may incorrectly evaluate true
+     * and force fallbacks (e.g. sidebar_template -> sticky-cta).
+     *
+     * @param string $key Property key.
+     * @return bool
+     */
+    public function __isset($key) {
+        if (property_exists($this, $key)) {
+            return isset($this->$key);
+        }
+
+        if (isset($this->dynamic_properties[$key])) {
+            return isset($this->dynamic_properties[$key]);
+        }
+
+        if (isset($this->post_data[$key])) {
+            return isset($this->post_data[$key]);
+        }
+
+        return false;
+    }
+
+    /**
      * get cta options
      * @package sticky-sidebar
      * @since   1.3.6
@@ -196,7 +221,10 @@ class WP_Sticky_CTA_Data {
         global $wpdb;
     
         $options = $wpdb->get_results(
-            $wpdb->prepare("SELECT * FROM {$wpdb->prefix}sticky_cta_options WHERE sticky_cta_id = %d", $this->sticky_data->id)
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}sticky_cta_options WHERE sticky_cta_id = %d ORDER BY ID ASC",
+                $this->sticky_data->id
+            )
         );
     
         // Skip setting properties that are protected
@@ -204,6 +232,7 @@ class WP_Sticky_CTA_Data {
     
         foreach ($options as $option) {
             $option_name = $option->option_name;
+            $this->saved_option_keys[$option_name] = true;
     
             // Skip protected properties
             if (in_array($option_name, $protected_props, true)) {
@@ -213,6 +242,63 @@ class WP_Sticky_CTA_Data {
             // Only assign if the name is safe and doesn't start with a null character
             if (strpos($option_name, "\0") === false) {
                 $this->sticky_data->{$option_name} = maybe_unserialize($option->option_value);
+            }
+        }
+    }
+
+    /**
+     * Apply template-specific defaults only when value is not explicitly saved.
+     * This keeps user-saved data intact while improving first-load defaults.
+     *
+     * @return void
+     */
+    private function apply_template_aware_defaults() {
+        $template = strtolower(trim((string) ($this->sidebar_template ?? '')));
+        if ($template !== 'tab-cta') {
+            return;
+        }
+
+        // CTA Tab Text
+        if (empty($this->saved_option_keys['SSuprydp_button_option_text'])) {
+            $current_text = trim((string) ($this->SSuprydp_button_option_text ?? ''));
+            if ($current_text === '' || strtolower($current_text) === 'click here') {
+                $this->SSuprydp_button_option_text = 'Call Now';
+            }
+        }
+
+        // Font family
+        if (empty($this->saved_option_keys['SSuprydp_button_option_font'])) {
+            $current_font = trim((string) ($this->SSuprydp_button_option_font ?? ''));
+            if (
+                $current_font === ''
+                || stripos($current_font, 'open sans') !== false
+                || stripos($current_font, 'archivo') !== false
+            ) {
+                $this->SSuprydp_button_option_font = 'Arial';
+            }
+        }
+
+        // Font size
+        if (empty($this->saved_option_keys['SSuprydp_button_option_size'])) {
+            $size = absint(preg_replace('/[^0-9.]/', '', (string) ($this->SSuprydp_button_option_size ?? '')));
+            if ($size <= 0 || in_array($size, [20, 24], true)) {
+                $this->SSuprydp_button_option_size = '24';
+            }
+        }
+
+        // Text color
+        if (empty($this->saved_option_keys['SSuprydp_button_option_color'])) {
+            $color = strtolower(trim((string) ($this->SSuprydp_button_option_color ?? '')));
+            if ($color === '' || in_array($color, ['#fff', '#ffffff'], true)) {
+                $this->SSuprydp_button_option_color = '#fff';
+            }
+        }
+
+        // Background color
+        if (empty($this->saved_option_keys['SSuprydp_button_option_backg_color'])) {
+            $bg = strtolower(trim((string) ($this->SSuprydp_button_option_backg_color ?? '')));
+            if ($bg === '' || in_array($bg, ['#4e0d61', '#2466d5'], true)) {
+                $this->SSuprydp_button_option_backg_color = '#218400';
             }
         }
     }

@@ -5,10 +5,32 @@ if (!defined('ABSPATH')) {
 
 $tabs = easy_sticky_sidebar_get_cta_tabs();
 $templates = easy_sticky_sidebar_templates();
-$current_template = !empty($stickycta->sidebar_template) ? $stickycta->sidebar_template : 'sticky-cta';
+$current_template = (string) $stickycta->sidebar_template;
+if ($current_template === '') {
+    $current_template = 'sticky-cta';
+}
+$current_template = function_exists('easy_sticky_sidebar_normalize_template_key')
+    ? easy_sticky_sidebar_normalize_template_key($current_template, 'sticky-cta')
+    : $current_template;
 $current_template_label = isset($templates[$current_template]) ? $templates[$current_template] : ucfirst(str_replace('-', ' ', $current_template));
-$preview_image = !empty($stickycta->sticky_s_media) ? $stickycta->sticky_s_media : (EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/ss_dummy.jpg');
-$is_pro_active = has_wordpress_cta_pro();
+$preview_image_mode = strtolower((string) ($stickycta->image_placement ?? 'classic'));
+if ($preview_image_mode === 'background') {
+    $preview_image_mode = 'overlay';
+}
+$preview_image_fallback = EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/ss_dummy.jpg';
+if ($current_template === 'sticky-cta' && $preview_image_mode === 'overlay') {
+    $preview_image_fallback = EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/overlay_dummy.webp';
+}
+$preview_image = !empty($stickycta->sticky_s_media) ? $stickycta->sticky_s_media : $preview_image_fallback;
+if (
+    $current_template === 'sticky-cta'
+    && $preview_image_mode === 'overlay'
+    && is_string($preview_image)
+    && stripos($preview_image, 'ss_dummy.jpg') !== false
+) {
+    $preview_image = EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/overlay_dummy.webp';
+}
+$is_pro_active = easy_sticky_sidebar_has_pro();
 $cta_count = 0;
 if (!$is_pro_active) {
     global $wpdb;
@@ -17,7 +39,9 @@ if (!$is_pro_active) {
 $is_new_cta = empty($sticky_id);
 $cta_limit_reached = (!$is_pro_active && $is_new_cta && $cta_count >= 3);
 $preview_position = !empty($stickycta->SSuprydp_cta_position) ? $stickycta->SSuprydp_cta_position : 'right';
-$preview_align = !empty($stickycta->horizontal_vertical_position) ? $stickycta->horizontal_vertical_position : 'top';
+$preview_align = function_exists('easy_sticky_sidebar_normalize_secondary_position')
+    ? easy_sticky_sidebar_normalize_secondary_position($preview_position, $stickycta->horizontal_vertical_position ?? '', 'center')
+    : (!empty($stickycta->horizontal_vertical_position) ? $stickycta->horizontal_vertical_position : 'center');
 
 if (!$is_pro_active) {
     $preview_position = 'right';
@@ -45,9 +69,6 @@ if ($show_close_button) {
 }
 
 $preview_anchor_align = $preview_align;
-if (in_array($preview_position, ['top', 'bottom'], true)) {
-    $preview_anchor_align = ($preview_align === 'top') ? 'left' : (($preview_align === 'bottom') ? 'right' : 'center');
-}
 
 if (in_array($preview_position, ['top', 'bottom'], true)) {
     $preview_classes[] = 'vertical-cta';
@@ -112,18 +133,19 @@ $before_tab_content = trim(ob_get_clean());
                                         </div>
                                         <div class="ess-preview-stage">
                                             <div class="ess-preview-anchor" data-position="<?php echo esc_attr($preview_position); ?>" data-align="<?php echo esc_attr($preview_anchor_align); ?>">
-                                                <div class="ess-preview-template ess-preview-sticky is-active" data-template="sticky-cta">
+                                                <div class="ess-preview-template ess-preview-sticky<?php echo $current_template === 'sticky-cta' ? ' is-active' : ''; ?>" data-template="sticky-cta">
                                                     <div class="<?php echo esc_attr(implode(' ', $preview_classes)); ?>" id="ess-preview-cta">
-                                                    <div class="sticky-sidebar-button" id="ess-preview-button-wrap">
-                                                        <div id="ess-preview-button-text">
-                                                            <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Click Here', 'easy-sticky-sidebar')); ?>
+                                                        <div class="sticky-sidebar-button" id="ess-preview-button-wrap">
+                                                            <div id="ess-preview-button-text">
+                                                            <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Have Questions?', 'easy-sticky-sidebar')); ?>
+                                                            </div>
                                                         </div>
-                                                    </div>
 
                                                     <div class="sticky-sidebar-content sticky-sidebar-container">
                                                         <div class="sticky-sidebar-image" id="ess-preview-image-wrap"
                                                             style="background-image: url('<?php echo esc_url($preview_image); ?>');"></div>
 
+                                                        <div class="sticky-overlay-panel" id="ess-preview-overlay-panel">
                                                         <div class="sticky-sidebar-text sticky-content-inner" id="ess-preview-content-text">
                                                             <?php echo esc_html(wp_strip_all_tags((string) $stickycta->SSuprydp_content_option_text)); ?>
                                                         </div>
@@ -131,25 +153,26 @@ $before_tab_content = trim(ob_get_clean());
                                                         <hr id="ess-preview-divider">
 
                                                         <div class="sticky-sidebar-call-to-action sticky-content-inner" id="ess-preview-link">
-                                                            <?php echo esc_html($stickycta->SSuprydp_action_option_text ? $stickycta->SSuprydp_action_option_text : __('Click Here to View', 'easy-sticky-sidebar')); ?>
+                                                            <?php echo esc_html($stickycta->SSuprydp_action_option_text ? $stickycta->SSuprydp_action_option_text : __('Get Started', 'easy-sticky-sidebar')); ?>
+                                                        </div>
                                                         </div>
                                                     </div>
                                                     <span style="background-color: <?php echo esc_attr($close_button_color); ?>; <?php echo esc_attr($close_button_style); ?>" class="btn-ess-close icon-close <?php echo esc_attr($close_button_position); ?> <?php echo esc_attr($close_button_edge); ?>"></span>
                                                     </div>
                                                 </div>
 
-                                                <div class="ess-preview-template ess-preview-tab" data-template="tab-cta">
+                                                <div class="ess-preview-template ess-preview-tab<?php echo $current_template === 'tab-cta' ? ' is-active' : ''; ?>" data-template="tab-cta">
                                                     <div class="easy-sticky-sidebar ess-preview-static ess-preview-tab-cta sticky-cta-position-<?php echo esc_attr($preview_position); ?><?php echo $show_close_button ? ' ess-close-button-' . esc_attr($close_button_position) : ''; ?>" id="ess-preview-tab-cta">
                                                         <a class="sticky-sidebar-button" id="ess-preview-tab-button" href="#" aria-label="<?php esc_attr_e('Preview tab CTA', 'easy-sticky-sidebar'); ?>">
-                                                            <div id="ess-preview-tab-button-text">
-                                                                <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Tab CTA', 'easy-sticky-sidebar')); ?>
+                                                                <div id="ess-preview-tab-button-text">
+                                                                <?php echo esc_html($stickycta->SSuprydp_button_option_text ? $stickycta->SSuprydp_button_option_text : __('Call Now', 'easy-sticky-sidebar')); ?>
                                                             </div>
                                                         </a>
                                                         <span style="background-color: <?php echo esc_attr($close_button_color); ?>; <?php echo esc_attr($close_button_style); ?>" class="btn-ess-close icon-close <?php echo esc_attr($close_button_position); ?> <?php echo esc_attr($close_button_edge); ?>"></span>
                                                     </div>
                                                 </div>
 
-                                                <div class="ess-preview-template ess-preview-banner" data-template="banner">
+                                                <div class="ess-preview-template ess-preview-banner<?php echo $current_template === 'banner' ? ' is-active' : ''; ?>" data-template="banner">
                                                     <div class="easy-sticky-sidebar wordpress-cta-pro-banner ess-preview-banner" id="ess-preview-banner">
                                                         <div class="ess-preview-banner-text" id="ess-preview-banner-text">
                                                             <?php echo esc_html(wp_strip_all_tags((string) $stickycta->SSuprydp_content_option_text)); ?>
@@ -161,7 +184,7 @@ $before_tab_content = trim(ob_get_clean());
                                                     </div>
                                                 </div>
 
-                                                <div class="ess-preview-template ess-preview-gdpr" data-template="gdpr">
+                                                <div class="ess-preview-template ess-preview-gdpr<?php echo $current_template === 'gdpr' ? ' is-active' : ''; ?>" data-template="gdpr">
                                                     <div class="easy-sticky-sidebar wordpress-cta-pro-gdpr ess-preview-gdpr" id="ess-preview-gdpr">
                                                         <div class="gdpr-content ess-preview-gdpr-text" id="ess-preview-gdpr-text">
                                                             <?php echo esc_html(wp_strip_all_tags((string) $stickycta->SSuprydp_content_option_text)); ?>
@@ -178,7 +201,7 @@ $before_tab_content = trim(ob_get_clean());
                                                     </div>
                                                 </div>
 
-                                                <div class="ess-preview-template ess-preview-html" data-template="html">
+                                                <div class="ess-preview-template ess-preview-html<?php echo $current_template === 'html' ? ' is-active' : ''; ?>" data-template="html">
                                                     <div class="easy-sticky-sidebar sticky-cta ess-preview-static ess-preview-html-cta sticky-cta-position-<?php echo esc_attr($preview_position); ?><?php echo $show_close_button ? ' ess-close-button-' . esc_attr($close_button_position) : ''; ?>" id="ess-preview-html-cta">
                                                         <div class="sticky-sidebar-button" id="ess-preview-html-button">
                                                             <div id="ess-preview-html-button-text">
@@ -194,9 +217,9 @@ $before_tab_content = trim(ob_get_clean());
                                                     </div>
                                                 </div>
 
-                                                <div class="ess-preview-template ess-preview-floating" data-template="floating-buttons">
+                                                <div class="ess-preview-template ess-preview-floating<?php echo $current_template === 'floating-buttons' ? ' is-active' : ''; ?>" data-template="floating-buttons">
                                                     <?php
-                                                    $preview_buttons = Wordpress_CTA_Free_Floating_Buttons::get_buttons($stickycta);
+                                                    $preview_buttons = Easy_Sticky_Sidebar_Floating_Buttons::get_buttons($stickycta);
                                                     if (empty($preview_buttons)) {
                                                         $preview_buttons = [
                                                             (object) ['icon' => 'fa-solid fa-phone', 'text' => __('Call Us', 'easy-sticky-sidebar'), 'url' => ''],
@@ -336,7 +359,7 @@ $before_tab_content = trim(ob_get_clean());
                 </form>
             </div>
 
-            <?php if (!has_wordpress_cta_pro()) : ?>
+            <?php if (!easy_sticky_sidebar_has_pro()) : ?>
                 <div class="wordpress-cta-advertisement">
                     <span class="div-two">
                         <a href="https://wpctapro.com/" target="_blank"><img src="<?php echo esc_url(EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/ads.jpeg'); ?>" alt="WP CTA Pro"></a>
@@ -383,4 +406,3 @@ jQuery(document).ready(function($) {
     });
 });
 </script>
-

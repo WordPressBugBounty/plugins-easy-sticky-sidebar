@@ -29,6 +29,36 @@ jQuery(document).ready(function ($) {
 		});
 	};
 
+	const updateOverlayBackgroundOffsets = function ($cta) {
+		if (!$cta || !$cta.length) {
+			return;
+		}
+
+		if (!$cta.hasClass('image-as-background')) {
+			$cta.css('--ess-overlay-bg-offset-x', '');
+			$cta.css('--ess-overlay-bg-offset-y', '');
+			return;
+		}
+
+		const $panel = $cta.find('.sticky-overlay-panel').first();
+		if (!$panel.length) {
+			$cta.css('--ess-overlay-bg-offset-x', '');
+			$cta.css('--ess-overlay-bg-offset-y', '');
+			return;
+		}
+
+		const panelWidth = Math.max(0, Math.round(($panel.outerWidth() || 0) * 0.9));
+		const panelHeight = Math.max(0, Math.round(($panel.outerHeight() || 0) * 0.9));
+		$cta.css('--ess-overlay-bg-offset-x', `${panelWidth}px`);
+		$cta.css('--ess-overlay-bg-offset-y', `${panelHeight}px`);
+	};
+
+	const updateAllOverlayBackgroundOffsets = function () {
+		$('.easy-sticky-sidebar.image-as-background').each(function () {
+			updateOverlayBackgroundOffsets($(this));
+		});
+	};
+
 	const updateVerticalShrinkOffset = function ($cta, isShrink) {
 		if (!$cta || !$cta.length || !$cta.hasClass('vertical-cta')) {
 			return;
@@ -65,9 +95,14 @@ jQuery(document).ready(function ($) {
 			return;
 		}
 
-		const iconClass = ($cta.data('button-icon') || '').toString().trim();
+		let iconClass = ($cta.data('button-icon') || '').toString().trim();
 		if (!iconClass) {
 			return;
+		}
+
+		// Backward compatibility for values like "fa-angle-right".
+		if (/^fa-[a-z0-9-]+$/i.test(iconClass)) {
+			iconClass = `fa ${iconClass}`;
 		}
 
 		const $label = $cta.find('.sticky-sidebar-button > div').first();
@@ -79,16 +114,18 @@ jQuery(document).ready(function ($) {
 			return;
 		}
 
-		const $icon = $('<i />').addClass(iconClass);
+		const $icon = $('<i />').addClass(`icon ${iconClass}`);
 		$label.prepend(' ').prepend($icon);
 	};
 
 	updateAllButtonMetrics();
+	updateAllOverlayBackgroundOffsets();
 	$('.easy-sticky-sidebar.tab-cta').each(function () {
 		ensureTabCtaIcon($(this));
 	});
 	$(window).on('load resize', function () {
 		updateAllButtonMetrics();
+		updateAllOverlayBackgroundOffsets();
 	});
 
 	$('.easy-sticky-sidebar .btn-ess-close').on('click', function (e) {
@@ -136,7 +173,30 @@ jQuery(document).ready(function ($) {
 		const willShrink = !current_cta.hasClass('shrink');
 		current_cta.toggleClass('shrink');
 		updateVerticalShrinkOffset(current_cta, willShrink);
+		updateOverlayBackgroundOffsets(current_cta);
 	});
+
+	(function trackImpressions() {
+		if (typeof easy_sticky_sidebar_front === 'undefined' || !easy_sticky_sidebar_front.ajax_url) {
+			return;
+		}
+
+		var ids = [];
+		$('.easy-sticky-sidebar[data-id]').each(function () {
+			var id = parseInt($(this).data('id'), 10);
+			if (id > 0) {
+				ids.push(id);
+			}
+		});
+
+		if (ids.length) {
+			$.post(easy_sticky_sidebar_front.ajax_url, {
+				action: 'easy_sticky_sidebar_track_impressions',
+				ids: ids,
+				nonce: easy_sticky_sidebar_front.nonce
+			});
+		}
+	})();
 
 	$('body').on('click', '.easy-sticky-sidebar a', function () {
 		var sticky_id = parseInt($(this).closest('[data-id]').data('id'), 10);
@@ -152,7 +212,8 @@ jQuery(document).ready(function ($) {
 
 		$.post(easy_sticky_sidebar_front.ajax_url, {
 			action: 'easy_sticky_sidebar_get_click',
-			sticky_id: sticky_id
+			sticky_id: sticky_id,
+			nonce: easy_sticky_sidebar_front.nonce
 		});
 	});
 });

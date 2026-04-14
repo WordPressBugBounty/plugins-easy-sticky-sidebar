@@ -53,15 +53,6 @@ body:not(.wp-admin) .easy-sticky-sidebar.vertical-cta.shrink {
     transform: translate(var(--translateX, 0), var(--translateY, 0)) !important;
 }
 
-.easy-sticky-sidebar.sticky-cta .sticky-sidebar-button>div {
-    white-space: nowrap;
-    writing-mode: vertical-lr
-}
-
-.sticky-sidebar-container .sticky-content-inner {
-    padding: 14px 24px
-}
-
 .sticky-sidebar-container hr {
     margin: 0;
     height: 2px;
@@ -118,13 +109,159 @@ body:not(.wp-admin) .easy-sticky-sidebar.vertical-cta.shrink {
     background-color: #0e2163;
 }
 
+/* Sticky CTA overlay mode (image as background) */
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-sidebar-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    background-size: cover;
+    background-position: center;
+    --ess-overlay-bg-offset-x: 0px;
+    --ess-overlay-bg-offset-y: 0px;
+    overflow: hidden;
+    height: max(var(--ess-overlay-height, 200px), var(--buttonHeight, 0px));
+    min-height: max(var(--ess-overlay-height, 200px), var(--buttonHeight, 0px));
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-left .sticky-sidebar-container {
+    background-position: left var(--ess-overlay-bg-offset-x, 0px) center;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-right .sticky-sidebar-container {
+    background-position: right var(--ess-overlay-bg-offset-x, 0px) center;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-top .sticky-sidebar-container {
+    background-position: center top var(--ess-overlay-bg-offset-y, 0px);
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-bottom .sticky-sidebar-container {
+    background-position: center bottom var(--ess-overlay-bg-offset-y, 0px);
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-overlay-panel {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    isolation: isolate;
+    padding: var(--ess-overlay-content-padding, 12px);
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-overlay-panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: var(--ess-overlay-backdrop-opacity, 0.7);
+    pointer-events: none;
+    z-index: -1;
+    -webkit-backdrop-filter: blur(1px);
+    backdrop-filter: blur(1px);
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-overlay-panel > * {
+    position: relative;
+    z-index: 1;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-left .sticky-overlay-panel::before {
+    background: linear-gradient(to right, var(--ess-overlay-backdrop-color, #fff) 0%, var(--ess-overlay-backdrop-color, #fff) 85%, transparent 100%);
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-right .sticky-overlay-panel::before {
+    background: linear-gradient(to left, var(--ess-overlay-backdrop-color, #fff) 0%, var(--ess-overlay-backdrop-color, #fff) 85%, transparent 100%);
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-top .sticky-overlay-panel::before {
+    background: linear-gradient(to bottom, var(--ess-overlay-backdrop-color, #fff) 0%, var(--ess-overlay-backdrop-color, #fff) 85%, transparent 100%);
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-bottom .sticky-overlay-panel::before {
+    background: linear-gradient(to top, var(--ess-overlay-backdrop-color, #fff) 0%, var(--ess-overlay-backdrop-color, #fff) 85%, transparent 100%);
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-left .sticky-overlay-panel,
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-right .sticky-overlay-panel {
+    left: 0;
+    max-width: var(--ess-overlay-size, 60%);
+    height: 100%;
+    justify-content: space-evenly;
+    flex: 1;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-left .sticky-overlay-panel {
+    margin-right: auto;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-right .sticky-overlay-panel {
+    margin-left: auto;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-top .sticky-overlay-panel {
+    width: var(--ess-overlay-size, 60%);
+    height: 100%;
+    margin-bottom: auto;
+    justify-content: center;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-bottom .sticky-overlay-panel {
+    width: var(--ess-overlay-size, 60%);
+    height: 100%;
+    margin-top: auto;
+    justify-content: center;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-sidebar-image,
+.easy-sticky-sidebar.sticky-cta.image-as-background hr {
+    display: none !important;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-sidebar-text,
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-sidebar-call-to-action {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    overflow-wrap: anywhere;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-sidebar-text {
+    background-color: transparent;
+    overflow-y: visible;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background .sticky-sidebar-call-to-action {
+    margin-top: var(--ess-overlay-content-gap, 10px);
+    text-decoration: none;
+    width: fit-content;
+    max-width: 100%;
+    line-height: 1;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-top .sticky-sidebar-container {
+    justify-content: flex-start;
+    align-items: center;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-bottom .sticky-sidebar-container {
+    justify-content: flex-end;
+    align-items: center;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-left .sticky-sidebar-container {
+    justify-content: center;
+    align-items: flex-start;
+}
+.easy-sticky-sidebar.sticky-cta.image-as-background.overlay-pos-right .sticky-sidebar-container {
+    justify-content: center;
+    align-items: flex-end;
+}
+
+/* Firefox fallback: avoid pseudo-layer compositing glitches that can hide overlay content. */
+@supports (-moz-appearance: none) {
+    .easy-sticky-sidebar.sticky-cta.image-as-background .sticky-overlay-panel {
+        isolation: auto;
+        overflow: visible;
+    }
+    .easy-sticky-sidebar.sticky-cta.image-as-background .sticky-overlay-panel::before {
+        z-index: 0;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+    .easy-sticky-sidebar.sticky-cta.image-as-background .sticky-overlay-panel > * {
+        z-index: 1;
+    }
+}
+
 .shrink {
     right: calc((var(--width) * -1) + var(--buttonWidth) + var(--position_distance)) !important;
     transition: ease all 0.4s !important;
 }
 
 .easy-sticky-sidebar.sticky-cta .sticky-sidebar-image {
-    height: 250px;
+    height: 200px;
     width: 100%;
     background-size: cover;
     background-position: center center;
@@ -219,8 +356,6 @@ body.admin-bar .easy-sticky-sidebar.sticky-cta-top {
 
 .easy-sticky-sidebar.tab-cta .sticky-sidebar-button {
     color: #fff;
-    display: block;
-    position: relative;
     height: max-content;
     width: auto;
     min-width: var(--width, 50px);
@@ -271,13 +406,13 @@ body.admin-bar .easy-sticky-sidebar.sticky-cta-top {
     min-height: var(--buttonHeight);
     border-radius: var(--round) var(--round) 0 0;
 }
-.easy-sticky-sidebar.vertical-cta.sticky-cta-position-top .sticky-sidebar-button,
-.easy-sticky-sidebar.vertical-cta.sticky-cta-position-bottom .sticky-sidebar-button {
+.easy-sticky-sidebar.vertical-cta.sticky-cta.sticky-cta-position-top .sticky-sidebar-button,
+.easy-sticky-sidebar.vertical-cta.sticky-cta.sticky-cta-position-bottom .sticky-sidebar-button {
     justify-content: center !important;
     align-items: center !important;
 }
-.easy-sticky-sidebar.vertical-cta.sticky-cta-position-top .sticky-sidebar-button > div,
-.easy-sticky-sidebar.vertical-cta.sticky-cta-position-bottom .sticky-sidebar-button > div {
+.easy-sticky-sidebar.vertical-cta.sticky-cta.sticky-cta-position-top .sticky-sidebar-button > div,
+.easy-sticky-sidebar.vertical-cta.sticky-cta.sticky-cta-position-bottom .sticky-sidebar-button > div {
     display: flex;
     align-items: center;
     justify-content: center;

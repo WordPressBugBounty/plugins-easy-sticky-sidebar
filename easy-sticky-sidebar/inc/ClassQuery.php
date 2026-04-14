@@ -75,8 +75,8 @@ class Easy_Sticky_Sidebar_Query {
 
 		$fonts = [];
 		foreach ($results as &$item) {
-			if (!is_a($item, 'WP_Sticky_CTA_Data')) {
-				$item = new WP_Sticky_CTA_Data($item);
+			if (!is_a($item, 'Easy_Sticky_Sidebar_CTA_Data')) {
+				$item = new Easy_Sticky_Sidebar_CTA_Data($item);
 			}
 
 			foreach ((array) $font_fields as $field_key) {
