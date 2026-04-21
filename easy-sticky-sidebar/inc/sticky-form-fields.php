@@ -677,12 +677,12 @@ add_action('easy_sticky_sidebar_cta_image', 'easy_sticky_sidebar_cta_image_heigh
 
 function easy_sticky_sidebar_overlay_mode_fields($stickycta) { ?>
 	<div class="SSuprydp_field_wrap cta-image-overlay-only">
-		<label><?php esc_html_e("Backdrop Color", "easy-sticky-sidebar"); ?></label>
+		<label><?php esc_html_e("Overlay Color", "easy-sticky-sidebar"); ?></label>
 		<input type="text" name="overlay_backdrop_color" value="<?php echo esc_attr($stickycta->overlay_backdrop_color ?? '#ffffff'); ?>" class="sticky-sidebar-colorpicker" />
 	</div>
 
 	<div class="SSuprydp_field_wrap cta-image-overlay-only">
-		<label><?php esc_html_e("Backdrop Opacity", "easy-sticky-sidebar"); ?></label>
+		<label><?php esc_html_e("Overlay Opacity", "easy-sticky-sidebar"); ?></label>
 		<input style="width: 60px;text-align:right" type="number" min="0" max="100" name="overlay_backdrop_opacity" value="<?php echo esc_attr(max(0, min(100, absint($stickycta->overlay_backdrop_opacity ?? 70)))); ?>"> %
 	</div>
 

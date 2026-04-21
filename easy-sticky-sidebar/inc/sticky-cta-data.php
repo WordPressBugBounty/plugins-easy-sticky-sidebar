@@ -258,6 +258,12 @@ class Easy_Sticky_Sidebar_CTA_Data {
             return;
         }
 
+        if (is_object($this->saved_option_keys)) {
+            $this->saved_option_keys = (array) $this->saved_option_keys;
+        } elseif (!is_array($this->saved_option_keys)) {
+            $this->saved_option_keys = [];
+        }
+
         // CTA Tab Text
         if (empty($this->saved_option_keys['SSuprydp_button_option_text'])) {
             $current_text = trim((string) ($this->SSuprydp_button_option_text ?? ''));

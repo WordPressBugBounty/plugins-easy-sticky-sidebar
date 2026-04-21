@@ -205,7 +205,7 @@ class Easy_Sticky_Sidebar
 		?>
 		<div class="notice notice-info is-dismissible easy-sticky-sidebar-new-features-notice" data-notice-id="<?php echo esc_attr($notice_id); ?>" data-nonce="<?php echo esc_attr($nonce); ?>">
 			<p>
-				<strong><?php esc_html_e('🚀 WP CTA 2.2.1 is now live', 'easy-sticky-sidebar'); ?></strong>
+				<strong><?php esc_html_e('🚀 WP CTA 2.2.2 is now live', 'easy-sticky-sidebar'); ?></strong>
 			</p>
 			<p>
 				<?php esc_html_e('Enjoy an easier, more user-friendly dashboard with improved placement controls and a smoother, streamlined CTA-building process.', 'easy-sticky-sidebar'); ?>
