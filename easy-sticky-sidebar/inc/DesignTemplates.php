@@ -31,6 +31,14 @@ function easy_sticky_sidebar_normalize_design_template(array $template) {
 		$template['overlay_position'] = 'right';
 	}
 
+	if (empty($template['cta_height']) && !empty($template['cta_image_height'])) {
+		$template['cta_height'] = $template['cta_image_height'];
+	}
+	if (empty($template['cta_height_unit'])) {
+		$template['cta_height_unit'] = 'px';
+	}
+	$template['enable_cta_height'] = 'yes';
+
 	if ($image_mode === 'overlay') {
 		$template['SSuprydp_button_option_backg_color'] = $template['SSuprydp_button_option_backg_color'] ?? '#099607';
 		$template['link_text_background'] = $template['link_text_background'] ?? '#08a800';
@@ -165,7 +173,7 @@ function easy_sticky_sidebar_get_design_templates() {
 			'custom_css' => '',
 			'close_button_edge' => 'no',
 			'close_button_position' => 'start',
-			'close_button_color' => '',
+			'close_button_color' => '#ffffff',
 			'show_close_button' => 'no',
 			'floating_button_font_size' => '',
 			'floating_button_icon_width' => '',
@@ -399,7 +407,7 @@ function easy_sticky_sidebar_get_design_templates() {
 			'SSuprydp_nofollow' => 'No',
 			'SSuprydp_cta_position' => 'right',
 			'sidebar_template' => 'sticky-cta',
-			'line_separator_show' => 'no',
+			'line_separator_show' => 'yes',
 			'line_separator_color' => '#ab8c66',
 			'cta_position_horizontal' => 'left',
 			'cta_width' => '450',

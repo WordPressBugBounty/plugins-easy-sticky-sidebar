@@ -15,7 +15,7 @@ class Easy_Sticky_Sidebar_Floating_Buttons {
      */
     public static function get_data($data = []) {
         return (object) wp_parse_args($data, apply_filters('easy_sticky_sidebar_floating_button_default', array(
-            'icon' => '',
+            'icon' => 'fa-solid fa-phone',
             'text' => '',
             'url' => '',
             'color' => '',

@@ -85,7 +85,16 @@ jQuery(document).ready(function ($) {
 			return;
 		}
 
-		const delta = Math.max(0, ctaHeight - buttonHeight - distance);
+		const isExternalVerticalHtmlTab = $cta.hasClass('sticky-cta')
+			&& ($cta.hasClass('ess-html-tab-align-left') || $cta.hasClass('ess-html-tab-align-center') || $cta.hasClass('ess-html-tab-align-right'));
+		const isExternalVerticalStickyOverlayTab = $cta.hasClass('sticky-cta')
+			&& $cta.hasClass('image-as-background')
+			&& !$cta.hasClass('ess-overlay-full-tab-height')
+			&& (isTop || isBottom);
+		const isExternalVerticalTab = isExternalVerticalHtmlTab || isExternalVerticalStickyOverlayTab;
+		const delta = isExternalVerticalTab
+			? Math.max(0, ctaHeight - distance)
+			: Math.max(0, ctaHeight - buttonHeight - distance);
 		const translateY = isTop ? -delta : delta;
 		$cta.css('--translateY', `${translateY}px`);
 	};

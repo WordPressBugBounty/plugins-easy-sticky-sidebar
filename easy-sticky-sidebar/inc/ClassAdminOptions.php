@@ -120,38 +120,18 @@ class Easy_Sticky_Sidebar_Options {
      */
 
     public function add_new_cta_page() {
-        $default_attachment = get_option('easy_sticky_sidebar_default_attachment');
-        $overlay_default_image = EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/overlay_dummy.webp';
+        $default_profiles = function_exists('easy_sticky_sidebar_get_editor_default_templates')
+            ? easy_sticky_sidebar_get_editor_default_templates()
+            : array();
+        $sticky_defaults = array();
+        if (!empty($default_profiles['sticky_layouts']['overlay-left']) && is_array($default_profiles['sticky_layouts']['overlay-left'])) {
+            $sticky_defaults = $default_profiles['sticky_layouts']['overlay-left'];
+        }
+
         $data = array(
             'sticky_id' => 0,
             'editor_current_tab' => 'sticky-sidebar-template',
-            'stickycta' => new Easy_Sticky_Sidebar_CTA_Data([
-                'sticky_s_media' => $overlay_default_image,
-                'image_attachment_id' => 0,
-                'image_placement' => 'overlay',
-                'overlay_position' => 'left',
-                'SSuprydp_button_option_text' => 'Have Questions?',
-                'SSuprydp_content_option_text' => 'Get quick answers and expert guidance tailored to your needs.',
-                'SSuprydp_action_option_text' => 'Get Started',
-                'SSuprydp_button_option_backg_color' => '#099607',
-                'SSuprydp_button_option_font' => 'Archivo:700',
-                'SSuprydp_button_option_size' => '24',
-                'SSuprydp_action_option_font' => 'Archivo:700',
-                'SSuprydp_action_option_size' => '24',
-                'SSuprydp_content_option_font' => 'Arial',
-                'SSuprydp_content_option_size' => '24',
-                'SSuprydp_content_option_color' => '#383838',
-                'link_text_background' => '#08a800',
-                'overlay_button_padding' => array(
-                    'top' => 5,
-                    'right' => 20,
-                    'bottom' => 5,
-                    'left' => 20,
-                    'unit' => 'px',
-                ),
-                'overlay_button_radius' => 50,
-                'cta_image_height' => '300',
-            ])
+            'stickycta' => new Easy_Sticky_Sidebar_CTA_Data($sticky_defaults)
         );
 
         $form_attributes = array(

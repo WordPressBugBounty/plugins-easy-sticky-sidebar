@@ -31,21 +31,14 @@ if (
     $preview_image = EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/img/overlay_dummy.webp';
 }
 $is_pro_active = easy_sticky_sidebar_has_pro();
-$cta_count = 0;
-if (!$is_pro_active) {
-    global $wpdb;
-    $cta_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}sticky_cta");
-}
-$is_new_cta = empty($sticky_id);
-$cta_limit_reached = (!$is_pro_active && $is_new_cta && $cta_count >= 3);
 $preview_position = !empty($stickycta->SSuprydp_cta_position) ? $stickycta->SSuprydp_cta_position : 'right';
+$preview_overlay_position = strtolower((string) ($stickycta->overlay_position ?? 'right'));
+$preview_full_tab_height = strtolower((string) ($stickycta->overlay_full_tab_height ?? 'no')) === 'yes';
+$preview_text_orientation = strtolower((string) ($stickycta->button_text_orientation ?? ($stickycta->overlay_tab_text_orientation ?? 'top-to-bottom')));
+
 $preview_align = function_exists('easy_sticky_sidebar_normalize_secondary_position')
     ? easy_sticky_sidebar_normalize_secondary_position($preview_position, $stickycta->horizontal_vertical_position ?? '', 'center')
     : (!empty($stickycta->horizontal_vertical_position) ? $stickycta->horizontal_vertical_position : 'center');
-
-if (!$is_pro_active) {
-    $preview_position = 'right';
-}
 
 if (!in_array($preview_position, ['left', 'right', 'top', 'bottom'], true)) {
     $preview_position = 'right';
@@ -61,7 +54,7 @@ $preview_classes = [
 $show_close_button = ($stickycta->show_close_button ?? '') === 'yes';
 $close_button_position = !empty($stickycta->close_button_position) ? $stickycta->close_button_position : 'start';
 $close_button_edge = ($stickycta->close_button_edge ?? '') === 'yes' ? 'outside' : '';
-$close_button_color = !empty($stickycta->close_button_color) ? $stickycta->close_button_color : '#000000';
+$close_button_color = !empty($stickycta->close_button_color) ? $stickycta->close_button_color : '#ffffff';
 $close_button_style = $show_close_button ? '' : 'display:none;';
 
 if ($show_close_button) {
@@ -70,9 +63,22 @@ if ($show_close_button) {
 
 $preview_anchor_align = $preview_align;
 
+if ($current_template === 'sticky-cta' && $preview_image_mode === 'overlay') {
+    $preview_classes[] = 'image-as-background';
+    $preview_classes[] = 'overlay-pos-' . (in_array($preview_overlay_position, ['left', 'right', 'top', 'bottom'], true) ? $preview_overlay_position : 'right');
+
+    if ($preview_full_tab_height) {
+        $preview_classes[] = 'ess-overlay-full-tab-height';
+    }
+}
+
 if (in_array($preview_position, ['top', 'bottom'], true)) {
     $preview_classes[] = 'vertical-cta';
     $preview_classes[] = 'vertical-cta-' . $preview_position;
+}
+
+if ($preview_text_orientation === 'bottom-to-top' && in_array($preview_position, ['left', 'right'], true)) {
+    $preview_classes[] = 'ess-tab-text-bottom-to-top';
 }
 
 ob_start();
@@ -95,12 +101,6 @@ $before_tab_content = trim(ob_get_clean());
                     <?php wp_nonce_field('_nonce_easy_sticky_sidebar'); ?>
                     <input type="hidden" name="sticky_id" value="<?php echo esc_attr($sticky_id); ?>" />
                     <input type="hidden" name="cta_editor_current_tab" value="<?php echo esc_attr($editor_current_tab); ?>">
-                    <?php if ($cta_limit_reached) : ?>
-                        <div class="notice notice-warning">
-                            <p><?php esc_html_e('Only 3 CTAs are allowed in free version. Please upgrade to Pro to build more CTAs.', 'easy-sticky-sidebar'); ?></p>
-                        </div>
-                    <?php endif; ?>
-
                     <div class="SSuprydp_page_fields ess-page-fields">
                         <div class="ssuprydp_load" style="display:none;">
                             <p>Loading.....</p>
@@ -315,9 +315,9 @@ $before_tab_content = trim(ob_get_clean());
                                     <div class="SSuprydp_btn_save">   
                                         <input type="submit"
                                             onclick="return SSuprydp_Admin.ProcessPageData(event, this);"
-                                            class="button_save<?php echo $cta_limit_reached ? ' is-disabled' : ''; ?>"
+                                            class="button_save"
                                             value="<?php esc_attr_e('Save', 'easy-sticky-sidebar'); ?>"
-                                            <?php echo $cta_limit_reached ? 'disabled="disabled" aria-disabled="true"' : ''; ?>>
+                                            >
                                     </div>
                                     <p class="wordpress-cta-instruction ess-publish-help">
                                         <?php

@@ -92,6 +92,7 @@ class Easy_Sticky_Sidebar_CTA_Data {
             "SSuprydp_button_option_font"=>"Archivo:700",
             "SSuprydp_button_option_weight"=>"400",
             "SSuprydp_button_option_size"=>"24",
+            "button_round"=>"5",
             "SSuprydp_button_option_align"=>"left",
             "SSuprydp_button_option_color"=>"#fff",
             "SSuprydp_content_option_text"=>"This is the Content Area. Put a description here of what you want to promote.",
@@ -267,7 +268,7 @@ class Easy_Sticky_Sidebar_CTA_Data {
         // CTA Tab Text
         if (empty($this->saved_option_keys['SSuprydp_button_option_text'])) {
             $current_text = trim((string) ($this->SSuprydp_button_option_text ?? ''));
-            if ($current_text === '' || strtolower($current_text) === 'click here') {
+            if ($current_text === '' || in_array(strtolower($current_text), array('click here', 'have questions?'), true)) {
                 $this->SSuprydp_button_option_text = 'Call Now';
             }
         }

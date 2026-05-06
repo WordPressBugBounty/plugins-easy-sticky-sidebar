@@ -13,6 +13,300 @@ function easy_sticky_sidebar_has_pro() {
 }
 
 /**
+ * Get the current one-time product update notice ID.
+ *
+ * @since 2.3.0
+ *
+ * @return string
+ */
+function easy_sticky_sidebar_get_update_notice_id() {
+	return 'wpcta_230_major_update';
+}
+
+/**
+ * Check whether the current user dismissed the product update notice.
+ *
+ * @since 2.3.0
+ *
+ * @return bool
+ */
+function easy_sticky_sidebar_is_update_notice_dismissed() {
+	if (!is_user_logged_in()) {
+		return true;
+	}
+
+	return 'yes' === get_user_meta(
+		get_current_user_id(),
+		'_easy_sticky_sidebar_dismissed_' . easy_sticky_sidebar_get_update_notice_id(),
+		true
+	);
+}
+
+/**
+ * Render the WP CTA 2.3.0 one-time update notice.
+ *
+ * @since 2.3.0
+ *
+ * @param string $context Notice context. Accepts admin or dashboard.
+ * @return void
+ */
+function easy_sticky_sidebar_render_update_notice($context = 'admin') {
+	if (!current_user_can('manage_options') || easy_sticky_sidebar_is_update_notice_dismissed()) {
+		return;
+	}
+
+	$notice_id = easy_sticky_sidebar_get_update_notice_id();
+	static $rendered_notices = array();
+	if (isset($rendered_notices[$notice_id])) {
+		return;
+	}
+	$rendered_notices[$notice_id] = true;
+
+	$nonce = wp_create_nonce('easy_sticky_sidebar_dismiss_' . $notice_id);
+	$dashboard_url = admin_url('admin.php?page=easy-sticky-sidebars');
+	$is_dashboard = ('dashboard' === $context);
+	$classes = $is_dashboard
+		? 'easy-sticky-sidebar-update-notice easy-sticky-sidebar-update-notice-dashboard'
+		: 'notice easy-sticky-sidebar-update-notice easy-sticky-sidebar-update-notice-admin';
+	?>
+	<div class="<?php echo esc_attr($classes); ?>" data-notice-id="<?php echo esc_attr($notice_id); ?>" data-nonce="<?php echo esc_attr($nonce); ?>">
+		<button type="button" class="notice-dismiss easy-sticky-sidebar-update-dismiss">
+			<span class="screen-reader-text"><?php esc_html_e('Dismiss this notice.', 'easy-sticky-sidebar'); ?></span>
+		</button>
+		<div class="easy-sticky-sidebar-update-notice__icon" aria-hidden="true">
+			<span class="dashicons dashicons-megaphone"></span>
+		</div>
+		<div class="easy-sticky-sidebar-update-notice__content">
+			<div class="easy-sticky-sidebar-update-notice__eyebrow"><?php esc_html_e('NEW FREE FEATURES AVAILABLE', 'easy-sticky-sidebar'); ?></div>
+			<h2><?php esc_html_e('More free styling controls are now available in WP CTA.', 'easy-sticky-sidebar'); ?></h2>
+			<p><?php esc_html_e('CTA creation limits have been removed, the new compact tab is now available for Sticky CTA and Sticky CTA Tabs, and styling controls and live preview behavior have all been improved.', 'easy-sticky-sidebar'); ?></p>
+			<div class="easy-sticky-sidebar-update-notice__actions">
+				<a class="button button-primary" href="<?php echo esc_url($dashboard_url); ?>"><?php esc_html_e('Open WP CTA Dashboard', 'easy-sticky-sidebar'); ?></a>
+				<span><?php esc_html_e('Dismiss this message anytime.', 'easy-sticky-sidebar'); ?></span>
+			</div>
+		</div>
+	</div>
+	<?php
+	static $script_printed = false;
+	if ($script_printed) {
+		return;
+	}
+	$script_printed = true;
+	?>
+	<script>
+		(function () {
+			const dismissUpdateNotice = function (notice) {
+				if (!notice) {
+					return;
+				}
+
+				const noticeId = notice.getAttribute('data-notice-id') || '';
+				const nonce = notice.getAttribute('data-nonce') || '';
+				document.querySelectorAll('.easy-sticky-sidebar-update-notice[data-notice-id="' + noticeId + '"]').forEach(function (item) {
+					item.remove();
+				});
+
+				const data = new FormData();
+				data.append('action', 'easy_sticky_sidebar_dismiss_new_features_notice');
+				data.append('notice_id', noticeId);
+				data.append('nonce', nonce);
+
+				window.fetch('<?php echo esc_url(admin_url('admin-ajax.php')); ?>', {
+					method: 'POST',
+					credentials: 'same-origin',
+					body: data
+				});
+			};
+
+			document.addEventListener('click', function (event) {
+				const dismissButton = event.target.closest('.easy-sticky-sidebar-update-notice .notice-dismiss');
+				if (!dismissButton) {
+					return;
+				}
+
+				event.preventDefault();
+				dismissUpdateNotice(dismissButton.closest('.easy-sticky-sidebar-update-notice'));
+			});
+		}());
+	</script>
+	<?php
+}
+
+/**
+ * Shared sticky CTA image overlay defaults.
+ *
+ * Classic image overlay and overlay mode settings are intentionally separate.
+ *
+ * @since 2.4.3
+ *
+ * @param array $defaults CTA defaults.
+ * @return array
+ */
+function easy_sticky_sidebar_image_overlay_defaults($defaults) {
+	$defaults['enable_image_overlay'] = $defaults['enable_image_overlay'] ?? 'no';
+	$defaults['cta_image_overlay_color'] = $defaults['cta_image_overlay_color'] ?? '#000000';
+	$defaults['cta_image_overlay_opacity'] = $defaults['cta_image_overlay_opacity'] ?? 35;
+
+	return $defaults;
+}
+add_filter('easy_sticky_sidebar_cta_defaults', 'easy_sticky_sidebar_image_overlay_defaults');
+
+/**
+ * Resolve the active CTA height CSS value.
+ *
+ * Prefers the current CTA height control and falls back to the legacy
+ * image-height value for older CTAs that still rely on it.
+ *
+ * @since 2.4.5
+ *
+ * @param Easy_Sticky_Sidebar_CTA_Data|object $stickycta CTA object.
+ * @param int                                 $fallback  Fallback pixel height.
+ * @param int                                 $min_px    Minimum allowed pixel value.
+ * @return string
+ */
+function easy_sticky_sidebar_get_resolved_cta_height_css($stickycta, $fallback = 300, $min_px = 0) {
+	$image_mode = strtolower((string) ($stickycta->image_placement ?? 'classic'));
+	if ($image_mode === 'background') {
+		$image_mode = 'overlay';
+	}
+	$is_classic_sticky_cta = (($stickycta->sidebar_template ?? '') === 'sticky-cta') && $image_mode !== 'overlay';
+	if ($is_classic_sticky_cta && absint($fallback) === 300) {
+		$fallback = 200;
+	}
+
+	$enable_cta_height = strtolower((string) ($stickycta->enable_cta_height ?? 'no'));
+	$cta_height_unit = (string) ($stickycta->cta_height_unit ?? 'px');
+	if (!in_array($cta_height_unit, array('px', '%'), true)) {
+		$cta_height_unit = 'px';
+	}
+
+	$cta_height_value = floatval($stickycta->cta_height ?? 0);
+	if ('yes' === $enable_cta_height && $cta_height_value > 0) {
+		if ('px' === $cta_height_unit) {
+			$cta_height_value = max($min_px, $cta_height_value);
+		}
+
+		$cta_height_value = 0.0 === fmod($cta_height_value, 1.0)
+			? (string) absint($cta_height_value)
+			: (string) $cta_height_value;
+
+		return $cta_height_value . $cta_height_unit;
+	}
+
+	$legacy_height = absint($stickycta->cta_image_height ?? 0);
+	if ($is_classic_sticky_cta && $legacy_height === 300) {
+		$legacy_height = 200;
+	}
+	if ($legacy_height > 0) {
+		return max($min_px, $legacy_height) . 'px';
+	}
+
+	return max($min_px, absint($fallback)) . 'px';
+}
+
+/**
+ * Render close button markup for CTA templates.
+ *
+ * Kept on the historical function name so free and pro templates can share
+ * the same rendering path without branching.
+ *
+ * @since 2.4.3
+ *
+ * @param Easy_Sticky_Sidebar_CTA_Data|object $stickycta CTA object.
+ * @return void
+ */
+if (!function_exists('wordpress_cta_pro_get_close_button')) {
+	function wordpress_cta_pro_get_close_button($stickycta) {
+		$show_close_button = strtolower((string) ($stickycta->show_close_button ?? 'no'));
+		if ('yes' !== $show_close_button) {
+			return;
+		}
+
+		$close_button_color = sanitize_hex_color((string) ($stickycta->close_button_color ?? ''));
+		$close_button_edge = ('yes' === strtolower((string) ($stickycta->close_button_edge ?? 'no'))) ? 'outside' : '';
+		$close_button_position = (string) ($stickycta->close_button_position ?? 'start');
+
+		printf(
+			'<span style="background-color: %s" class="btn-ess-close icon-close %s %s"></span>',
+			esc_attr($close_button_color),
+			esc_attr($close_button_position),
+			esc_attr($close_button_edge)
+		);
+	}
+}
+
+/**
+ * Add classic image overlay class for frontend rendering.
+ *
+ * @since 2.4.3
+ *
+ * @param array                               $classes   CTA classes.
+ * @param Easy_Sticky_Sidebar_CTA_Data|object $stickycta CTA object.
+ * @return array
+ */
+function easy_sticky_sidebar_classic_image_overlay_class($classes, $stickycta) {
+	if (($stickycta->sidebar_template ?? '') !== 'sticky-cta') {
+		return $classes;
+	}
+
+	$image_mode = strtolower((string) ($stickycta->image_placement ?? 'classic'));
+	if ($image_mode === 'background') {
+		$image_mode = 'overlay';
+	}
+
+	if ($image_mode === 'overlay') {
+		return $classes;
+	}
+
+	if ('yes' === strtolower((string) ($stickycta->enable_image_overlay ?? 'no'))) {
+		$classes[] = 'has-image-ovarlay';
+	}
+
+	return $classes;
+}
+add_filter('easy_sticky_sidebar_class', 'easy_sticky_sidebar_classic_image_overlay_class', 10, 2);
+
+/**
+ * Generate classic image overlay CSS.
+ *
+ * @since 2.4.3
+ *
+ * @param Easy_Sticky_Sidebar_CTA_Data|object $stickycta CTA object.
+ * @return void
+ */
+function easy_sticky_sidebar_generate_classic_image_overlay_css($stickycta) {
+	if (($stickycta->sidebar_template ?? '') !== 'sticky-cta') {
+		return;
+	}
+
+	$image_mode = strtolower((string) ($stickycta->image_placement ?? 'classic'));
+	if ($image_mode === 'background') {
+		$image_mode = 'overlay';
+	}
+
+	if ($image_mode === 'overlay' || 'yes' !== strtolower((string) ($stickycta->enable_image_overlay ?? 'no'))) {
+		return;
+	}
+
+	$properties = array();
+	$opacity = max(0, min(100, absint($stickycta->cta_image_overlay_opacity ?? 35)));
+	$properties[] = sprintf('opacity: %s', $opacity / 100);
+
+	$overlay_color = sanitize_hex_color((string) ($stickycta->cta_image_overlay_color ?? ''));
+	if (!empty($overlay_color)) {
+		$properties[] = sprintf('background-color: %s', $overlay_color);
+	}
+
+	if (empty($properties)) {
+		return;
+	}
+
+	$wrapper_selector = sprintf('.easy-sticky-sidebar.easy-sticky-sidebar-%d', absint($stickycta->id));
+	printf("%s .sticky-sidebar-image:after {%s}\n\n", esc_html($wrapper_selector), esc_html(implode(';', $properties)));
+}
+add_action('easy_sticky_sidebar_generate_css', 'easy_sticky_sidebar_generate_classic_image_overlay_css', 10);
+
+/**
  * check if pro available or not
  * @since  1.4.5
  */
@@ -854,8 +1148,12 @@ function easy_sticky_sidebar_template_tab($stickycta) {
                     SSuprydp_cta_position: 'right',
                     horizontal_vertical_position: 'center',
                     button_alignment: 'start',
+                    button_icon_position: 'before',
+                    button_text_orientation: 'top-to-bottom',
                     image_placement: 'classic',
                     overlay_position: 'right',
+                    overlay_full_tab_height: 'yes',
+                    overlay_tab_text_orientation: 'top-to-bottom',
                     hide_cta_image: 'no',
                     hide_content_text: 'no',
                     hide_call_to_action: 'no',
@@ -865,7 +1163,11 @@ function easy_sticky_sidebar_template_tab($stickycta) {
                     collapse_on_page_load: 'no',
                     html_cta_disable_collapse: 'no',
                     enable_cta_width: 'no',
-                    enable_cta_height: 'no'
+                    cta_width: '500',
+                    cta_width_unit: 'px',
+                    enable_cta_height: 'no',
+                    cta_height: '300',
+                    cta_height_unit: 'px'
                 };
             };
 
@@ -904,13 +1206,33 @@ function easy_sticky_sidebar_template_tab($stickycta) {
                 });
             };
 
+            const applyEditorContentDefaults = function (defaults) {
+                if (!defaults || typeof defaults !== 'object') {
+                    return;
+                }
+
+                ['SSuprydp_button_option_text', 'SSuprydp_content_option_text', 'SSuprydp_action_option_text'].forEach(function (fieldName) {
+                    if (Object.prototype.hasOwnProperty.call(defaults, fieldName)) {
+                        setFormFieldValue(fieldName, defaults[fieldName], { silent: false });
+                    }
+                });
+            };
+
+            let resetScenarioVersion = 0;
             const runResetScenario = function (scenario) {
                 const scenarioData = scenario || {};
                 const template = (scenarioData.template || sidebarTemplate.value || 'sticky-cta').toString();
                 const stickyLayout = (scenarioData.stickyLayout || getCurrentStickyLayout()).toString();
+                const currentResetVersion = ++resetScenarioVersion;
 
                 showPreviewSpinner();
                 window.requestAnimationFrame(function () {
+                    if (currentResetVersion !== resetScenarioVersion) {
+                        return;
+                    }
+                    if (window.EasyStickySidebar && window.EasyStickySidebar.isApplyingPresetTemplate) {
+                        return;
+                    }
                     try {
                         window.easyStickySidebarApplyingDefaults = true;
                         if (window.EasyStickySidebar) {
@@ -925,6 +1247,8 @@ function easy_sticky_sidebar_template_tab($stickycta) {
                             'content_padding',
                             'call_to_action_padding',
                             'overlay_button_padding',
+                            'overlay_button_margin',
+                            'overlay_content_margin',
                             'banner_content_padding',
                             'banner_button_padding',
                             'banner_button_margin'
@@ -952,12 +1276,20 @@ function easy_sticky_sidebar_template_tab($stickycta) {
                                 window.jQuery(overlayPositionField).trigger('change');
                             }
                         }
+                        const resolvedDefaults = template === 'sticky-cta'
+                            ? getStickyLayoutDefaults(stickyLayout)
+                            : getTemplateDefaults(template);
+
                         if (window.EasyStickySidebar) {
                             window.EasyStickySidebar.previewSuspended = false;
                         }
                         window.easyStickySidebarApplyingDefaults = false;
                         syncStickyLayoutCards();
                         toggleTemplateSections();
+                        applyEditorContentDefaults(resolvedDefaults);
+                        if (typeof window.easyStickySidebarRefreshStylingSections === "function") {
+                            window.easyStickySidebarRefreshStylingSections();
+                        }
                         runSinglePreviewRefresh();
                     }
                 });
@@ -1037,6 +1369,7 @@ function easy_sticky_sidebar_template_tab($stickycta) {
                     if (!radio.checked || radio.disabled) {
                         return;
                     }
+
                     sidebarTemplate.value = radio.value;
                     if (window.jQuery) {
                         window.jQuery(sidebarTemplate).trigger("change").trigger("update");
@@ -1047,6 +1380,12 @@ function easy_sticky_sidebar_template_tab($stickycta) {
                         sidebarTemplateUserSelection.value = radio.value;
                     }
                     toggleTemplateSections();
+                    if (radio.value === "sticky-cta" && !window.easyStickySidebarApplyingDefaults) {
+                        window.easyStickySidebarApplyEditorDefaultsForStickyLayout('overlay-left');
+                    }
+                    if (typeof window.easyStickySidebarRefreshStylingSections === "function") {
+                        window.easyStickySidebarRefreshStylingSections();
+                    }
                 });
             });
 
@@ -1061,6 +1400,9 @@ function easy_sticky_sidebar_template_tab($stickycta) {
                     }
                     if (!window.easyStickySidebarApplyingDefaults) {
                         window.easyStickySidebarApplyEditorDefaultsForStickyLayout(radio.value);
+                    }
+                    if (typeof window.easyStickySidebarRefreshStylingSections === "function") {
+                        window.easyStickySidebarRefreshStylingSections();
                     }
                 });
             });
@@ -1356,18 +1698,12 @@ function easy_sticky_sidebar_cta_adjustment($stickycta) {
             'ess-settings-panel',
             Easy_Sticky_Sidebar_Utils::pro_tab_class('easy_sticky_sidebar_cta_adjustment'),
         );
-        if (!easy_sticky_sidebar_has_pro()) {
-            $fieldset_classes[] = 'ess-section-pro-cover';
-        }
         ?>
         <div class="<?php echo esc_attr(trim(implode(' ', array_filter($fieldset_classes)))); ?>" id="cta-adjustment-options" data-tab-label="<?php esc_attr_e("Width & Height", "easy-sticky-sidebar"); ?>">
             <?php do_action('easy_sticky_sidebar_cta_adjustment', $stickycta, $stickycta->__get('id')); ?>
             <?php
             if (has_action('easy_sticky_sidebar_cta_height')) {
                 do_action('easy_sticky_sidebar_cta_height', $stickycta, $stickycta->__get('id'));
-            }
-            if (!easy_sticky_sidebar_has_pro()) {
-                Easy_Sticky_Sidebar_Utils::get_inline_lock();
             }
             ?>
         </div>
@@ -1584,9 +1920,7 @@ add_action('easy_sticky_sidebar_styling_options', 'easy_sticky_sidebar_line_sepa
 function easy_sticky_sidebar_call_to_action($stickycta) {
     if (has_action('easy_sticky_sidebar_call_to_action')) : ?>
         <div class="easy-sticky-sidebar-fieldset ess-settings-panel <?php echo esc_attr(Easy_Sticky_Sidebar_Utils::pro_tab_class('easy_sticky_sidebar_call_to_action')); ?>" id="cta-link-text-options" data-tab-label="<?php esc_attr_e("Button Settings", "easy-sticky-sidebar"); ?>">
-            <div class="ess-settings-grid">
-                <?php do_action('easy_sticky_sidebar_call_to_action', $stickycta, $stickycta->__get('id')) ?>
-            </div>
+            <?php do_action('easy_sticky_sidebar_call_to_action', $stickycta, $stickycta->__get('id')) ?>
         </div>
     <?php endif;
 }
@@ -1603,17 +1937,9 @@ function easy_sticky_sidebar_close_button_options($stickycta) {
             'ess-settings-panel',
             Easy_Sticky_Sidebar_Utils::pro_tab_class('easy_sticky_sidebar_close_button_options'),
         );
-        if (!easy_sticky_sidebar_has_pro()) {
-            $fieldset_classes[] = 'ess-section-pro-cover';
-        }
         ?>
         <div class="<?php echo esc_attr(trim(implode(' ', array_filter($fieldset_classes)))); ?>" id="cta-close-button-options" data-tab-label="<?php esc_attr_e("Close Button Settings", "easy-sticky-sidebar"); ?>">
             <?php do_action('easy_sticky_sidebar_close_button_options', $stickycta, $stickycta->__get('id')) ?>
-            <?php
-            if (!easy_sticky_sidebar_has_pro()) {
-                Easy_Sticky_Sidebar_Utils::get_inline_lock();
-            }
-            ?>
         </div>
     <?php endif;
 }
@@ -1626,17 +1952,9 @@ function easy_sticky_sidebar_box_shadow_options($stickycta) {
             'ess-settings-panel',
             Easy_Sticky_Sidebar_Utils::pro_tab_class('easy_sticky_sidebar_box_shadow_options'),
         );
-        if (!easy_sticky_sidebar_has_pro()) {
-            $fieldset_classes[] = 'ess-section-pro-cover';
-        }
         ?>
         <div class="<?php echo esc_attr(trim(implode(' ', array_filter($fieldset_classes)))); ?>" id="cta-box-shadow-options" data-tab-label="<?php esc_attr_e("Box Shadow Setting", "easy-sticky-sidebar"); ?>">
             <?php do_action('easy_sticky_sidebar_box_shadow_options', $stickycta, $stickycta->__get('id')) ?>
-            <?php
-            if (!easy_sticky_sidebar_has_pro()) {
-                Easy_Sticky_Sidebar_Utils::get_inline_lock();
-            }
-            ?>
         </div>
     <?php endif;
 }
@@ -1910,13 +2228,39 @@ if (!function_exists('easy_sticky_sidebar_normalize_icon_class')) {
 }
 
 if (!function_exists('easy_sticky_sidebar_add_button_icon')) {
-    function easy_sticky_sidebar_add_button_icon($stickycta) {
-        $icon_class = easy_sticky_sidebar_normalize_icon_class($stickycta->button_icon ?? '');
-        if (!empty($icon_class)) {
-            printf('<i class="icon %s"></i>', esc_attr($icon_class));
-        }
+    function easy_sticky_sidebar_get_button_icon_position($stickycta) {
+        $position = strtolower((string) ($stickycta->button_icon_position ?? 'before'));
+        return in_array($position, array('before', 'after'), true) ? $position : 'before';
     }
 }
-add_action('easy_sticky_sidebar_sticky_cta_button', 'easy_sticky_sidebar_add_button_icon');
+
+if (!function_exists('easy_sticky_sidebar_get_button_icon_html')) {
+    function easy_sticky_sidebar_get_button_icon_html($stickycta) {
+        $icon_class = easy_sticky_sidebar_normalize_icon_class($stickycta->button_icon ?? '');
+        $icon_size  = absint($stickycta->button_icon_size ?? 16);
+        if (!empty($icon_class)) {
+            return sprintf(
+                '<i class="icon %s" style="font-size:%dpx;"></i>',
+                esc_attr($icon_class),
+                $icon_size > 0 ? $icon_size : 16
+            );
+        }
+        return '';
+    }
+}
+
+if (!function_exists('easy_sticky_sidebar_add_button_icon')) {
+    function easy_sticky_sidebar_add_button_icon($stickycta) {
+        echo wp_kses(
+            easy_sticky_sidebar_get_button_icon_html($stickycta),
+            array(
+                'i' => array(
+                    'class' => array(),
+                    'style' => array(),
+                ),
+            )
+        );
+    }
+}
 
 

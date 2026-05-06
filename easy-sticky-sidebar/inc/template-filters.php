@@ -20,6 +20,32 @@ class Easy_Sticky_Sidebar_Template_Filters {
      * @since 1.5.0
      */
     function add_button_text($stickycta) {
-        echo esc_html($stickycta->SSuprydp_button_option_text);
+        $button_text = trim((string) ($stickycta->SSuprydp_button_option_text ?? ''));
+        $label_html = sprintf(
+            '<span class="ess-sticky-sidebar-button-label">%s</span>',
+            esc_html($button_text)
+        );
+        $icon_html = function_exists('easy_sticky_sidebar_get_button_icon_html')
+            ? easy_sticky_sidebar_get_button_icon_html($stickycta)
+            : '';
+        $icon_position = function_exists('easy_sticky_sidebar_get_button_icon_position')
+            ? easy_sticky_sidebar_get_button_icon_position($stickycta)
+            : 'before';
+        $button_html = ($icon_position === 'after')
+            ? $label_html . $icon_html
+            : $icon_html . $label_html;
+
+        echo wp_kses(
+            $button_html,
+            array(
+                'span' => array(
+                    'class' => array(),
+                ),
+                'i' => array(
+                    'class' => array(),
+                    'style' => array(),
+                ),
+            )
+        );
     }
 }

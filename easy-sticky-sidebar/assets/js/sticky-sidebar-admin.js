@@ -11,9 +11,6 @@ const has_easy_sticky_sidebar_pro = function () {
 }
 
 jQuery(document).ready(function ($) {
-    height = $(".sticky-sidebar-button").height();
-    $(".sticky-sidebar-button div").css("width", height);
-
     $(".easy-sidebar-wrap .sticky-sidebar-name-input + i").on("click", function () {
         $(this).prev().focus();
     });
@@ -301,8 +298,20 @@ jQuery(document).ready(function ($) {
         return true;
     };
 
+    const getCurrentSidebarTemplate = function () {
+        const selectedTemplate = $('#ess-template-selector input[name="sidebar_template_picker"]:checked:not(:disabled)').first().val();
+        return selectedTemplate || $('[name="sidebar_template"]').val() || 'sticky-cta';
+    };
+
     const refreshStylingSectionVisibility = function () {
-        const currentTemplate = $('[name="sidebar_template"]').val() || 'sticky-cta';
+        const currentTemplate = getCurrentSidebarTemplate();
+        const $templateField = $('[name="sidebar_template"]').first();
+
+        if ($templateField.length && $templateField.val() !== currentTemplate) {
+            $templateField.val(currentTemplate);
+        }
+        $('#sidebar_template_user_selection').val(currentTemplate);
+        $('#SSuprydp_form').attr('data-template', currentTemplate);
 
         $('.wordpress-cta-styling-container').each(function () {
             const $container = $(this);
@@ -340,6 +349,7 @@ jQuery(document).ready(function ($) {
             }
         });
     };
+    window.easyStickySidebarRefreshStylingSections = refreshStylingSectionVisibility;
 
     $(document).on('click', '.ess-settings-tabs-nav .ess-settings-tab', function () {
         const $button = $(this);
@@ -378,7 +388,7 @@ jQuery(document).ready(function ($) {
     $('.wordpress-cta-styling-container').removeClass('ess-settings-tabs-pending').addClass('ess-settings-tabs-enabled');
     refreshStylingSectionVisibility();
     syncBehaviourConditionalFields();
-    $(document).on('change', '[name="image_placement"], [name="overlay_position"], [name="sticky_layout"]', function () {
+    $(document).on('change', '[name="sidebar_template"], [name="sidebar_template_picker"], [name="image_placement"], [name="overlay_position"], [name="sticky_layout"]', function () {
         refreshStylingSectionVisibility();
     });
     $(document).on('change', '#cta-animation-behaviour-options [name="display_trigger"], #cta-animation-behaviour-options [name="hide_behavior"], #cta-animation-behaviour-options [name="after_close_behavior"]', function () {
@@ -570,103 +580,6 @@ jQuery(document).ready(function ($) {
         $field.val(value).trigger('input').trigger('change');
     };
 
-    const applyTabCtaEditorDefaults = function () {
-        if (window.EasyStickySidebar && window.EasyStickySidebar.isApplyingPresetTemplate) {
-            return;
-        }
-
-        const textField = $('[name="SSuprydp_button_option_text"]').first();
-        const bgField = $('[name="SSuprydp_button_option_backg_color"]').first();
-        if (!textField.length || !bgField.length) {
-            return;
-        }
-
-        textField.val('Call Now').trigger('input').trigger('change');
-        setColorFieldValue(bgField, '#218400');
-    };
-    const applyStickyCtaEditorDefaults = function () {
-        if (window.EasyStickySidebar && window.EasyStickySidebar.isApplyingPresetTemplate) {
-            return;
-        }
-        const imageModeRaw = `${$('[name="image_placement"]').first().val() || 'classic'}`.toLowerCase();
-        const imageMode = imageModeRaw === 'background' ? 'overlay' : imageModeRaw;
-        const isOverlayMode = imageMode === 'overlay';
-        const pluginBaseUrl = (
-            window.sticky_sidebar &&
-            typeof window.sticky_sidebar.plugin_url === 'string' &&
-            window.sticky_sidebar.plugin_url.length
-        ) ? window.sticky_sidebar.plugin_url.replace(/\/$/, '') : '';
-        const overlayDefaultImage = pluginBaseUrl ? `${pluginBaseUrl}/assets/img/overlay_dummy.webp` : '';
-        const classicDefaultImage = pluginBaseUrl ? `${pluginBaseUrl}/assets/img/ss_dummy.jpg` : '';
-        const defaultTabBg = isOverlayMode ? '#099607' : '#4e0d61';
-        const defaultLinkBg = isOverlayMode ? '#08a800' : '#11265d';
-
-        const textField = $('[name="SSuprydp_button_option_text"]').first();
-        const bgField = $('[name="SSuprydp_button_option_backg_color"]').first();
-        const contentField = $('[name="SSuprydp_content_option_text"]').first();
-        const actionTextField = $('[name="SSuprydp_action_option_text"]').first();
-        const actionBgField = $('[name="link_text_background"]').first();
-        const imageHeightField = $('[name="cta_image_height"]').first();
-        if (!textField.length || !bgField.length) {
-            return;
-        }
-
-        if (isOverlayMode) {
-            textField.val('Have Questions?').trigger('input').trigger('change');
-            if (contentField.length) {
-                contentField.val('Get quick answers and expert guidance tailored to your needs.').trigger('input').trigger('change');
-            }
-            if (actionTextField.length) {
-                actionTextField.val('Get Started').trigger('input').trigger('change');
-            }
-            $('[name="SSuprydp_content_option_font"]').val('Arial').trigger('change');
-            $('[name="SSuprydp_content_option_size"]').val('24').trigger('input').trigger('change');
-            $('[name="SSuprydp_action_option_font"]').val('Archivo:700').trigger('change');
-            $('[name="SSuprydp_action_option_size"]').val('24').trigger('input').trigger('change');
-            $('[name="overlay_button_padding[top]"]').val('5').trigger('input').trigger('change');
-            $('[name="overlay_button_padding[right]"]').val('20').trigger('input').trigger('change');
-            $('[name="overlay_button_padding[bottom]"]').val('5').trigger('input').trigger('change');
-            $('[name="overlay_button_padding[left]"]').val('20').trigger('input').trigger('change');
-            $('[name="overlay_button_padding[unit]"][value="px"]').prop('checked', true).trigger('change');
-            $('[name="overlay_button_radius"]').val('50').trigger('input').trigger('change');
-            $('[name="overlay_backdrop_color"]').val('#ffffff').trigger('change');
-            $('[name="overlay_backdrop_opacity"]').val('70').trigger('input').trigger('change');
-            $('[name="overlay_width"]').val('60').trigger('input').trigger('change');
-            setColorFieldValue($('[name="SSuprydp_content_option_color"]').first(), '#383838');
-            $('[name="content_background_color"]').first().val('').trigger('input').trigger('change');
-            if (overlayDefaultImage) {
-                syncContentImageThumbnail(overlayDefaultImage);
-            }
-            $('[name="image_attachment_id"]').val('0').trigger('change');
-        } else {
-            textField.val('Click Here').trigger('input').trigger('change');
-            if (contentField.length) {
-                contentField.val('This is the Content Area. Put a description here of what you want to promote.').trigger('input').trigger('change');
-            }
-            if (actionTextField.length) {
-                actionTextField.val('Click Here to View').trigger('input').trigger('change');
-            }
-            $('[name="SSuprydp_content_option_size"]').val('20').trigger('input').trigger('change');
-            $('[name="SSuprydp_action_option_size"]').val('20').trigger('input').trigger('change');
-            setColorFieldValue($('[name="SSuprydp_content_option_color"]').first(), '#ffffff');
-            setColorFieldValue($('[name="content_background_color"]').first(), '#250d61');
-            if (classicDefaultImage) {
-                syncContentImageThumbnail(classicDefaultImage);
-            }
-            $('[name="image_attachment_id"]').val('0').trigger('change');
-        }
-
-        setColorFieldValue(bgField, defaultTabBg);
-        setColorFieldValue($('[name="SSuprydp_button_option_color"]').first(), '#ffffff');
-        if (actionBgField.length) {
-            setColorFieldValue(actionBgField, defaultLinkBg);
-        }
-        setColorFieldValue($('[name="SSuprydp_action_option_color"]').first(), '#ffffff');
-        if (imageHeightField.length) {
-            imageHeightField.val(isOverlayMode ? '300' : '200').trigger('input').trigger('change');
-        }
-    };
-
     // Keep template select in sync with thumbnail selection before any preview/update triggers.
     const selectedTemplateCardOnLoad = $('#ess-template-selector input[name="sidebar_template_picker"]:checked:not(:disabled)').first();
     if (selectedTemplateCardOnLoad.length) {
@@ -716,11 +629,6 @@ jQuery(document).ready(function ($) {
         contentLinkOptions.toggle(showContentLinkOptions);
         contentLinkOptions.find('input, select, textarea, button').prop('disabled', !showContentLinkOptions);
 
-        // Styling tab: CTA/Image height is not relevant for HTML template.
-        const imageHeightField = $('[name="cta_image_height"]');
-        imageHeightField.prop('disabled', isHtmlTemplate);
-        imageHeightField.closest('.SSuprydp_field_wrap').toggle(!isHtmlTemplate);
-
         // Hide font-size controls for HTML/iframe template.
         const htmlHiddenControls = $('.hide-on-html-template');
         htmlHiddenControls.toggle(!isHtmlTemplate);
@@ -729,7 +637,11 @@ jQuery(document).ready(function ($) {
         // Styling tab: hide CTA Link Text section for GDPR.
         const ctaLinkTextSection = $('#cta-link-text-options');
         if (ctaLinkTextSection.length) {
-            ctaLinkTextSection.toggle(!isGdprTemplate);
+            if (isGdprTemplate) {
+                ctaLinkTextSection.hide();
+            } else {
+                ctaLinkTextSection.css('display', 'grid');
+            }
             ctaLinkTextSection.find('input, select, textarea, button').prop('disabled', isGdprTemplate);
         }
 
@@ -741,13 +653,94 @@ jQuery(document).ready(function ($) {
             ctaImageSection.find('input, select, textarea, button').prop('disabled', !showImageOptions);
         }
 
+        // Content settings: GDPR-only fields should not appear in Sticky CTA or other templates.
+        const gdprOnlyFields = $('#cta-content-options .wordpress-cta-gdpr-only');
+        if (gdprOnlyFields.length) {
+            gdprOnlyFields.toggle(isGdprTemplate);
+            gdprOnlyFields.find('input, select, textarea, button').prop('disabled', !isGdprTemplate);
+        }
+
+        // "Turn the text into a button" should be available only for Announcement Banner.
+        const bannerOnlyFields = $('#cta-link-text-options .ess-banner-only-field');
+        if (bannerOnlyFields.length) {
+            bannerOnlyFields.toggle(isBannerTemplate);
+            bannerOnlyFields.find('input, select, textarea, button').prop('disabled', !isBannerTemplate);
+        }
+
+        const applyBannerButtonFieldLayout = function () {
+            const section = $('#cta-link-text-options');
+            if (!section.length) {
+                return;
+            }
+
+            const letterSpacingField = section.find('.call-to-action-letter-spacing').first();
+            const fontFamilyField = section.find('.call-to-action-font').first();
+            const fontSizeField = section.find('.call-to-action-font-size').first();
+            const textColorField = section.find('.call-to-action-textcolor').first();
+            const toggleField = section.find('.call-to-action-button.ess-banner-only-field').first();
+            const bgColorField = section.find('.call-to-action-background-color').first();
+            const bannerPaddingField = section.find('[name="banner_button_padding[top]"]').first().closest('.SSuprydp_field_wrap');
+            const bannerRadiusField = section.find('[name="banner_button_border_radius"]').first().closest('.SSuprydp_field_wrap');
+            const bannerMarginField = section.find('[name="banner_button_margin[top]"]').first().closest('.SSuprydp_field_wrap');
+
+            if (isBannerTemplate) {
+                // Keep typography grouped right after letter-spacing for banner.
+                if (letterSpacingField.length && fontFamilyField.length) {
+                    fontFamilyField.insertAfter(letterSpacingField);
+                }
+                if (fontFamilyField.length && fontSizeField.length) {
+                    fontSizeField.insertAfter(fontFamilyField);
+                }
+                if (fontSizeField.length && textColorField.length) {
+                    textColorField.insertAfter(fontSizeField);
+                }
+                if (textColorField.length && bannerMarginField.length) {
+                    bannerMarginField.insertAfter(textColorField);
+                }
+
+                // Place banner toggle right after margin to keep 2-column flow stable.
+                if (toggleField.length) {
+                    if (bannerMarginField.length) {
+                        toggleField.insertAfter(bannerMarginField);
+                    } else {
+                        toggleField.appendTo(section);
+                    }
+                }
+            }
+
+            const bannerButtonEnabled = section.find('[name="call_to_action_button"]').is(':checked');
+            const shouldShowButtonBgField = !isBannerTemplate || bannerButtonEnabled;
+            if (bgColorField.length) {
+                bgColorField.toggle(shouldShowButtonBgField);
+                bgColorField.find('input, select, textarea, button').prop('disabled', !shouldShowButtonBgField);
+            }
+
+            const shouldShowBannerButtonOnlyFields = isBannerTemplate && bannerButtonEnabled;
+            [bannerPaddingField, bannerRadiusField].forEach(function ($field) {
+                if (!$field || !$field.length) {
+                    return;
+                }
+                $field.toggle(shouldShowBannerButtonOnlyFields);
+                $field.find('input, select, textarea, button').prop('disabled', !shouldShowBannerButtonOnlyFields);
+            });
+        };
+        applyBannerButtonFieldLayout();
+
         setButtonOptionsHeadingByTemplate(currentTemplate);
     };
 
+    $(document).on('change', '#cta-link-text-options [name="call_to_action_button"]', function () {
+        toggleHtmlTemplateContentOptions($('[name="sidebar_template"]').val() || 'sticky-cta');
+    });
+
     $('[name="sidebar_template"]').on("update", function (event, form_data) {
+        form_data = form_data || {
+            template: $('[name="sidebar_template"]').val() || 'sticky-cta'
+        };
+
         if (form_data.template == 'banner') {
             $('#cta-content-options').show();
-            $('#cta-link-text-options').show();
+            $('#cta-link-text-options').css('display', 'grid');
 
             current_position = $('[name="SSuprydp_cta_position"]').data('position');
             options = ['Top', 'Bottom'].map((pos) => {
@@ -846,19 +839,31 @@ jQuery(document).ready(function ($) {
 
     const DesignTemplate = {
         template: null,
+        templateKey: '',
+
+        get_selected_template: function () {
+            const selectedOption = $('#cta-premade-style').find(':selected');
+            const templateKey = selectedOption.attr('data-design-template-key') || this.templateKey || '';
+            if (
+                templateKey &&
+                window.sticky_sidebar &&
+                window.sticky_sidebar.design_templates &&
+                window.sticky_sidebar.design_templates[templateKey]
+            ) {
+                return Object.assign({}, window.sticky_sidebar.design_templates[templateKey]);
+            }
+
+            const rawTemplate = selectedOption.val() || this.template || '{}';
+            try {
+                const parsedTemplate = JSON.parse(rawTemplate);
+                return parsedTemplate && typeof parsedTemplate === 'object' ? parsedTemplate : {};
+            } catch (error) {
+                return {};
+            }
+        },
 
         get_values: function (style_only = false) {
-            let values = {}
-
-            try {
-                values = JSON.parse(this.template)
-                if (typeof values !== 'object') {
-                    values = {};
-                }
-
-            } catch (error) {
-                return {}
-            }
+            let values = this.get_selected_template();
 
             if (style_only === false) {
                 if (values && values.sidebar_template === 'sticky-cta' && typeof values.image_placement === 'undefined') {
@@ -878,19 +883,26 @@ jQuery(document).ready(function ($) {
         init: function () {
             const self = this;
 
-            $('#cta-premade-style').on('change', function (e) {
+            $(document).off('change.essDesignTemplate', '#cta-premade-style').on('change.essDesignTemplate', '#cta-premade-style', function (e) {
+                if (!$(this).val()) {
+                    self.template = null;
+                    self.templateKey = '';
+                    return;
+                }
                 $('#wordpress-cta-popup-load-design').trigger('open');
                 self.template = $(this).val();
+                self.templateKey = $(this).find(':selected').attr('data-design-template-key') || '';
             });
 
-            $('#wordpress-cta-popup-load-design .btn-cancel').on('click', function (e) {
+            $(document).off('click.essDesignTemplateCancel', '#wordpress-cta-popup-load-design .btn-cancel').on('click.essDesignTemplateCancel', '#wordpress-cta-popup-load-design .btn-cancel', function (e) {
                 e.preventDefault();
                 $('#wordpress-cta-popup-load-design').trigger('close');
-                self.template = {};
+                self.template = null;
+                self.templateKey = '';
                 $('#cta-premade-style').val('');
             })
 
-            $('#wordpress-cta-popup-load-design .btn-wordpress-cta-primary').on('click', function (e) {
+            $(document).off('click.essDesignTemplateApply', '#wordpress-cta-popup-load-design .btn-wordpress-cta-primary').on('click.essDesignTemplateApply', '#wordpress-cta-popup-load-design .btn-wordpress-cta-primary', function (e) {
                 e.preventDefault();
 
                 const style_only = $(this).attr('href') === '#load-style';
@@ -1036,6 +1048,8 @@ jQuery(document).ready(function ($) {
                     }
                     $('#wordpress-cta-popup-load-design').trigger('close');
                     $('#cta-premade-style').val('');
+                    self.template = null;
+                    self.templateKey = '';
 
                     const finishBulkApply = function () {
                         setPreviewBusy(false);
@@ -1043,6 +1057,9 @@ jQuery(document).ready(function ($) {
                             window.EasyStickySidebar.isApplyingPresetTemplate = false;
                         }
                         syncContentImageThumbnail($('#sticky_s_media').val());
+                        if (typeof window.easyStickySidebarRefreshStylingSections === 'function') {
+                            window.easyStickySidebarRefreshStylingSections();
+                        }
                         if (ess && typeof ess.applyTemplatePreviewRefresh === 'function') {
                             ess.applyTemplatePreviewRefresh();
                         }
@@ -1077,40 +1094,41 @@ jQuery(document).ready(function ($) {
         init: function () {
             const self = this;
 
-            $('.wordpress-cta-pro-element, .wordpress-cta-pro-feature-inline').on('click', function (e) {
+            $(document).off('click.essCtaPopupPro', '.wordpress-cta-pro-element, .wordpress-cta-pro-feature-inline').on('click.essCtaPopupPro', '.wordpress-cta-pro-element, .wordpress-cta-pro-feature-inline', function (e) {
                 e.preventDefault();
                 $('#wordpress-cta-pro-feature-popup').trigger('open');
             })
 
-            self.container.on('open', function (event, data) {
+            $(document).off('open.essCtaPopup', '.wordpress-cta-popup').on('open.essCtaPopup', '.wordpress-cta-popup', function (event, data) {
                 const popup_text = Object.assign({ heading: self.heading, description: self.description }, data)
-                self.container.find('.pro-title').html(popup_text.heading)
+                const popup = $(this);
+                popup.find('.pro-title').html(popup_text.heading)
                 if (popup_text.description) {
-                    self.container.find('.pro-description').html(popup_text.description)
+                    popup.find('.pro-description').html(popup_text.description)
                 }
 
                 $('body').addClass('has-wordpress-cta-popup');
-                $(this).addClass('active');
+                popup.addClass('active');
             })
 
-            self.container.on('close', function () {
+            $(document).off('close.essCtaPopup', '.wordpress-cta-popup').on('close.essCtaPopup', '.wordpress-cta-popup', function () {
                 $('body').removeClass('has-wordpress-cta-popup')
                 $(this).removeClass('active');
             })
 
-            self.container.on('click', function (e) {
-                if (self.container.is(e.target)) {
-                    self.container.trigger('close')
+            $(document).off('click.essCtaPopupBackdrop', '.wordpress-cta-popup').on('click.essCtaPopupBackdrop', '.wordpress-cta-popup', function (e) {
+                if (this === e.target) {
+                    $(this).trigger('close')
                 }
             })
 
-            self.container.on('click', '.close', function () {
+            $(document).off('click.essCtaPopupClose', '.wordpress-cta-popup .close').on('click.essCtaPopupClose', '.wordpress-cta-popup .close', function () {
                 $(this).closest('.wordpress-cta-popup').trigger('close')
             })
 
-            $(document).on('keydown', function (e) {
+            $(document).off('keydown.essCtaPopup').on('keydown.essCtaPopup', function (e) {
                 if (e.keyCode === 27) { // ESC
-                    self.container.trigger('close')
+                    $('.wordpress-cta-popup.active').trigger('close')
                 }
             });
         }
@@ -1304,6 +1322,11 @@ jQuery(document).ready(function ($) {
         button_container: $('#floating-buttons-options .floating-buttons'),
 
         update_buttons: function (button_id = 0, event = 'update') {
+            const buttonTemplateNode = document.getElementById('tmpl-easy-sticky-sidebar-floating-single-button-style');
+            if (!buttonTemplateNode || typeof wp === 'undefined' || !wp.template) {
+                return;
+            }
+
             const tabs = $('#floating-single-button-styles').find('.easy-sticky-sidebar-fieldset-floating-button');
             const current_tab = tabs.filter(`[data-id="${button_id}"]`);
 
@@ -1311,7 +1334,9 @@ jQuery(document).ready(function ($) {
                 current_tab.remove();
             }
 
-            const button_args = { ...this.button_default_args, ...this.buttons[button_id] };
+            const button_args = { ...this.button_default_args, ...(this.buttons[button_id] || {}) };
+            button_args.icon = `${button_args.icon || ''}`;
+            button_args.text = `${button_args.text || ''}`;
 
 
             const button_style_template = wp.template('easy-sticky-sidebar-floating-single-button-style');
@@ -1427,9 +1452,10 @@ jQuery(document).ready(function ($) {
                 }
 
                 const button_template = wp.template("easy-sticky-sidebar-floating-button");
-                const button_html = button_template({ button_no: next_button_no });
+                const button_args = { ...self.button_default_args, button_no: next_button_no };
+                const button_html = button_template(button_args);
                 self.button_container.append(button_html);
-                self.buttons[next_button_no] = self.button_default_args;
+                self.buttons[next_button_no] = button_args;
                 self.update_buttons(next_button_no, 'add');
             })
 
@@ -1545,6 +1571,36 @@ jQuery(document).ready(function ($) {
         return input.length ? input.is(':checked') : false;
     };
 
+    const syncContentImageThumbnail = function (imageUrl) {
+        const resolved = `${imageUrl || ''}`.trim();
+        if (!resolved.length) {
+            return;
+        }
+
+        const imageField = $('#sticky_s_media');
+        const imagePreview = $('#image-preview');
+        if (imageField.length) {
+            imageField.val(resolved);
+        }
+        if (imagePreview.length) {
+            imagePreview.attr('src', resolved).prop('src', resolved);
+        }
+    };
+
+    const getEditorDefault = function (template, fieldName, fallback = '') {
+        const defaults = window.sticky_sidebar && window.sticky_sidebar.editor_defaults
+            ? window.sticky_sidebar.editor_defaults
+            : {};
+        const templates = defaults.templates || {};
+        const templateDefaults = templates[template] || {};
+
+        if (Object.prototype.hasOwnProperty.call(templateDefaults, fieldName)) {
+            return templateDefaults[fieldName];
+        }
+
+        return fallback;
+    };
+
     const toggleStickyImageModeFieldGroups = function () {
         const mode = (getValue('image_placement', 'classic') || 'classic').toString().toLowerCase();
         const normalized = mode === 'background' ? 'overlay' : mode;
@@ -1563,12 +1619,14 @@ jQuery(document).ready(function ($) {
             .find('input, select, textarea, button')
             .prop('disabled', !showOverlayOnly);
 
-        // Hard guard: after switching from templates that hide this control
-        // (for example HTML/GDPR), ensure sticky layout always restores it.
-        const imageHeightWrap = form.find('[name="cta_image_height"]').first().closest('.SSuprydp_field_wrap');
-        if (imageHeightWrap.length) {
-            imageHeightWrap.toggle(isStickyTemplate);
-            imageHeightWrap.find('input, select, textarea, button').prop('disabled', !isStickyTemplate);
+        // Sticky classic-only controls: hide only in sticky overlay mode.
+        const stickyClassicOnlyFields = form.find('.cta-sticky-classic-only');
+        if (stickyClassicOnlyFields.length) {
+            const showStickyClassicOnly = !isStickyTemplate || !isOverlay;
+            stickyClassicOnlyFields
+                .toggle(showStickyClassicOnly)
+                .find('input, select, textarea, button')
+                .prop('disabled', !showStickyClassicOnly);
         }
 
         // Hard guard: hide Content Padding in sticky overlay mode, regardless of source renderer.
@@ -1577,6 +1635,100 @@ jQuery(document).ready(function ($) {
             const shouldShowContentPadding = !isStickyTemplate || !isOverlay;
             contentPaddingWrap.toggle(shouldShowContentPadding);
             contentPaddingWrap.find('input, select, textarea, button').prop('disabled', !shouldShowContentPadding);
+        }
+
+        const overlayContentMarginWrap = form.find('[name="overlay_content_margin[top]"]').first().closest('.SSuprydp_field_wrap');
+        if (overlayContentMarginWrap.length) {
+            overlayContentMarginWrap
+                .toggle(showOverlayOnly)
+                .find('input, select, textarea, button')
+                .prop('disabled', !showOverlayOnly);
+        }
+
+        const overlayButtonMarginWrap = form.find('[name="overlay_button_margin[top]"]').first().closest('.SSuprydp_field_wrap');
+        if (overlayButtonMarginWrap.length) {
+            overlayButtonMarginWrap
+                .toggle(showOverlayOnly)
+                .find('input, select, textarea, button')
+                .prop('disabled', !showOverlayOnly);
+        }
+
+        const overlayPosition = (getValue('overlay_position', 'right') || 'right').toString().toLowerCase();
+        const ctaPosition = (getValue('SSuprydp_cta_position', 'right') || 'right').toString().toLowerCase();
+        const currentTemplate = (getValue('sidebar_template', 'sticky-cta') || 'sticky-cta').toString().toLowerCase();
+        const hideContentToggleWrap = form.find('[name="hide_content_text"]').first().closest('.SSuprydp_field_wrap');
+        if (hideContentToggleWrap.length) {
+            const shouldShowHideContentToggle = currentTemplate !== 'gdpr';
+            hideContentToggleWrap
+                .toggle(shouldShowHideContentToggle)
+                .find('input, select, textarea, button')
+                .prop('disabled', !shouldShowHideContentToggle);
+        }
+
+        const showOverlayTextOrientationOnly = showOverlayOnly && (ctaPosition === 'left' || ctaPosition === 'right');
+        const showSideTabOrientationOnly = (currentTemplate === 'tab-cta' || currentTemplate === 'html')
+            ? (ctaPosition === 'left' || ctaPosition === 'right')
+            : (showOverlayOnly ? showOverlayTextOrientationOnly : (isStickyTemplate && (ctaPosition === 'left' || ctaPosition === 'right')));
+
+        const overlaySideTabOrientationWrap = form.find('[name="button_text_orientation"]').first().closest('.SSuprydp_field_wrap');
+        if (overlaySideTabOrientationWrap.length) {
+            overlaySideTabOrientationWrap
+                .toggle(showSideTabOrientationOnly)
+                .find('input, select, textarea, button')
+                .prop('disabled', !showSideTabOrientationOnly);
+        }
+
+        const buttonIconValue = (getValue('button_icon', '') || '').toString().trim();
+        const shouldShowButtonIconControls = (currentTemplate === 'sticky-cta' || currentTemplate === 'tab-cta' || currentTemplate === 'html') && buttonIconValue !== '';
+
+        const buttonIconSizeWrap = form.find('[name="button_icon_size"]').first().closest('.SSuprydp_field_wrap');
+        if (buttonIconSizeWrap.length) {
+            buttonIconSizeWrap
+                .toggle(shouldShowButtonIconControls)
+                .find('input, select, textarea, button')
+                .prop('disabled', !shouldShowButtonIconControls);
+        }
+
+        const buttonIconPositionWrap = form.find('[name="button_icon_position"]').first().closest('.SSuprydp_field_wrap');
+        if (buttonIconPositionWrap.length) {
+            buttonIconPositionWrap
+                .toggle(shouldShowButtonIconControls)
+                .find('input, select, textarea, button')
+                .prop('disabled', !shouldShowButtonIconControls);
+        }
+
+        const buttonAlignmentWrap = form.find('[name="button_alignment"]').first().closest('.SSuprydp_field_wrap');
+        if (buttonAlignmentWrap.length) {
+            const shouldShowButtonAlignment = currentTemplate === 'sticky-cta' || currentTemplate === 'html';
+            buttonAlignmentWrap
+                .toggle(shouldShowButtonAlignment)
+                .find('input, select, textarea, button')
+                .prop('disabled', !shouldShowButtonAlignment);
+        }
+
+        const overlayContentCornerRadiusWrap = form.find('[name="overlay_tab_corner_radius"]').first().closest('.SSuprydp_field_wrap');
+        if (overlayContentCornerRadiusWrap.length) {
+            const shouldShowOverlayContentCornerRadius = showOverlayOnly || currentTemplate === 'html';
+            overlayContentCornerRadiusWrap
+                .toggle(shouldShowOverlayContentCornerRadius)
+                .find('input, select, textarea, button')
+                .prop('disabled', !shouldShowOverlayContentCornerRadius);
+        }
+
+        const fullTabHeightWrap = form.find('[name="overlay_full_tab_height"]').first().closest('.SSuprydp_field_wrap');
+        if (fullTabHeightWrap.length) {
+            const hasConfigurableTabSize = currentTemplate === 'sticky-cta' || currentTemplate === 'html';
+            const shouldShowFullTabHeight = hasConfigurableTabSize && (currentTemplate === 'html' || showOverlayOnly);
+            const fullTabLabel = (ctaPosition === 'top' || ctaPosition === 'bottom') ? 'Full Width Tab' : 'Full Height Tab';
+            const fullTabDescription = (ctaPosition === 'top' || ctaPosition === 'bottom')
+                ? 'When off, the tab uses only the width needed for its icon and text, then follows the Tab Alignment setting.'
+                : 'When off, the tab uses only the height needed for its icon and text, then follows the Tab Alignment setting.';
+            fullTabHeightWrap.find('.ess-full-tab-size-label, .heading').first().text(fullTabLabel);
+            fullTabHeightWrap.find('.ess-full-tab-size-description').first().text(fullTabDescription);
+            fullTabHeightWrap
+                .toggle(shouldShowFullTabHeight)
+                .find('input, select, textarea, button')
+                .prop('disabled', !shouldShowFullTabHeight);
         }
     };
 
@@ -1986,7 +2138,14 @@ jQuery(document).ready(function ($) {
             const currentActivePane = previewTemplates.filter('.is-active:visible').first();
             const paneHeight = currentActivePane.length ? currentActivePane.outerHeight(true) : 0;
             if (paneHeight && paneHeight > 0) {
-                const nextHeight = Math.max(120, Math.ceil(paneHeight + 8));
+                let extraHeight = 8;
+                const externalVerticalTab = currentActivePane
+                    .find('#ess-preview-html-cta.vertical-cta.ess-html-tab-align-left, #ess-preview-html-cta.vertical-cta.ess-html-tab-align-center, #ess-preview-html-cta.vertical-cta.ess-html-tab-align-right, #ess-preview-cta.vertical-cta.ess-overlay-vertical-tab-preview:not(.ess-overlay-vertical-full-tab-preview)')
+                    .first();
+                if (externalVerticalTab.length) {
+                    extraHeight += Math.ceil(externalVerticalTab.find('.sticky-sidebar-button').first().outerHeight() || 0);
+                }
+                const nextHeight = Math.max(120, Math.ceil(paneHeight + extraHeight));
                 previewStage.css('--ess-preview-height', `${nextHeight}px`);
             }
         };
@@ -1995,6 +2154,11 @@ jQuery(document).ready(function ($) {
         syncPreviewStageHeight();
 
         $('.ess-template-label').text(form.find('[name="sidebar_template"] option:selected').text().replace(/\s+\(.*\)$/, ''));
+
+        const imagePlacementRaw = (getValue('image_placement', 'classic') || 'classic').toString().toLowerCase();
+        const imagePlacement = imagePlacementRaw === 'background' ? 'overlay' : imagePlacementRaw;
+        const isOverlayMode = imagePlacement === 'overlay';
+        const overlayPosition = (getValue('overlay_position', 'right') || 'right').toString().toLowerCase();
 
         let ctaPosition = getValue('SSuprydp_cta_position', 'right');
         let ctaAlignment = getValue('horizontal_vertical_position', 'center');
@@ -2010,26 +2174,30 @@ jQuery(document).ready(function ($) {
             ctaAlignment = 'center';
         }
 
+        let stickyPreviewPosition = ctaPosition;
+        let stickyPreviewAlignment = ctaAlignment;
+
         // Floating buttons use a compact preview; keep left/right previews centered in admin.
         // This avoids inheriting unrelated sticky alignment values (top/bottom) and clipping.
         if (activeTemplate === 'floating-buttons' && (ctaPosition === 'left' || ctaPosition === 'right')) {
             ctaAlignment = 'center';
         }
 
-        const anchorAlign = ctaAlignment;
+        const anchorPosition = activeTemplate === 'sticky-cta' ? stickyPreviewPosition : ctaPosition;
+        const anchorAlign = activeTemplate === 'sticky-cta' ? stickyPreviewAlignment : ctaAlignment;
 
         $('.ess-preview-anchor')
-            .attr('data-position', ctaPosition)
+            .attr('data-position', anchorPosition)
             .attr('data-align', anchorAlign);
 
         const preview = $('#ess-preview-cta');
         preview
             .removeClass('sticky-cta-position-left sticky-cta-position-right sticky-cta-position-top sticky-cta-position-bottom vertical-cta vertical-cta-top vertical-cta-bottom')
-            .addClass(`sticky-cta-position-${ctaPosition}`);
+            .addClass(`sticky-cta-position-${stickyPreviewPosition}`);
         resetPreviewButtonMetrics(preview);
 
-        if (ctaPosition === 'top' || ctaPosition === 'bottom') {
-            preview.addClass('vertical-cta').addClass(`vertical-cta-${ctaPosition}`);
+        if (stickyPreviewPosition === 'top' || stickyPreviewPosition === 'bottom') {
+            preview.addClass('vertical-cta').addClass(`vertical-cta-${stickyPreviewPosition}`);
         }
         const enableCtaWidth = getChecked('enable_cta_width') || getValue('enable_cta_width', 'no') === 'yes';
         const ctaWidthValue = parseInt(getValue('cta_width', ''), 10);
@@ -2039,9 +2207,10 @@ jQuery(document).ready(function ($) {
 
         const buttonTextValue = getValue('SSuprydp_button_option_text', '');
         const buttonIconValue = getValue('button_icon', '');
-        const imagePlacementRaw = (getValue('image_placement', 'classic') || 'classic').toString().toLowerCase();
-        const imagePlacement = imagePlacementRaw === 'background' ? 'overlay' : imagePlacementRaw;
-        const isOverlayMode = imagePlacement === 'overlay';
+        const buttonIconSize = parseInt(getNormalizedNumber('button_icon_size', '16'), 10);
+        const buttonIconPosition = (getValue('button_icon_position', 'before') || 'before').toString().toLowerCase();
+        const overlayTabCornerRadius = parseInt(getNormalizedNumber('overlay_tab_corner_radius', '5'), 10);
+        const buttonTextOrientation = (getValue('button_text_orientation', getValue('overlay_tab_text_orientation', 'top-to-bottom')) || 'top-to-bottom').toString().toLowerCase();
         const pluginBaseUrl = (
             window.sticky_sidebar &&
             typeof window.sticky_sidebar.plugin_url === 'string' &&
@@ -2053,11 +2222,17 @@ jQuery(document).ready(function ($) {
             || getChecked('SSuprydp_img_hideimg')
             || getValue('SSuprydp_img_hideimg', 'No') === 'Yes';
         preview.toggleClass('image-as-background', isOverlayMode);
-        if (buttonIconValue) {
-            $('#ess-preview-button-text').html(`<i class="icon ${buttonIconValue}"></i> ${buttonTextValue}`);
-        } else {
-            $('#ess-preview-button-text').text(buttonTextValue);
-        }
+        const overlayFullTabHeight = getChecked('overlay_full_tab_height') || getValue('overlay_full_tab_height', 'no') === 'yes';
+        preview.toggleClass('ess-overlay-full-tab-height', isOverlayMode && overlayFullTabHeight);
+        preview.toggleClass('ess-tab-text-bottom-to-top', false);
+        preview.css('--ess-overlay-tab-corner-radius', !Number.isNaN(overlayTabCornerRadius) && overlayTabCornerRadius >= 0 ? `${overlayTabCornerRadius}px` : '5px');
+        const stickyButtonIconHtml = buttonIconValue ? `<i class="icon ${buttonIconValue}"></i>` : '';
+        const stickyButtonLabelHtml = `<span class="ess-sticky-sidebar-button-label">${buttonTextValue}</span>`;
+        $('#ess-preview-button-text').html(
+            buttonIconPosition === 'after'
+                ? `${stickyButtonLabelHtml}${stickyButtonIconHtml}`
+                : `${stickyButtonIconHtml}${stickyButtonLabelHtml}`
+        );
         $('#ess-preview-content-text').text(stripText(getValue('SSuprydp_content_option_text', 'This is the content area for your sticky CTA.')));
         $('#ess-preview-link').text(getValue('SSuprydp_action_option_text', 'Get Started'));
 
@@ -2091,7 +2266,7 @@ jQuery(document).ready(function ($) {
             $('#ess-preview-image-wrap').hide();
         }
 
-        const imageOverlayEnabled = getChecked('enable_image_overlay') || getValue('enable_image_overlay', 'no') === 'yes';
+        const imageOverlayEnabled = !isOverlayMode && (getChecked('enable_image_overlay') || getValue('enable_image_overlay', 'no') === 'yes');
         const overlayColor = getValue('cta_image_overlay_color', '');
         const overlayOpacityRaw = parseInt(getValue('cta_image_overlay_opacity', ''), 10);
         const overlayOpacity = Number.isNaN(overlayOpacityRaw) ? '' : Math.max(0, Math.min(100, overlayOpacityRaw)) / 100;
@@ -2125,10 +2300,10 @@ jQuery(document).ready(function ($) {
             const overlayBackdropOpacity = Number.isNaN(overlayBackdropOpacityRaw) ? 0.7 : Math.max(0, Math.min(100, overlayBackdropOpacityRaw)) / 100;
             const overlayWidthRaw = parseInt(getValue('overlay_width', '60'), 10);
             const overlayWidth = Number.isNaN(overlayWidthRaw) ? 60 : Math.max(20, Math.min(100, overlayWidthRaw));
-            const overlayContentGapRaw = parseInt(getValue('overlay_content_gap', '10'), 10);
-            const overlayContentGap = Number.isNaN(overlayContentGapRaw) ? 10 : Math.max(0, overlayContentGapRaw);
             const overlayContentPaddingRaw = parseInt(getValue('overlay_content_padding', '12'), 10);
             const overlayContentPadding = Number.isNaN(overlayContentPaddingRaw) ? 12 : Math.max(0, overlayContentPaddingRaw);
+            const overlayContentMarginCss = getDimensionCss('overlay_content_margin');
+            const overlayButtonMarginCss = getDimensionCss('overlay_button_margin');
 
             preview
                 .removeClass('overlay-pos-top overlay-pos-left overlay-pos-bottom overlay-pos-right')
@@ -2137,10 +2312,20 @@ jQuery(document).ready(function ($) {
             preview.css('--ess-overlay-backdrop-color', overlayBackdropColor);
             preview.css('--ess-overlay-backdrop-opacity', `${overlayBackdropOpacity}`);
             preview.css('--ess-overlay-size', `${overlayWidth}%`);
-            preview.css('--ess-overlay-content-gap', `${overlayContentGap}px`);
-            const overlayHeightRaw = parseInt(getValue('cta_image_height', '300'), 10);
-            const overlayHeight = Number.isNaN(overlayHeightRaw) ? 200 : Math.max(60, overlayHeightRaw);
-            preview.css('--ess-overlay-height', `${overlayHeight}px`);
+            let overlayHeightCss = '';
+            const overlayHeightEnabled = getChecked('enable_cta_height') || getValue('enable_cta_height', 'no') === 'yes';
+            const overlayHeightValue = parseFloat(getValue('cta_height', ''));
+            const overlayHeightUnit = (getValue('cta_height_unit', 'px') || 'px').toString();
+            if (overlayHeightEnabled && !Number.isNaN(overlayHeightValue) && overlayHeightValue > 0) {
+                if (overlayHeightUnit === 'px') {
+                    overlayHeightCss = `${Math.max(60, overlayHeightValue)}px`;
+                } else {
+                    overlayHeightCss = `${overlayHeightValue}${overlayHeightUnit}`;
+                }
+            } else {
+                overlayHeightCss = '300px';
+            }
+            preview.css('--ess-overlay-height', overlayHeightCss);
             preview.css('--ess-overlay-content-padding', `${overlayContentPadding}px`);
             $('#ess-preview-overlay-panel').css('padding', `${overlayContentPadding}px`);
 
@@ -2151,7 +2336,8 @@ jQuery(document).ready(function ($) {
                 'background-color': 'transparent',
                 'color': overlayContentColor,
                 'padding': '',
-                'text-align': overlayContentAlignment
+                'text-align': overlayContentAlignment,
+                'margin': overlayContentMarginCss || ''
             });
 
             const overlayButtonPaddingCss = getDimensionCss('overlay_button_padding');
@@ -2164,14 +2350,11 @@ jQuery(document).ready(function ($) {
             const overlayButtonBg = getValue('link_text_background', '') || getValue('SSuprydp_button_option_backg_color', '#08a800');
             const overlayButtonColor = getValue('SSuprydp_action_option_color', '') || getValue('SSuprydp_button_option_color', '#ffffff');
 
-            let marginLeft = 'auto';
-            let marginRight = '0';
+            let alignSelf = 'flex-end';
             if (overlayButtonAlignment === 'left') {
-                marginLeft = '0';
-                marginRight = 'auto';
+                alignSelf = 'flex-start';
             } else if (overlayButtonAlignment === 'center') {
-                marginLeft = 'auto';
-                marginRight = 'auto';
+                alignSelf = 'center';
             }
             $('#ess-preview-link').css({
                 'background-color': overlayButtonBg,
@@ -2179,12 +2362,12 @@ jQuery(document).ready(function ($) {
                 'text-align': overlayButtonAlignment,
                 'padding': overlayButtonPaddingCss || `${overlayButtonPadV}px ${overlayButtonPadH}px`,
                 'border-radius': `${overlayButtonRadius}px`,
-                'margin-left': marginLeft,
-                'margin-right': marginRight
+                'margin': overlayButtonMarginCss || '',
+                'align-self': alignSelf
             });
             const previewLink = $('#ess-preview-link').get(0);
             if (previewLink) {
-                previewLink.style.setProperty('padding', `${overlayButtonPadV}px ${overlayButtonPadH}px`, 'important');
+                previewLink.style.setProperty('padding', overlayButtonPaddingCss || `${overlayButtonPadV}px ${overlayButtonPadH}px`, 'important');
                 previewLink.style.setProperty('border-radius', `${overlayButtonRadius}px`, 'important');
             }
             syncPreviewOverlayBackgroundOffsets(preview);
@@ -2192,7 +2375,6 @@ jQuery(document).ready(function ($) {
             preview.removeClass('image-as-background overlay-pos-top overlay-pos-left overlay-pos-bottom overlay-pos-right');
             preview.css('--ess-overlay-backdrop-color', '');
             preview.css('--ess-overlay-backdrop-opacity', '');
-            preview.css('--ess-overlay-content-gap', '');
             preview.css('--ess-overlay-height', '');
             preview.css('--ess-overlay-size', '');
             preview.css('--ess-overlay-content-padding', '');
@@ -2204,7 +2386,8 @@ jQuery(document).ready(function ($) {
             $('#ess-preview-content-text').css({
                 'background-color': getValue('content_background_color', 'rgb(37 13 97)'),
                 'color': getValue('SSuprydp_content_option_color', '#ffffff'),
-                'text-align': ''
+                'text-align': '',
+                'margin': ''
             });
             $('#ess-preview-link').css({
                 'background-color': getValue('link_text_background', '#11265d'),
@@ -2212,8 +2395,8 @@ jQuery(document).ready(function ($) {
                 'text-align': '',
                 'border-radius': '',
                 'padding': '',
-                'margin-left': '',
-                'margin-right': ''
+                'margin': '',
+                'align-self': ''
             });
         }
 
@@ -2233,6 +2416,7 @@ jQuery(document).ready(function ($) {
         if (!isNaN(buttonFontSize)) {
             $('#ess-preview-button-text').css('font-size', `${buttonFontSize}px`);
         }
+        $('#ess-preview-button-text .icon').css('font-size', !Number.isNaN(buttonIconSize) && buttonIconSize > 0 ? `${buttonIconSize}px` : '16px');
 
         if (!isNaN(contentFontSize)) {
             $('#ess-preview-content-text').css('font-size', `${contentFontSize}px`);
@@ -2249,7 +2433,7 @@ jQuery(document).ready(function ($) {
         const linkFontDefaultFamily = isOverlayMode ? 'Archivo:700' : 'Open Sans';
         applyPreviewFont('#ess-preview-link', getValue('SSuprydp_action_option_font', linkFontDefaultFamily), linkFontDefaultFamily);
 
-        const isVerticalPosition = ctaPosition === 'top' || ctaPosition === 'bottom';
+        const isVerticalPosition = stickyPreviewPosition === 'top' || stickyPreviewPosition === 'bottom';
         const axisMap = { start: 'flex-start', center: 'center', end: 'flex-end' };
         let alignmentValue = (getValue('button_alignment', '') || '').toString().toLowerCase();
         if (!alignmentValue) {
@@ -2260,6 +2444,8 @@ jQuery(document).ready(function ($) {
         const axisAlign = axisMap[alignmentValue] || 'flex-start';
         const justifyValue = isVerticalPosition ? 'center' : axisAlign;
         const alignValue = isVerticalPosition ? axisAlign : 'center';
+        const htmlFullTabHeight = getChecked('overlay_full_tab_height') || getValue('overlay_full_tab_height', 'no') === 'yes';
+        const tabContentJustifyValue = axisMap[alignmentValue] || 'flex-start';
         const buttonAlignStyles = {
             'text-align': 'center',
             'display': 'flex',
@@ -2280,6 +2466,25 @@ jQuery(document).ready(function ($) {
         applyAlignStyles($('#ess-preview-button-wrap'));
         applyAlignStyles($('#ess-preview-tab-button'));
         applyAlignStyles($('#ess-preview-html-button'));
+        if (ctaPosition === 'left' || ctaPosition === 'right') {
+            if (htmlFullTabHeight) {
+                $('#ess-preview-html-cta').addClass('ess-html-full-tab-height');
+            } else {
+                const htmlSideAlignClass = alignmentValue === 'end'
+                    ? 'ess-html-side-tab-align-bottom'
+                    : (alignmentValue === 'center' ? 'ess-html-side-tab-align-center' : 'ess-html-side-tab-align-top');
+                $('#ess-preview-html-cta').addClass(htmlSideAlignClass);
+            }
+        } else if (ctaPosition === 'top' || ctaPosition === 'bottom') {
+            if (htmlFullTabHeight) {
+                $('#ess-preview-html-cta').addClass('ess-html-full-tab-width');
+            } else {
+                const htmlVerticalAlignClass = alignmentValue === 'end'
+                    ? 'ess-html-tab-align-right'
+                    : (alignmentValue === 'center' ? 'ess-html-tab-align-center' : 'ess-html-tab-align-left');
+                $('#ess-preview-html-cta').addClass(htmlVerticalAlignClass);
+            }
+        }
         if (isVerticalPosition) {
             const textAlign = alignmentValue === 'start' ? 'left' : (alignmentValue === 'end' ? 'right' : 'center');
             $('#ess-preview-button-text').css('text-align', textAlign);
@@ -2287,11 +2492,205 @@ jQuery(document).ready(function ($) {
             $('#ess-preview-html-button-text').css('text-align', textAlign);
         }
 
+        const previewButtonWrapEl = $('#ess-preview-button-wrap').get(0);
+        const previewButtonTextEl = $('#ess-preview-button-text').get(0);
+        const previewButtonLabelEl = previewButtonTextEl ? previewButtonTextEl.querySelector('.ess-sticky-sidebar-button-label') : null;
+        const previewButtonIconEl = previewButtonTextEl ? previewButtonTextEl.querySelector('.icon') : null;
+        preview.removeClass('ess-overlay-side-tab-preview ess-overlay-full-height-side-tab-preview ess-overlay-vertical-tab-preview ess-overlay-vertical-full-tab-preview ess-overlay-tab-align-left ess-overlay-tab-align-center ess-overlay-tab-align-right ess-overlay-side-tab-align-top ess-overlay-side-tab-align-center ess-overlay-side-tab-align-bottom ess-tab-text-bottom-to-top');
+        if (previewButtonWrapEl) {
+            [
+                'text-align',
+                'display',
+                'flex-direction',
+                'align-items',
+                'justify-content',
+                'align-self',
+                'width',
+                'height',
+                'min-height'
+            ].forEach(function (property) {
+                previewButtonWrapEl.style.removeProperty(property);
+            });
+        }
+        if (previewButtonTextEl) {
+            [
+                'display',
+                'flex-direction',
+                'align-items',
+                'justify-content',
+                'gap',
+                'width',
+                'min-width',
+                'max-width',
+                'white-space',
+                'writing-mode',
+                'text-orientation',
+                'text-align',
+                'left',
+                'overflow',
+                'transform',
+                'transform-origin',
+                'padding'
+            ].forEach(function (property) {
+                previewButtonTextEl.style.removeProperty(property);
+            });
+        }
+        if (previewButtonLabelEl) {
+            [
+                'display',
+                'width',
+                'max-width',
+                'white-space',
+                'writing-mode',
+                'line-height',
+                'transform',
+                'transform-origin'
+            ].forEach(function (property) {
+                previewButtonLabelEl.style.removeProperty(property);
+            });
+        }
+        if (previewButtonIconEl) {
+            [
+                'display',
+                'line-height',
+                'margin',
+                'margin-inline-start',
+                'margin-inline-end'
+            ].forEach(function (property) {
+                previewButtonIconEl.style.removeProperty(property);
+            });
+        }
+
+        const isOverlaySideTabPreview = isOverlayMode
+            && (stickyPreviewPosition === 'left' || stickyPreviewPosition === 'right');
+        const isOverlayVerticalTabPreview = isOverlayMode
+            && (stickyPreviewPosition === 'top' || stickyPreviewPosition === 'bottom');
+        if (isOverlaySideTabPreview) {
+            const overlayTabTextAlign = stickyPreviewPosition === 'left' ? 'left' : 'right';
+            const overlayTabPreviewClass = overlayFullTabHeight ? 'ess-overlay-full-height-side-tab-preview' : 'ess-overlay-side-tab-preview';
+            preview.addClass(`${overlayTabPreviewClass} ess-overlay-tab-align-${overlayTabTextAlign}`);
+
+            if (!overlayFullTabHeight) {
+                const overlaySideTabAlignmentClass = alignmentValue === 'end'
+                    ? 'ess-overlay-side-tab-align-bottom'
+                    : (alignmentValue === 'center' ? 'ess-overlay-side-tab-align-center' : 'ess-overlay-side-tab-align-top');
+                preview.addClass(overlaySideTabAlignmentClass);
+            }
+
+            if (overlayFullTabHeight && previewButtonWrapEl) {
+                const previewContentHeight = Math.ceil(previewContentContainer.outerHeight() || 0);
+
+                previewButtonWrapEl.style.setProperty('text-align', overlayTabTextAlign, 'important');
+                previewButtonWrapEl.style.setProperty('display', 'flex', 'important');
+                previewButtonWrapEl.style.setProperty('flex-direction', 'column', 'important');
+                previewButtonWrapEl.style.setProperty('align-items', 'center', 'important');
+                previewButtonWrapEl.style.setProperty('justify-content', tabContentJustifyValue, 'important');
+                if (previewContentHeight > 0) {
+                    previewButtonWrapEl.style.setProperty('height', `${previewContentHeight}px`, 'important');
+                    previewButtonWrapEl.style.setProperty('min-height', `${previewContentHeight}px`, 'important');
+                } else {
+                    previewButtonWrapEl.style.setProperty('height', '100%', 'important');
+                    previewButtonWrapEl.style.setProperty('min-height', '100%', 'important');
+                }
+            }
+
+            if (overlayFullTabHeight && previewButtonTextEl) {
+                previewButtonTextEl.style.setProperty('writing-mode', 'vertical-lr', 'important');
+                previewButtonTextEl.style.setProperty('text-orientation', 'mixed', 'important');
+                previewButtonTextEl.style.setProperty('transform', 'none', 'important');
+                previewButtonTextEl.style.setProperty('transform-origin', 'center center', 'important');
+                previewButtonTextEl.style.setProperty('left', '0', 'important');
+                previewButtonTextEl.style.setProperty('width', 'auto', 'important');
+                previewButtonTextEl.style.setProperty('min-width', '0', 'important');
+                previewButtonTextEl.style.setProperty('max-width', 'none', 'important');
+                previewButtonTextEl.style.setProperty('overflow', 'visible', 'important');
+                previewButtonTextEl.style.setProperty('padding', '0', 'important');
+                previewButtonTextEl.style.setProperty('line-height', '1.1', 'important');
+                previewButtonTextEl.style.setProperty('text-align', overlayTabTextAlign, 'important');
+            }
+
+            if (overlayFullTabHeight && previewButtonLabelEl) {
+                previewButtonLabelEl.style.setProperty('display', 'inline', 'important');
+                if (buttonTextOrientation === 'bottom-to-top') {
+                    previewButtonLabelEl.style.setProperty('display', 'inline-block', 'important');
+                    previewButtonLabelEl.style.setProperty('transform', 'rotate(180deg)', 'important');
+                    previewButtonLabelEl.style.setProperty('transform-origin', 'center center', 'important');
+                }
+            }
+
+            if (overlayFullTabHeight && previewButtonIconEl) {
+                previewButtonIconEl.style.setProperty('display', 'inline-block', 'important');
+                previewButtonIconEl.style.setProperty('line-height', '1', 'important');
+            }
+        } else if (isOverlayVerticalTabPreview) {
+            preview.addClass('ess-overlay-vertical-tab-preview');
+            if (overlayFullTabHeight) {
+                preview.addClass('ess-overlay-vertical-full-tab-preview');
+            } else {
+                const overlayVerticalTabAlignmentClass = alignmentValue === 'end'
+                    ? 'ess-overlay-tab-align-right'
+                    : (alignmentValue === 'center' ? 'ess-overlay-tab-align-center' : 'ess-overlay-tab-align-left');
+                preview.addClass(overlayVerticalTabAlignmentClass);
+            }
+
+            if (previewButtonWrapEl) {
+                previewButtonWrapEl.style.setProperty('display', 'flex', 'important');
+                previewButtonWrapEl.style.setProperty('flex-direction', 'row', 'important');
+                previewButtonWrapEl.style.setProperty('align-items', 'center', 'important');
+                previewButtonWrapEl.style.setProperty('justify-content', tabContentJustifyValue, 'important');
+                previewButtonWrapEl.style.removeProperty('height');
+                previewButtonWrapEl.style.removeProperty('min-height');
+                if (overlayFullTabHeight) {
+                    previewButtonWrapEl.style.setProperty('align-self', 'stretch', 'important');
+                    previewButtonWrapEl.style.setProperty('width', '100%', 'important');
+                } else {
+                    previewButtonWrapEl.style.setProperty('align-self', 'center', 'important');
+                    previewButtonWrapEl.style.setProperty('width', 'auto', 'important');
+                }
+            }
+            if (previewButtonTextEl) {
+                previewButtonTextEl.style.setProperty('display', 'inline-flex', 'important');
+                previewButtonTextEl.style.setProperty('flex-direction', 'row', 'important');
+                previewButtonTextEl.style.setProperty('align-items', 'center', 'important');
+                previewButtonTextEl.style.setProperty('justify-content', 'center', 'important');
+                previewButtonTextEl.style.setProperty('gap', '8px', 'important');
+                previewButtonTextEl.style.setProperty('writing-mode', 'horizontal-tb', 'important');
+                previewButtonTextEl.style.setProperty('width', 'auto', 'important');
+                previewButtonTextEl.style.setProperty('padding', '0', 'important');
+                previewButtonTextEl.style.setProperty('overflow', 'visible', 'important');
+            }
+            if (previewButtonLabelEl) {
+                previewButtonLabelEl.style.setProperty('position', 'static', 'important');
+                previewButtonLabelEl.style.setProperty('display', 'inline', 'important');
+                previewButtonLabelEl.style.setProperty('writing-mode', 'horizontal-tb', 'important');
+                previewButtonLabelEl.style.setProperty('white-space', 'nowrap', 'important');
+                previewButtonLabelEl.style.setProperty('width', 'auto', 'important');
+                previewButtonLabelEl.style.removeProperty('transform');
+            }
+        } else {
+            applyAlignStyles($('#ess-preview-button-wrap'));
+
+            if (isVerticalPosition) {
+                const textAlign = alignmentValue === 'start' ? 'left' : (alignmentValue === 'end' ? 'right' : 'center');
+                $('#ess-preview-button-text').css('text-align', textAlign);
+            }
+        }
+
         const dividerThickness = parseInt(getValue('line_separator_thickness', ''), 10);
         $('#ess-preview-divider').css('height', Number.isNaN(dividerThickness) ? '' : `${Math.max(1, dividerThickness)}px`);
 
-        const imageHeight = parseInt(getValue('cta_image_height', ''), 10);
-        $('#ess-preview-image-wrap').css('height', Number.isNaN(imageHeight) ? '' : `${Math.max(1, imageHeight)}px`);
+        const imageHeightEnabled = getChecked('enable_cta_height') || getValue('enable_cta_height', 'no') === 'yes';
+        const imageHeightValue = parseFloat(getValue('cta_height', ''));
+        const imageHeightUnit = (getValue('cta_height_unit', 'px') || 'px').toString();
+        let imageHeightCss = '';
+        if (imageHeightEnabled && !Number.isNaN(imageHeightValue) && imageHeightValue > 0) {
+            if (imageHeightUnit === 'px') {
+                imageHeightCss = `${Math.max(1, imageHeightValue)}px`;
+            } else {
+                imageHeightCss = `${imageHeightValue}${imageHeightUnit}`;
+            }
+        }
+        $('#ess-preview-image-wrap').css('height', imageHeightCss);
 
         const buttonLetterSpacing = parseInt(getValue('letter_spacing', ''), 10);
         $('#ess-preview-button-text').css('letter-spacing', Number.isNaN(buttonLetterSpacing) ? '' : `${buttonLetterSpacing}px`);
@@ -2337,6 +2736,7 @@ jQuery(document).ready(function ($) {
             $('#ess-preview-tab-cta').css('--round', `${Math.max(0, buttonRound)}px`);
             $('#ess-preview-html-cta').css('--round', `${Math.max(0, buttonRound)}px`);
         }
+        $('#ess-preview-html-cta').css('--ess-overlay-tab-corner-radius', !Number.isNaN(overlayTabCornerRadius) && overlayTabCornerRadius >= 0 ? `${overlayTabCornerRadius}px` : '5px');
 
         const hideCallToAction = ['yes', 'Yes', '1', true].includes(getValue('hide_call_to_action', 'no')) ||
             getChecked('hide_call_to_action');
@@ -2377,30 +2777,52 @@ jQuery(document).ready(function ($) {
             }
         });
 
-        // Box shadow toggle (Pro only)
-        const shadowEnabled = isProActive && (getChecked('enable_box_shadow') || getValue('enable_box_shadow', 'no') === 'yes');
+        // Keep preview shadow behavior in sync with frontend for free and pro.
+        const shadowEnabled = getChecked('enable_box_shadow') || getValue('enable_box_shadow', 'no') === 'yes';
         const previewShadow = shadowEnabled ? '0 0 10px rgba(19, 19, 19, .2)' : '0 0 0 rgba(0, 0, 0, 0)';
         previewCard.find('.ess-preview-stage .easy-sticky-sidebar').css('--ess-preview-shadow', previewShadow);
 
         const tabPreview = $('#ess-preview-tab-cta');
         tabPreview
-            .removeClass('sticky-cta-position-left sticky-cta-position-right sticky-cta-position-top sticky-cta-position-bottom vertical-cta vertical-cta-top vertical-cta-bottom')
+            .removeClass('sticky-cta-position-left sticky-cta-position-right sticky-cta-position-top sticky-cta-position-bottom vertical-cta vertical-cta-top vertical-cta-bottom ess-tab-text-bottom-to-top')
             .addClass(`sticky-cta-position-${ctaPosition}`);
         resetPreviewButtonMetrics(tabPreview);
+
+        const stickySideTextOrientation = isOverlayMode
+            ? (stickyPreviewPosition === 'left' || stickyPreviewPosition === 'right')
+            : (ctaPosition === 'left' || ctaPosition === 'right');
+        if (stickySideTextOrientation && buttonTextOrientation === 'bottom-to-top') {
+            preview.addClass('ess-tab-text-bottom-to-top');
+        }
+        if ((ctaPosition === 'left' || ctaPosition === 'right') && buttonTextOrientation === 'bottom-to-top') {
+            tabPreview.addClass('ess-tab-text-bottom-to-top');
+        }
 
         if (ctaPosition === 'top' || ctaPosition === 'bottom') {
             tabPreview.addClass('vertical-cta').addClass(`vertical-cta-${ctaPosition}`);
         }
 
+        const tabDefaultText = getEditorDefault('tab-cta', 'SSuprydp_button_option_text', 'Call Now');
         const tabButtonIconValue = getValue('button_icon', '');
-        const tabButtonTextValue = (buttonTextValue && `${buttonTextValue}`.trim().length)
-            ? buttonTextValue
-            : 'Call Now';
-        if (tabButtonIconValue) {
-            $('#ess-preview-tab-button-text').html(`<i class="icon ${tabButtonIconValue}"></i> ${tabButtonTextValue}`);
-        } else {
-            $('#ess-preview-tab-button-text').text(tabButtonTextValue);
+        const tabButtonTextRaw = (buttonTextValue || '').toString().trim();
+        const tabStaleDefaults = ['have questions?', 'click here'];
+        const tabButtonTextValue = (
+            activeTemplate === 'tab-cta' &&
+            (!tabButtonTextRaw.length || tabStaleDefaults.includes(tabButtonTextRaw.toLowerCase()))
+        )
+            ? tabDefaultText
+            : (tabButtonTextRaw.length ? buttonTextValue : tabDefaultText);
+        if (activeTemplate === 'tab-cta' && tabButtonTextValue === tabDefaultText && buttonTextValue !== tabDefaultText) {
+            form.find('[name="SSuprydp_button_option_text"]').val(tabDefaultText);
         }
+        const tabButtonIconHtml = tabButtonIconValue ? `<i class="icon ${tabButtonIconValue}"></i>` : '';
+        const tabButtonLabelHtml = `<span class="ess-sticky-sidebar-button-label">${tabButtonTextValue}</span>`;
+        $('#ess-preview-tab-button-text').html(
+            buttonIconPosition === 'after'
+                ? `${tabButtonLabelHtml}${tabButtonIconHtml}`
+                : `${tabButtonIconHtml}${tabButtonLabelHtml}`
+        );
+        $('#ess-preview-tab-button-text .icon').css('font-size', !Number.isNaN(buttonIconSize) && buttonIconSize > 0 ? `${buttonIconSize}px` : '16px');
         $('#ess-preview-tab-button').css('background-color', getValue('SSuprydp_button_option_backg_color', '#218400'));
         $('#ess-preview-tab-button-text').css('color', getValue('SSuprydp_button_option_color', '#ffffff'));
 
@@ -2600,6 +3022,15 @@ jQuery(document).ready(function ($) {
             'padding': sharedContentPadding || '30px 35px',
             'border-radius': Number.isNaN(gdprBoxRadius) ? '' : `${Math.max(0, gdprBoxRadius)}px`
         });
+        const gdprPreviewNode = gdprPreview.get(0);
+        if (gdprPreviewNode) {
+            if (Number.isNaN(gdprBoxRadius)) {
+                gdprPreviewNode.style.removeProperty('border-radius');
+            } else {
+                gdprPreviewNode.style.setProperty('border-radius', `${Math.max(0, gdprBoxRadius)}px`, 'important');
+            }
+            gdprPreviewNode.style.setProperty('overflow', 'hidden');
+        }
         gdprText.css({
             'font-size': Number.isNaN(contentFontSize) ? '' : `${contentFontSize}px`,
             'letter-spacing': Number.isNaN(contentLetterSpacing) ? '' : `${contentLetterSpacing}px`,
@@ -2676,14 +3107,59 @@ jQuery(document).ready(function ($) {
 
         const htmlPreview = $('#ess-preview-html-cta');
         htmlPreview
-            .removeClass('sticky-cta-position-left sticky-cta-position-right sticky-cta-position-top sticky-cta-position-bottom vertical-cta vertical-cta-top vertical-cta-bottom')
+            .removeClass('sticky-cta-position-left sticky-cta-position-right sticky-cta-position-top sticky-cta-position-bottom vertical-cta vertical-cta-top vertical-cta-bottom ess-tab-text-bottom-to-top ess-html-full-tab-height ess-html-full-tab-width ess-html-side-tab-align-top ess-html-side-tab-align-center ess-html-side-tab-align-bottom ess-html-tab-align-left ess-html-tab-align-center ess-html-tab-align-right')
             .addClass(`sticky-cta-position-${ctaPosition}`);
         resetPreviewButtonMetrics(htmlPreview);
 
         if (ctaPosition === 'top' || ctaPosition === 'bottom') {
             htmlPreview.addClass('vertical-cta').addClass(`vertical-cta-${ctaPosition}`);
         }
+        if (buttonTextOrientation === 'bottom-to-top' && (ctaPosition === 'left' || ctaPosition === 'right')) {
+            htmlPreview.addClass('ess-tab-text-bottom-to-top');
+        }
+        if (ctaPosition === 'left' || ctaPosition === 'right') {
+            if (htmlFullTabHeight) {
+                htmlPreview.addClass('ess-html-full-tab-height');
+            } else {
+                const htmlSideAlignClass = alignmentValue === 'end'
+                    ? 'ess-html-side-tab-align-bottom'
+                    : (alignmentValue === 'center' ? 'ess-html-side-tab-align-center' : 'ess-html-side-tab-align-top');
+                htmlPreview.addClass(htmlSideAlignClass);
+            }
+        } else if (ctaPosition === 'top' || ctaPosition === 'bottom') {
+            if (htmlFullTabHeight) {
+                htmlPreview.addClass('ess-html-full-tab-width');
+            } else {
+                const htmlVerticalAlignClass = alignmentValue === 'end'
+                    ? 'ess-html-tab-align-right'
+                    : (alignmentValue === 'center' ? 'ess-html-tab-align-center' : 'ess-html-tab-align-left');
+                htmlPreview.addClass(htmlVerticalAlignClass);
+            }
+        }
         htmlPreview.css('--width', previewWidth);
+        const htmlCornerRadius = !Number.isNaN(overlayTabCornerRadius) && overlayTabCornerRadius >= 0 ? overlayTabCornerRadius : 5;
+        const htmlCornerRadiusCss = `${htmlCornerRadius}px`;
+        let htmlContentRadius = '';
+        if (ctaPosition === 'right') {
+            htmlContentRadius = htmlFullTabHeight || alignmentValue === 'center'
+                ? `${htmlCornerRadiusCss} 0 0 ${htmlCornerRadiusCss}`
+                : (alignmentValue === 'end' ? `${htmlCornerRadiusCss} 0 0 0` : `0 0 0 ${htmlCornerRadiusCss}`);
+        } else if (ctaPosition === 'left') {
+            htmlContentRadius = htmlFullTabHeight || alignmentValue === 'center'
+                ? `0 ${htmlCornerRadiusCss} ${htmlCornerRadiusCss} 0`
+                : (alignmentValue === 'end' ? `0 ${htmlCornerRadiusCss} 0 0` : `0 0 ${htmlCornerRadiusCss} 0`);
+        } else if (ctaPosition === 'top') {
+            htmlContentRadius = `0 0 ${htmlCornerRadiusCss} ${htmlCornerRadiusCss}`;
+        } else if (ctaPosition === 'bottom') {
+            htmlContentRadius = `${htmlCornerRadiusCss} ${htmlCornerRadiusCss} 0 0`;
+        }
+        const htmlContentContainer = htmlPreview.find('.sticky-sidebar-container').first();
+        if (htmlContentRadius && htmlContentContainer.length) {
+            htmlContentContainer.css({
+                'border-radius': htmlContentRadius,
+                'overflow': 'hidden'
+            });
+        }
 
         const htmlButtonText = $('#ess-preview-html-button-text');
         const htmlButton = $('#ess-preview-html-button');
@@ -2691,11 +3167,19 @@ jQuery(document).ready(function ($) {
 
         const htmlButtonLabel = getValue('SSuprydp_button_option_text', '');
         const htmlButtonIcon = getValue('button_icon', '');
+        const htmlButtonLabelHtml = htmlButtonLabel.length
+            ? `<span class="ess-sticky-sidebar-button-label">${$('<div>').text(htmlButtonLabel).html()}</span>`
+            : '';
         if (htmlButtonIcon) {
-            htmlButtonText.html(`<i class="icon ${htmlButtonIcon}"></i> ${htmlButtonLabel}`);
+            const htmlButtonIconHtml = `<i class="icon ${htmlButtonIcon}"></i>`;
+            const htmlButtonMarkup = buttonIconPosition === 'after'
+                ? `${htmlButtonLabelHtml}${htmlButtonIconHtml}`
+                : `${htmlButtonIconHtml}${htmlButtonLabelHtml}`;
+            htmlButtonText.html(htmlButtonMarkup);
         } else {
-            htmlButtonText.text(htmlButtonLabel);
+            htmlButtonText.html(htmlButtonLabelHtml || $('<div>').text(htmlButtonLabel).html());
         }
+        htmlButtonText.find('.icon').css('font-size', !Number.isNaN(buttonIconSize) && buttonIconSize > 0 ? `${buttonIconSize}px` : '16px');
         const rawHtmlValue = `${getValue('SSuprydp_content_option_text', '') || ''}`.trim();
         if (rawHtmlValue.length) {
             htmlContent.html(rawHtmlValue);
@@ -2832,7 +3316,7 @@ jQuery(document).ready(function ($) {
         }
 
         // Height should update immediately while typing (no blur required).
-        if (target && target.name === 'cta_image_height' && e.type === 'input') {
+        if (target && (target.name === 'cta_height' || target.name === 'cta_tablet_height' || target.name === 'cta_mobile_height') && e.type === 'input') {
             if (previewInputDebounceTimer) {
                 clearTimeout(previewInputDebounceTimer);
             }
@@ -2889,3 +3373,27 @@ jQuery(document).ready(function ($) {
     updatePreview();
 
 });
+
+if (window.wp && window.wp.hooks && typeof window.wp.hooks.addAction === 'function') {
+    window.wp.hooks.addAction('easy_sticky_sidebar_updated', 'easy-sticky-sidebar/free-tab-alignment', function (stickycta) {
+        const alignmentField = jQuery('[name="button_alignment"]');
+        if (!alignmentField.length) {
+            return;
+        }
+
+        const template = `${stickycta?.options?.sidebar_template || ''}`.toLowerCase();
+        if (!['sticky-cta', 'tab-cta', 'html'].includes(template)) {
+            return;
+        }
+
+        let labels = ['Top', 'Center', 'Bottom'];
+        const position = `${stickycta?.options?.SSuprydp_cta_position || ''}`.toLowerCase();
+        if (position === 'top' || position === 'bottom') {
+            labels = ['Left', 'Center', 'Right'];
+        }
+
+        labels.forEach(function (label, index) {
+            alignmentField.find('option').eq(index).text(label);
+        });
+    });
+}

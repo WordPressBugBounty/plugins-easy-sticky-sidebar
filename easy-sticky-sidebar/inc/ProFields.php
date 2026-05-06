@@ -20,36 +20,8 @@ class Easy_Sticky_Sidebar_Pro_Placeholder {
         
         if (!easy_sticky_sidebar_has_pro()) {
             $elements['html_cta_disable_collapse'] = array('hook' => 'easy_sticky_sidebar_cta_scroll_options', 'callback' => [$this, 'disable_collapse']);
-            $elements['cta_height'] = array('hook' => 'easy_sticky_sidebar_cta_height', 'callback' => [$this, 'cta_height']);
-        }
-
-        $elements['cta_width'] = array('hook' => 'easy_sticky_sidebar_cta_adjustment', 'callback' => [$this, 'cta_width']);
-
-        $elements['hide_image'] = array('hook' => 'easy_sticky_sidebar_cta_image', 'callback' => [$this, 'hide_image'], 'priority' => 3);
-
-        $elements['letter_spacing'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_letter_spacing'], 'priority' => 45);
-        if (!easy_sticky_sidebar_has_pro()) {
-            $elements['button_padding'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_padding'], 'priority' => 47);
-        }
-        $elements['button_round'] = array('hook' => 'easy_sticky_sidebar_button_options', 'callback' => [$this, 'button_border_round'], 'priority' => 50);
-        
-        $elements['content_letter_spacing'] = array('hook' => 'easy_sticky_sidebar_content_option', 'callback' => [$this, 'content_letter_spacing'], 'priority' => 22);
-        if (!easy_sticky_sidebar_has_pro()) {
-            $elements['content_padding'] = array('hook' => 'easy_sticky_sidebar_content_option', 'callback' => [$this, 'content_padding'], 'priority' => 25);
         }
         
-        $elements['line_separator_thickness'] = array('hook' => 'easy_sticky_sidebar_line_separator', 'callback' => [$this, 'line_separator_thickness'], 'priority' => 15);
-        
-        $elements['call_to_action_show_hide'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_show_hide'], 'priority' => 1);
-        $elements['call_to_action_letter_spacing'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_letter_spacing'], 'priority' => 2);
-        if (!easy_sticky_sidebar_has_pro()) {
-            $elements['call_to_action_padding'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_padding'], 'priority' => 3);
-        }
-        $elements['call_to_action_link_or_button'] = array('hook' => 'easy_sticky_sidebar_call_to_action', 'callback' => [$this, 'call_to_action_link_or_button'], 'priority' => 4);
-
-        $elements['show_close_button'] = array('hook' => 'easy_sticky_sidebar_close_button_options', 'callback' => [$this, 'close_button_option'], 'priority' => 5);
-        $elements['enable_box_shadow'] = array('hook' => 'easy_sticky_sidebar_box_shadow_options', 'callback' => [$this, 'box_shadow_toggle'], 'priority' => 1);
-		
         return $elements;
     }
 

@@ -307,7 +307,7 @@ class Easy_Sticky_Sidebar_List  extends WP_List_Table
         // Process bulk actions if any
         $this->process_bulk_action();
 
-        $limit = easy_sticky_sidebar_has_pro() ? 999 : 3;
+        $limit = 999;
 
         $sidebars = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM {$wpdb->prefix}sticky_cta ORDER BY id LIMIT 0, %d",

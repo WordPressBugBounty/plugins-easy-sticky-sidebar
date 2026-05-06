@@ -292,17 +292,109 @@ class Easy_Sticky_Sidebar_Actions {
 			$overlay_button_alignment = sanitize_text_field(wp_unslash($_POST['overlay_button_alignment']));
 			$postdata['overlay_button_alignment'] = in_array($overlay_button_alignment, ['left', 'center', 'right'], true) ? $overlay_button_alignment : 'center';
 		}
+		if (isset($_POST['button_alignment'])) {
+			$button_alignment = sanitize_text_field(wp_unslash($_POST['button_alignment']));
+			$postdata['button_alignment'] = in_array($button_alignment, ['start', 'center', 'end'], true) ? $button_alignment : 'start';
+		}
+		if (isset($_POST['button_text_orientation'])) {
+			$button_text_orientation = sanitize_text_field(wp_unslash($_POST['button_text_orientation']));
+			$postdata['button_text_orientation'] = in_array($button_text_orientation, ['top-to-bottom', 'bottom-to-top'], true) ? $button_text_orientation : 'top-to-bottom';
+		}
+		if (isset($_POST['button_icon_position'])) {
+			$button_icon_position = sanitize_text_field(wp_unslash($_POST['button_icon_position']));
+			$postdata['button_icon_position'] = in_array($button_icon_position, ['before', 'after'], true) ? $button_icon_position : 'before';
+		}
+		if (isset($_POST['overlay_tab_text_orientation'])) {
+			$overlay_tab_text_orientation = sanitize_text_field(wp_unslash($_POST['overlay_tab_text_orientation']));
+			$postdata['overlay_tab_text_orientation'] = in_array($overlay_tab_text_orientation, ['top-to-bottom', 'bottom-to-top'], true) ? $overlay_tab_text_orientation : 'top-to-bottom';
+		}
 		if (isset($_POST['overlay_backdrop_color'])) {
 			$postdata['overlay_backdrop_color'] = sanitize_hex_color(wp_unslash($_POST['overlay_backdrop_color'])) ?: '#000000';
 		}
 		if (isset($_POST['overlay_backdrop_opacity'])) {
 			$postdata['overlay_backdrop_opacity'] = max(0, min(100, absint(wp_unslash($_POST['overlay_backdrop_opacity']))));
 		}
-		if (isset($_POST['overlay_content_gap'])) {
-			$postdata['overlay_content_gap'] = max(0, absint(wp_unslash($_POST['overlay_content_gap'])));
-		}
 		if (isset($_POST['overlay_content_padding'])) {
 			$postdata['overlay_content_padding'] = max(0, absint(wp_unslash($_POST['overlay_content_padding'])));
+		}
+		$dimension_fields = array(
+			'button_padding',
+			'content_padding',
+			'call_to_action_padding',
+			'overlay_button_padding',
+			'overlay_button_margin',
+			'overlay_content_margin',
+		);
+		foreach ($dimension_fields as $dimension_field) {
+			if (isset($_POST[ $dimension_field ]) && is_array($_POST[ $dimension_field ])) {
+				$postdata[ $dimension_field ] = $this->sanitize_dimension_input(wp_unslash($_POST[ $dimension_field ]));
+			}
+		}
+
+		$numeric_fields = array(
+			'cta_width',
+			'cta_tablet_width',
+			'cta_mobile_width',
+			'cta_height',
+			'cta_tablet_height',
+			'cta_mobile_height',
+			'cta_image_height',
+			'cta_image_overlay_opacity',
+			'button_round',
+			'button_icon_size',
+			'overlay_tab_corner_radius',
+			'letter_spacing',
+			'line_separator_thickness',
+			'content_letter_spacing',
+			'call_to_action_letter_spacing',
+		);
+		foreach ($numeric_fields as $numeric_field) {
+			if (isset($_POST[ $numeric_field ])) {
+				$postdata[ $numeric_field ] = max(0, absint(wp_unslash($_POST[ $numeric_field ])));
+			}
+		}
+
+		$unit_fields = array(
+			'cta_width_unit',
+			'cta_tablet_width_unit',
+			'cta_mobile_width_unit',
+			'cta_height_unit',
+			'cta_tablet_height_unit',
+			'cta_mobile_height_unit',
+		);
+		foreach ($unit_fields as $unit_field) {
+			if (isset($_POST[ $unit_field ])) {
+				$unit = sanitize_text_field(wp_unslash($_POST[ $unit_field ]));
+				$postdata[ $unit_field ] = in_array($unit, array('px', '%'), true) ? $unit : 'px';
+			}
+		}
+
+		$yes_no_fields = array(
+			'enable_cta_width',
+			'enable_cta_height',
+			'enable_image_overlay',
+			'overlay_full_tab_height',
+			'hide_cta_image',
+			'hide_call_to_action',
+			'call_to_action_button',
+			'show_close_button',
+			'close_button_edge',
+			'enable_box_shadow',
+		);
+		foreach ($yes_no_fields as $yes_no_field) {
+			if (isset($_POST[ $yes_no_field ])) {
+				$postdata[ $yes_no_field ] = $this->sanitize_yes_no_input(wp_unslash($_POST[ $yes_no_field ]));
+			}
+		}
+
+		if (isset($_POST['close_button_color'])) {
+			$postdata['close_button_color'] = sanitize_hex_color(wp_unslash($_POST['close_button_color'])) ?: '';
+		}
+		if (isset($_POST['cta_image_overlay_color'])) {
+			$postdata['cta_image_overlay_color'] = sanitize_hex_color(wp_unslash($_POST['cta_image_overlay_color'])) ?: '#000000';
+		}
+		if (isset($_POST['close_button_position'])) {
+			$postdata['close_button_position'] = sanitize_text_field(wp_unslash($_POST['close_button_position']));
 		}
 		$horizontal_vertical_position = '';
 		if (isset($_POST['horizontal_vertical_position'])) {
@@ -318,17 +410,6 @@ class Easy_Sticky_Sidebar_Actions {
 			$postdata['horizontal_vertical_position'] = function_exists('easy_sticky_sidebar_normalize_secondary_position')
 				? easy_sticky_sidebar_normalize_secondary_position($cta_position, $horizontal_vertical_position, 'center')
 				: (in_array($horizontal_vertical_position, ['top', 'center', 'bottom'], true) ? $horizontal_vertical_position : 'center');
-		}
-
-		if (!easy_sticky_sidebar_has_pro() && $sticky_id === 0) {
-			global $wpdb;
-			$cta_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}sticky_cta");
-			if ($cta_count >= 3) {
-				wp_send_json([
-					'status' => 'failed',
-					'message' => __('Only 3 CTAs are allowed in free version. Please upgrade to Pro to build more CTAs.', 'easy-sticky-sidebar')
-				]);
-			}
 		}
 
 		add_filter('wp_kses_allowed_html', [$this, 'content_filter'], 10, 2);
@@ -348,6 +429,12 @@ class Easy_Sticky_Sidebar_Actions {
 
 		if (is_array($postdata)) {
 			$postdata['created'] = get_the_date();
+
+			// Normalize tab CTA defaults before persistence when users have not
+			// provided their own custom tab copy/styles yet.
+			if (($postdata['sidebar_template'] ?? '') === 'tab-cta') {
+				$this->apply_tab_cta_defaults($postdata);
+			}
 
 			$sticky_id = $postdata['sticky_id'];
 			unset($postdata['sticky_id']);
@@ -383,12 +470,41 @@ class Easy_Sticky_Sidebar_Actions {
 			wp_send_json(['status' => 'success', 'message' => 'Saved']);
 		}
 
-		// Tab CTA defaults (only when values are empty/legacy defaults).
-		if (($postdata['sidebar_template'] ?? '') === 'tab-cta') {
-			$this->apply_tab_cta_defaults($postdata);
+		wp_send_json(['status' => 'failed', 'message' => 'Data missing']);
+	}
+
+	/**
+	 * Sanitize dimension control values.
+	 *
+	 * @since 2.4.3
+	 *
+	 * @param array $values Raw values.
+	 * @return array
+	 */
+	private function sanitize_dimension_input($values) {
+		if (!is_array($values)) {
+			return array();
 		}
 
-		wp_send_json(['status' => 'failed', 'message' => 'Data missing']);
+		return array(
+			'top'    => isset($values['top']) && '' !== trim((string) $values['top']) ? max(0, absint($values['top'])) : '',
+			'right'  => isset($values['right']) && '' !== trim((string) $values['right']) ? max(0, absint($values['right'])) : '',
+			'bottom' => isset($values['bottom']) && '' !== trim((string) $values['bottom']) ? max(0, absint($values['bottom'])) : '',
+			'left'   => isset($values['left']) && '' !== trim((string) $values['left']) ? max(0, absint($values['left'])) : '',
+			'unit'   => isset($values['unit']) && in_array($values['unit'], array('px', '%'), true) ? $values['unit'] : 'px',
+		);
+	}
+
+	/**
+	 * Sanitize shared yes/no values.
+	 *
+	 * @since 2.4.3
+	 *
+	 * @param string $value Raw value.
+	 * @return string
+	 */
+	private function sanitize_yes_no_input($value) {
+		return 'yes' === strtolower((string) $value) ? 'yes' : 'no';
 	}
 
 	/**
@@ -400,7 +516,7 @@ class Easy_Sticky_Sidebar_Actions {
 	private function apply_tab_cta_defaults(array &$postdata) {
 		$text = isset($postdata['SSuprydp_button_option_text']) ? trim((string) $postdata['SSuprydp_button_option_text']) : '';
 		$text_lc = strtolower($text);
-		if ($text === '' || in_array($text_lc, ['click here', 'tab cta'], true)) {
+		if ($text === '' || in_array($text_lc, ['click here', 'tab cta', 'have questions?'], true)) {
 			$postdata['SSuprydp_button_option_text'] = 'Call Now';
 		}
 

@@ -1118,7 +1118,9 @@ h4.heading {
 .wordpress-cta-heading {
     font-size: 18px;
     font-weight: bold;
-    margin: 0 0 10px 0;
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 12px 10px 0;
     color: var(--ess-text);
 }
 
@@ -1127,8 +1129,14 @@ h2.wordpress-cta-heading {
     line-height: 1.1;
 }
 
+:is(h2, h3, h4).wordpress-cta-heading + .wordpress-cta-instruction {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0 0 10px 0;
+}
+
 :is(.heading, .wordpress-cta-heading)+.wordpress-cta-instruction {
-    margin-top: -8px
+    margin-top: 0;
 }
 
 .wordpress-cta-heading+.SSuprydp_field_wrap {
@@ -2067,10 +2075,6 @@ input[type="checkbox"].checkbox-close-cta:checked:after {
     display: none
 }
 
-form.SSuprydp_form[data-template="sticky-cta"] :is(#cta-link-text-options, #sticky-cta-banner-image) {
-    display: block
-}
-
 form.SSuprydp_form:not([data-template="sticky-cta"]) :is(#cta-line-separator-options, .sticky-cta-option) {
     display: none !important
 }
@@ -2116,6 +2120,10 @@ form.SSuprydp_form:not([data-template="gdpr"]) :is(.button-text-hover-color, .bu
 }
 
 form.SSuprydp_form:not([data-template="gdpr"]) .wordpress-cta-gdpr-options {
+    display: none !important
+}
+
+form.SSuprydp_form[data-template="gdpr"] .ess-hide-content-toggle-option {
     display: none !important
 }
 

@@ -1169,8 +1169,18 @@
 
 				moveToSelected: function() {
 					var font = this.$original.val().replace(/ /g, '+');
-					var $li = font ? $("li[data-value='"+ font +"']", this.$results) : $li = $('li', this.$results).first();
-					this.$results.scrollTop($li.addClass('active')[0].offsetTop - this.searchBoxHeight);
+					var $li = font ? $("li[data-value='"+ font +"']", this.$results) : $('li', this.$results).first();
+					if (!$li.length) {
+						$li = $('li', this.$results).first();
+					}
+					if (!$li.length) {
+						return;
+					}
+					var activeNode = $li.addClass('active')[0];
+					if (!activeNode || typeof activeNode.offsetTop === 'undefined') {
+						return;
+					}
+					this.$results.scrollTop(activeNode.offsetTop - this.searchBoxHeight);
 				},
 
 				activateFont: function(e) {

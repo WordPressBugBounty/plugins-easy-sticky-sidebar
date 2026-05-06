@@ -137,9 +137,7 @@ class Easy_Sticky_Sidebar_Generate_CSS {
             printf("\tbackground-color: %s;\n", esc_html($this->item->SSuprydp_button_option_backg_color));
         }
 
-        if (function_exists('easy_sticky_sidebar_has_pro') && easy_sticky_sidebar_has_pro()) {
-            Easy_Sticky_Sidebar_Utils::get_dimensions_output($sticky_cta->button_padding, 'padding-%');
-        }
+        Easy_Sticky_Sidebar_Utils::get_dimensions_output($sticky_cta->button_padding, 'padding-%');
 
         do_action('easy_sticky_sidebar_generate_button_style', $this->item);
     }
@@ -149,8 +147,11 @@ class Easy_Sticky_Sidebar_Generate_CSS {
             printf("\tbackground-image: url(%s);\n", esc_url($this->item->sticky_s_media));
         }
 
-        if (absint($this->item->cta_image_height) > 0) {
-            printf("\theight: %dpx;\n", absint($this->item->cta_image_height));
+        $resolved_cta_height = function_exists('easy_sticky_sidebar_get_resolved_cta_height_css')
+            ? easy_sticky_sidebar_get_resolved_cta_height_css($this->item, 300, 1)
+            : '';
+        if ($resolved_cta_height !== '') {
+            printf("\theight: %s;\n", esc_attr($resolved_cta_height));
         }
 
         do_action('easy_sticky_sidebar_generate_image_style', $this->item);
@@ -176,11 +177,13 @@ class Easy_Sticky_Sidebar_Generate_CSS {
         if ($image_mode === 'background') {
             $image_mode = 'overlay';
         }
-        $is_sticky_classic = $this->item->sidebar_template === 'sticky-cta' && $image_mode !== 'overlay';
+        $is_sticky_cta = $this->item->sidebar_template === 'sticky-cta';
+        $is_sticky_overlay = $is_sticky_cta && $image_mode === 'overlay';
+        $is_sticky_classic = $is_sticky_cta && !$is_sticky_overlay;
 
-        // Classic sticky CTA content padding is handled by runtime/view styles.
-        // Do not emit generated CSS padding for this mode.
-        if (!$is_sticky_classic && function_exists('easy_sticky_sidebar_has_pro') && easy_sticky_sidebar_has_pro()) {
+        // Sticky CTA content padding is handled by runtime/view styles for both
+        // classic and overlay image modes.
+        if (!$is_sticky_classic && !$is_sticky_overlay) {
             Easy_Sticky_Sidebar_Utils::get_dimensions_output($this->item->content_padding, 'padding-%');
         }
 
@@ -226,7 +229,7 @@ class Easy_Sticky_Sidebar_Generate_CSS {
         $sticky_class = sprintf("#easy-sticky-sidebar-%d.easy-sticky-sidebar", absint($this->item->__get('id')));
 
         printf("%s {\n", esc_html($sticky_class));
-        if ($this->item->enable_cta_width == 'yes' && absint($this->item->cta_width) > 0 && $this->item->sidebar_template !== 'tab-cta') {
+        if ($this->item->enable_cta_width == 'yes' && absint($this->item->cta_width) > 0) {
             $unit = empty($this->item->cta_width_unit) ? 'px' : $this->item->cta_width_unit;
             printf("\t--width: %d%s;\n", absint($this->item->cta_width), esc_attr($unit));
         }

@@ -4,7 +4,7 @@ Tags: call button, call now button, call to action, cta, sticky button
 Requires at least: 5.0
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 2.2.2
+Stable tag: 2.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -121,8 +121,20 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 
 == Changelog ==
 
-= 2.2.2 =
+= 2.3.0 =
+* Styling customization is now available in the free version.
+* Removed the free CTA creation limit so users can create and display more CTAs.
+* Added time-based asset versioning for CSS and JavaScript files to make saved changes appear immediately.
+* Improved Sticky CTA overlay mode with full-height/full-width tab controls, tab alignment, text orientation, icon size, icon position, and content corner radius options.
+* Improved Sticky CTA live preview parity between admin and frontend for classic and overlay layouts.
+* Added overlay content and button margin controls with matching backend and frontend preview behavior.
+* Improved Tab CTA icon and text spacing, including support for icons before or after text.
+* Improved HTML CTA and GDPR compatibility when Pro is active, including cleaner tab settings behavior and preview handling.
+* Fixed frontend display so more than three CTAs can render correctly.
+* Fixed escaping, validation, and admin preview issues reported by WordPress coding standards.
+* Removed unused or confusing settings from specific CTA modes where they did not apply.
 
+= 2.2.2 =
 * Fixed import failures caused by malformed exported CTA metadata and object-shaped option data.
 
 = 2.2.1 =
@@ -196,6 +208,9 @@ Yes! [WP CTA Pro](https://wpctapro.com/) offers advanced features like unlimited
 * Responsive design
 
 == Upgrade Notice ==
+
+= 2.3.0 =
+Styling customization is now available in Free, with improved Sticky CTA tabs, live preview parity, and no CTA creation limit.
 
 = 2.2.2 =
 Fixed import failures because of malformed metadata.

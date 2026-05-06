@@ -59,12 +59,12 @@ class Easy_Sticky_Sidebar_Query {
 
 		if ($is_front) {
 			$results = $wpdb->get_results($wpdb->prepare(
-				"SELECT * FROM $wpdb->sticky_cta WHERE SSuprydp_location = %d OR SSuprydp_location = '' OR SSuprydp_location = 'home' OR SSuprydp_location IN ('entire_site','all') ORDER BY id ASC LIMIT 0, 3",
+				"SELECT * FROM $wpdb->sticky_cta WHERE SSuprydp_location = %d OR SSuprydp_location = '' OR SSuprydp_location = 'home' OR SSuprydp_location IN ('entire_site','all') ORDER BY id ASC",
 				$current_id
 			));
 		} else {
 			$results = $wpdb->get_results($wpdb->prepare(
-				"SELECT * FROM $wpdb->sticky_cta WHERE SSuprydp_location = %d OR SSuprydp_location IN ('entire_site','all') ORDER BY id ASC LIMIT 0, 3",
+				"SELECT * FROM $wpdb->sticky_cta WHERE SSuprydp_location = %d OR SSuprydp_location IN ('entire_site','all') ORDER BY id ASC",
 				$current_id
 			));
 		}

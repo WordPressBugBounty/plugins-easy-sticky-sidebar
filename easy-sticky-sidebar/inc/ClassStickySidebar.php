@@ -149,8 +149,13 @@ class Easy_Sticky_Sidebar
 
 		add_filter('plugin_row_meta', [$this, 'add_help_link_on_plugin_page'], 12, 2);
 
-		wp_register_style('fontawesome', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/fontawesome.css', array(), '6.1.1');
-		wp_register_script('jquery-cookie', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/jquery.cookie.js', ['jquery'], '1.4.1', true);
+		$fontawesome_css_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/fontawesome.css';
+		$fontawesome_css_ver = file_exists($fontawesome_css_path) ? (string) filemtime($fontawesome_css_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_register_style('fontawesome', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/fontawesome.css', array(), $fontawesome_css_ver);
+
+		$jquery_cookie_js_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/js/jquery.cookie.js';
+		$jquery_cookie_js_ver = file_exists($jquery_cookie_js_path) ? (string) filemtime($jquery_cookie_js_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_register_script('jquery-cookie', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/jquery.cookie.js', ['jquery'], $jquery_cookie_js_ver, true);
 
 		Easy_Sticky_Sidebar_Migrate::migrate();
 
@@ -189,6 +194,11 @@ class Easy_Sticky_Sidebar
 	 */
 	public function new_features_notice()
 	{
+		if (function_exists('easy_sticky_sidebar_render_update_notice')) {
+			easy_sticky_sidebar_render_update_notice('admin');
+			return;
+		}
+
 		if (!current_user_can('manage_options')) {
 			return;
 		}
@@ -251,6 +261,20 @@ class Easy_Sticky_Sidebar
 	{
 		if (!current_user_can('manage_options')) {
 			wp_send_json_error(array('message' => __('Permission denied.', 'easy-sticky-sidebar')), 403);
+		}
+
+		$notice_id = isset($_POST['notice_id']) ? sanitize_key(wp_unslash($_POST['notice_id'])) : '';
+		$expected_notice_id = function_exists('easy_sticky_sidebar_get_update_notice_id')
+			? easy_sticky_sidebar_get_update_notice_id()
+			: 'wpcta_230_major_update';
+
+		if ($expected_notice_id === $notice_id) {
+			if (!check_ajax_referer('easy_sticky_sidebar_dismiss_' . $expected_notice_id, 'nonce', false)) {
+				wp_send_json_error(array('message' => __('Security check failed.', 'easy-sticky-sidebar')), 403);
+			}
+
+			update_user_meta(get_current_user_id(), '_easy_sticky_sidebar_dismissed_' . $notice_id, 'yes');
+			wp_send_json_success();
 		}
 
 		if (!check_ajax_referer('easy_sticky_sidebar_dismiss_wpcta_220_new_features', 'nonce', false)) {
@@ -454,7 +478,9 @@ class Easy_Sticky_Sidebar
 	 */
 	public function enqueue_frontend_scripts()
 	{
-		wp_enqueue_style('SSuprydp_style', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar.css', array('fontawesome'), EASY_STICKY_SIDEBAR_VERSION);
+		$frontend_css_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/sticky-sidebar.css';
+		$frontend_css_ver = file_exists($frontend_css_path) ? (string) filemtime($frontend_css_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_style('SSuprydp_style', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar.css', array('fontawesome'), $frontend_css_ver);
 
 		$upload_dir = wp_upload_dir();
 		$generated_css = $upload_dir['basedir'] . '/sticky-sidebar-generated.css';
@@ -462,7 +488,9 @@ class Easy_Sticky_Sidebar
 			wp_enqueue_style('sticky-sidebar-generated', $upload_dir['baseurl'] . '/sticky-sidebar-generated.css', [], filemtime($generated_css));
 		}
 
-		wp_enqueue_script('SSuprydp_script', EASY_STICKY_SIDEBAR_PLUGIN_URL . "/assets/js/sticky-sidebar.js", array('jquery'), EASY_STICKY_SIDEBAR_VERSION, true);
+		$frontend_js_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/js/sticky-sidebar.js';
+		$frontend_js_ver = file_exists($frontend_js_path) ? (string) filemtime($frontend_js_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_script('SSuprydp_script', EASY_STICKY_SIDEBAR_PLUGIN_URL . "/assets/js/sticky-sidebar.js", array('jquery'), $frontend_js_ver, true);
 		wp_localize_script('SSuprydp_script', 'easy_sticky_sidebar_front', [
 			'ajax_url' => admin_url('admin-ajax.php'),
 			'nonce'    => wp_create_nonce('easy_sticky_sidebar_front_nonce'),
@@ -471,17 +499,25 @@ class Easy_Sticky_Sidebar
 
 	public function enqueue_admin_scripts()
 	{
-		wp_enqueue_style('easy-sidebar-global', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/easy-sidebar-global.css', [], EASY_STICKY_SIDEBAR_VERSION);
+		$global_css_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/easy-sidebar-global.css';
+		$global_css_ver = file_exists($global_css_path) ? (string) filemtime($global_css_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_style('easy-sidebar-global', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/easy-sidebar-global.css', [], $global_css_ver);
 		if (!is_easy_sticky_sidebar_screen()) {
 			return;
 		}
 
-		wp_enqueue_style('easy-sticky-sidebar-preview', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar.css', ['fontawesome'], EASY_STICKY_SIDEBAR_VERSION);
+		$preview_css_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/sticky-sidebar.css';
+		$preview_css_ver = file_exists($preview_css_path) ? (string) filemtime($preview_css_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_style('easy-sticky-sidebar-preview', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar.css', ['fontawesome'], $preview_css_ver);
 
 		wp_deregister_script('gform_tooltip_init');
 
-		wp_register_style('select2', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/select2.min.css');
-		wp_register_script('select2', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/select2.min.js', ['jquery'], '4.1.0', true);
+		$select2_css_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/select2.min.css';
+		$select2_css_ver = file_exists($select2_css_path) ? (string) filemtime($select2_css_path) : EASY_STICKY_SIDEBAR_VERSION;
+		$select2_js_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/js/select2.min.js';
+		$select2_js_ver = file_exists($select2_js_path) ? (string) filemtime($select2_js_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_register_style('select2', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/select2.min.css', [], $select2_css_ver);
+		wp_register_script('select2', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/select2.min.js', ['jquery'], $select2_js_ver, true);
 
 		wp_enqueue_style('wp-color-picker');
 
@@ -489,10 +525,12 @@ class Easy_Sticky_Sidebar
 			'easy-sticky-sidebar-admin',
 			EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/admin.css',
 			array(),
-			EASY_STICKY_SIDEBAR_VERSION
+			file_exists(EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/admin.css') ? (string) filemtime(EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/admin.css') : EASY_STICKY_SIDEBAR_VERSION
 		);
 
-		wp_enqueue_script('jquery-fontselect-js', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/jquery.fontselect.js', [], EASY_STICKY_SIDEBAR_VERSION);
+		$fontselect_js_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/js/jquery.fontselect.js';
+		$fontselect_js_ver = file_exists($fontselect_js_path) ? (string) filemtime($fontselect_js_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_script('jquery-fontselect-js', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/jquery.fontselect.js', [], $fontselect_js_ver);
 
 		$admin_js_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/js/sticky-sidebar-admin.js';
 		$admin_js_ver = file_exists($admin_js_path) ? (string) filemtime($admin_js_path) : EASY_STICKY_SIDEBAR_VERSION;
@@ -501,15 +539,25 @@ class Easy_Sticky_Sidebar
 			'ajax_url' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce('easy_sticky_sidebar_nonce'),
 			'plugin_url' => EASY_STICKY_SIDEBAR_PLUGIN_URL,
+			'editor_defaults' => function_exists('easy_sticky_sidebar_get_editor_default_templates') ? easy_sticky_sidebar_get_editor_default_templates() : [],
+			'design_templates' => function_exists('easy_sticky_sidebar_get_design_templates') ? easy_sticky_sidebar_get_design_templates() : [],
 		]);
 
-		wp_enqueue_script('SSuprydp_popper', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/popper.min.js', [], EASY_STICKY_SIDEBAR_VERSION);
+		$popper_js_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/js/popper.min.js';
+		$popper_js_ver = file_exists($popper_js_path) ? (string) filemtime($popper_js_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_script('SSuprydp_popper', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/popper.min.js', [], $popper_js_ver);
 
-		wp_enqueue_script('SSuprydp_bootstrap', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/bootstrap.min.js', [], EASY_STICKY_SIDEBAR_VERSION);
+		$bootstrap_js_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/js/bootstrap.min.js';
+		$bootstrap_js_ver = file_exists($bootstrap_js_path) ? (string) filemtime($bootstrap_js_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_script('SSuprydp_bootstrap', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/js/bootstrap.min.js', [], $bootstrap_js_ver);
 
-		wp_enqueue_style('fontselect-default', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/fontselect-default.css', [], EASY_STICKY_SIDEBAR_VERSION);
+		$fontselect_css_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/fontselect-default.css';
+		$fontselect_css_ver = file_exists($fontselect_css_path) ? (string) filemtime($fontselect_css_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_style('fontselect-default', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/fontselect-default.css', [], $fontselect_css_ver);
 
-		wp_enqueue_style('SSuprydp_admin_style', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar-admin-base.css', ['fontawesome'], EASY_STICKY_SIDEBAR_VERSION);
+		$admin_base_css_path = EASY_STICKY_SIDEBAR_PLUGIN_DIR . '/assets/css/sticky-sidebar-admin-base.css';
+		$admin_base_css_ver = file_exists($admin_base_css_path) ? (string) filemtime($admin_base_css_path) : EASY_STICKY_SIDEBAR_VERSION;
+		wp_enqueue_style('SSuprydp_admin_style', EASY_STICKY_SIDEBAR_PLUGIN_URL . '/assets/css/sticky-sidebar-admin-base.css', ['fontawesome'], $admin_base_css_ver);
 
 		$current_page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
 		if (in_array($current_page, ['add-easy-sticky-sidebar', 'edit-easy-sticky-sidebar'], true)) {
@@ -574,11 +622,9 @@ class Easy_Sticky_Sidebar
 				$dataview['cta_classes'][] = 'ess-close-button-' . $sticky_data->close_button_position;
 			}
 
-			if (function_exists('easy_sticky_sidebar_has_pro') && easy_sticky_sidebar_has_pro()) {
-				$shadow_enabled = isset($sticky_data->enable_box_shadow) ? $sticky_data->enable_box_shadow : 'no';
-				if ($shadow_enabled === 'yes') {
-					$dataview['cta_classes'][] = 'ess-shadow-enabled';
-				}
+			$shadow_enabled = isset($sticky_data->enable_box_shadow) ? $sticky_data->enable_box_shadow : 'no';
+			if ($shadow_enabled === 'yes') {
+				$dataview['cta_classes'][] = 'ess-shadow-enabled';
 			}
 
 			$dataview['cta_classes'] = array_unique($dataview['cta_classes']);
@@ -620,17 +666,6 @@ class Easy_Sticky_Sidebar
 
 		global $wpdb;
 		$pro_keys = [
-			'button_padding',
-			'content_padding',
-			'call_to_action_padding',
-			'button_round',
-			'button_letter_spacing',
-			'content_letter_spacing',
-			'line_separator_thickness',
-			'call_to_action_letter_spacing',
-			'call_to_action_button',
-			'hide_call_to_action',
-			'enable_box_shadow',
 			'display_trigger',
 			'display_trigger_seconds',
 			'display_trigger_scroll',
@@ -641,18 +676,7 @@ class Easy_Sticky_Sidebar
 			'after_close_behavior',
 			'after_close_time',
 			'after_close_time_unit',
-			'show_close_button',
-			'close_button_position',
-			'close_button_inside',
-			'close_button_color',
 			'close_button_background',
-			'enable_cta_width',
-			'cta_width',
-			'cta_tablet_width',
-			'cta_mobile_width',
-			'cta_width_unit',
-			'cta_tablet_width_unit',
-			'cta_mobile_width_unit'
 		];
 
 		$placeholders = implode(',', array_fill(0, count($pro_keys), '%s'));

@@ -81,7 +81,11 @@ if ($is_overlay_mode) {
     }
     $cta_classes[] = 'image-as-background';
     $cta_classes[] = 'overlay-pos-' . $overlay_position_class;
+    if ('yes' === strtolower((string) ($ctacontent->overlay_full_tab_height ?? 'no'))) {
+        $cta_classes[] = 'ess-overlay-full-tab-height';
+    }
 }
+$overlay_tab_corner_radius = max(0, absint($ctacontent->overlay_tab_corner_radius ?? 5));
 
 $cta_link_url = '';
 $tag = 'div';
@@ -94,8 +98,7 @@ $cta_nofollow = ($ctacontent->SSuprydp_nofollow == 'Yes');
 
 $padding_css = "14px 24px";
 $content_padding_css = "14px 24px";
-$pro_enabled = function_exists('easy_sticky_sidebar_has_pro') && easy_sticky_sidebar_has_pro();
-if ($pro_enabled && $ctacontent->call_to_action_padding) {
+if ($ctacontent->call_to_action_padding) {
     $padding_top    = isset($ctacontent->call_to_action_padding['top']) ? intval($ctacontent->call_to_action_padding['top']) : 0;
     $padding_bottom = isset($ctacontent->call_to_action_padding['bottom']) ? intval($ctacontent->call_to_action_padding['bottom']) : 0;
     $padding_right  = isset($ctacontent->call_to_action_padding['right']) ? intval($ctacontent->call_to_action_padding['right']) : 0;
@@ -120,7 +123,7 @@ $horizontal_vertical_position = function_exists('easy_sticky_sidebar_normalize_s
     ? easy_sticky_sidebar_normalize_secondary_position($ctacontent->SSuprydp_cta_position ?? 'right', $ctacontent->horizontal_vertical_position ?? '', 'center')
     : strtolower((string) ($ctacontent->horizontal_vertical_position ?? 'center'));
 
-if ($pro_enabled && $ctacontent->content_padding) {
+if ($ctacontent->content_padding) {
     $content_padding_top    = isset($ctacontent->content_padding['top']) ? intval($ctacontent->content_padding['top']) : 0;
     $content_padding_bottom = isset($ctacontent->content_padding['bottom']) ? intval($ctacontent->content_padding['bottom']) : 0;
     $content_padding_right  = isset($ctacontent->content_padding['right']) ? intval($ctacontent->content_padding['right']) : 0;
@@ -159,6 +162,38 @@ $button_alignment_style = sprintf(
     esc_attr($align_items_value),
     esc_attr($justify_value)
 );
+	$button_text_orientation = strtolower((string) ($ctacontent->button_text_orientation ?? ($ctacontent->overlay_tab_text_orientation ?? 'top-to-bottom')));
+if (!in_array($button_text_orientation, ['top-to-bottom', 'bottom-to-top'], true)) {
+    $button_text_orientation = 'top-to-bottom';
+}
+if ($button_text_orientation === 'bottom-to-top') {
+    $is_side_text_orientation = $is_overlay_mode
+        ? in_array((string) ($ctacontent->SSuprydp_cta_position ?? 'right'), ['left', 'right'], true)
+        : in_array((string) ($ctacontent->SSuprydp_cta_position ?? 'right'), ['left', 'right'], true);
+    if ($is_side_text_orientation) {
+        $cta_classes[] = 'ess-tab-text-bottom-to-top';
+    }
+}
+if (
+    $is_overlay_mode
+    && !in_array('ess-overlay-full-tab-height', $cta_classes, true)
+    && in_array((string) ($ctacontent->SSuprydp_cta_position ?? 'right'), ['left', 'right'], true)
+) {
+    $overlay_side_tab_alignment = $button_alignment_value === 'end'
+        ? 'bottom'
+        : ($button_alignment_value === 'center' ? 'center' : 'top');
+    $cta_classes[] = 'ess-overlay-side-tab-align-' . $overlay_side_tab_alignment;
+}
+if (
+    $is_overlay_mode
+    && !in_array('ess-overlay-full-tab-height', $cta_classes, true)
+    && in_array((string) ($ctacontent->SSuprydp_cta_position ?? 'right'), ['top', 'bottom'], true)
+) {
+    $overlay_vertical_tab_alignment = $button_alignment_value === 'end'
+        ? 'right'
+        : ($button_alignment_value === 'center' ? 'center' : 'left');
+    $cta_classes[] = 'ess-overlay-tab-align-' . $overlay_vertical_tab_alignment;
+}
 
 $overlay_content_style = '';
 $overlay_button_style = '';
@@ -184,10 +219,26 @@ if ($is_overlay_mode) {
 
     $overlay_content_color = $ess_get_css_color($ctacontent->SSuprydp_content_option_color ?? '', '#383838');
     $overlay_content_padding = max(0, absint($ctacontent->overlay_content_padding ?? 12));
+    $overlay_content_margin_values = class_exists('Easy_Sticky_Sidebar_Utils')
+        ? Easy_Sticky_Sidebar_Utils::get_dimensions_values((array) ($ctacontent->overlay_content_margin ?? array()))
+        : (object) array('top' => 0, 'right' => 0, 'bottom' => 0, 'left' => 0, 'unit' => 'px');
+    $overlay_content_margin_top = max(0, absint($overlay_content_margin_values->top ?? 0));
+    $overlay_content_margin_right = max(0, absint($overlay_content_margin_values->right ?? 0));
+    $overlay_content_margin_bottom = max(0, absint($overlay_content_margin_values->bottom ?? 0));
+    $overlay_content_margin_left = max(0, absint($overlay_content_margin_values->left ?? 0));
+    $overlay_content_margin_unit = in_array((string) ($overlay_content_margin_values->unit ?? 'px'), ['px'], true) ? 'px' : 'px';
     $overlay_content_style = sprintf(
-        'color:%s; background-color:transparent; text-align:%s;',
+        'color:%s; background-color:transparent; text-align:%s; margin:%d%s %d%s %d%s %d%s;',
         esc_attr($overlay_content_color),
-        esc_attr($overlay_content_alignment)
+        esc_attr($overlay_content_alignment),
+        $overlay_content_margin_top,
+        esc_attr($overlay_content_margin_unit),
+        $overlay_content_margin_right,
+        esc_attr($overlay_content_margin_unit),
+        $overlay_content_margin_bottom,
+        esc_attr($overlay_content_margin_unit),
+        $overlay_content_margin_left,
+        esc_attr($overlay_content_margin_unit)
     );
 
     $overlay_button_color = (string) ($ctacontent->SSuprydp_action_option_color ?? '');
@@ -204,41 +255,76 @@ if ($is_overlay_mode) {
     if ($overlay_button_bg === '') {
         $overlay_button_bg = '#0e2163';
     }
-    $overlay_button_padding_v = max(0, absint($ctacontent->overlay_button_padding_v ?? 5));
-    $overlay_button_padding_h = max(0, absint($ctacontent->overlay_button_padding_h ?? 20));
+    $overlay_button_padding = $ctacontent->overlay_button_padding ?? array();
+    if (!is_array($overlay_button_padding) || empty($overlay_button_padding)) {
+        $overlay_button_padding = array(
+            'top'    => max(0, absint($ctacontent->overlay_button_padding_v ?? 5)),
+            'right'  => max(0, absint($ctacontent->overlay_button_padding_h ?? 20)),
+            'bottom' => max(0, absint($ctacontent->overlay_button_padding_v ?? 5)),
+            'left'   => max(0, absint($ctacontent->overlay_button_padding_h ?? 20)),
+            'unit'   => 'px',
+        );
+    } elseif (class_exists('Easy_Sticky_Sidebar_Utils')) {
+        $normalized_overlay_button_padding = Easy_Sticky_Sidebar_Utils::get_dimensions_values((array) $overlay_button_padding);
+        if (!empty($normalized_overlay_button_padding->empty)) {
+            $overlay_button_padding = array(
+                'top'    => max(0, absint($ctacontent->overlay_button_padding_v ?? 5)),
+                'right'  => max(0, absint($ctacontent->overlay_button_padding_h ?? 20)),
+                'bottom' => max(0, absint($ctacontent->overlay_button_padding_v ?? 5)),
+                'left'   => max(0, absint($ctacontent->overlay_button_padding_h ?? 20)),
+                'unit'   => 'px',
+            );
+        }
+    }
+    $overlay_button_padding_values = Easy_Sticky_Sidebar_Utils::get_dimensions_values((array) $overlay_button_padding);
+    $overlay_button_padding_v = max(0, absint($overlay_button_padding_values->top ?? 5));
+    $overlay_button_padding_h = max(0, absint($overlay_button_padding_values->right ?? 20));
+    $overlay_button_margin_values = Easy_Sticky_Sidebar_Utils::get_dimensions_values((array) ($ctacontent->overlay_button_margin ?? array()));
+    $overlay_button_margin_top = max(0, absint($overlay_button_margin_values->top ?? 0));
+    $overlay_button_margin_right = max(0, absint($overlay_button_margin_values->right ?? 0));
+    $overlay_button_margin_bottom = max(0, absint($overlay_button_margin_values->bottom ?? 0));
+    $overlay_button_margin_left = max(0, absint($overlay_button_margin_values->left ?? 0));
+    $overlay_button_margin_unit = in_array((string) ($overlay_button_margin_values->unit ?? 'px'), ['px'], true) ? 'px' : 'px';
     $overlay_button_radius = max(0, absint($ctacontent->overlay_button_radius ?? 50));
-    $overlay_gap = max(0, absint($ctacontent->overlay_content_gap ?? 10));
     $overlay_backdrop_color = (string) ($ctacontent->overlay_backdrop_color ?? '');
     if ($overlay_backdrop_color === '') {
         $overlay_backdrop_color = '#000000';
     }
     $overlay_backdrop_opacity = max(0, min(100, absint($ctacontent->overlay_backdrop_opacity ?? 55)));
-    $overlay_height = max(60, absint($ctacontent->cta_image_height ?? 200));
+    $overlay_height = function_exists('easy_sticky_sidebar_get_resolved_cta_height_css')
+        ? easy_sticky_sidebar_get_resolved_cta_height_css($ctacontent, 300, 60)
+        : '300px';
     $overlay_wrapper_vars = sprintf(
-        '--ess-overlay-backdrop-color:%s; --ess-overlay-backdrop-opacity:%s; --ess-overlay-content-gap:%dpx; --ess-overlay-height:%dpx; --ess-overlay-content-padding:%dpx;',
+        '--ess-overlay-backdrop-color:%s; --ess-overlay-backdrop-opacity:%s; --ess-overlay-height:%s; --ess-overlay-content-padding:%dpx;',
         esc_attr($overlay_backdrop_color),
         esc_attr(round($overlay_backdrop_opacity / 100, 2)),
-        $overlay_gap,
-        $overlay_height,
+        esc_attr($overlay_height),
         $overlay_content_padding
     );
-    $overlay_button_margin_align = 'margin-left:auto; margin-right:0;';
+    $overlay_button_align_self = 'flex-end';
     if ($overlay_button_alignment === 'left') {
-        $overlay_button_margin_align = 'margin-left:0; margin-right:auto;';
+        $overlay_button_align_self = 'flex-start';
     } elseif ($overlay_button_alignment === 'center') {
-        $overlay_button_margin_align = 'margin-left:auto; margin-right:auto;';
+        $overlay_button_align_self = 'center';
     }
 
     $overlay_button_style = sprintf(
-        'color:%s; background-color:%s; text-align:%s; padding:%dpx %dpx !important; border-radius:%dpx !important; margin-top:%dpx;%s%s',
+        'color:%s; background-color:%s; text-align:%s; padding:%dpx %dpx !important; border-radius:%dpx !important; margin:%d%s %d%s %d%s %d%s; align-self:%s;%s',
         esc_attr($overlay_button_color),
         esc_attr($overlay_button_bg),
         esc_attr($overlay_button_alignment),
         $overlay_button_padding_v,
         $overlay_button_padding_h,
         $overlay_button_radius,
-        $overlay_gap,
-        $overlay_button_margin_align,
+        $overlay_button_margin_top,
+        esc_attr($overlay_button_margin_unit),
+        $overlay_button_margin_right,
+        esc_attr($overlay_button_margin_unit),
+        $overlay_button_margin_bottom,
+        esc_attr($overlay_button_margin_unit),
+        $overlay_button_margin_left,
+        esc_attr($overlay_button_margin_unit),
+        esc_attr($overlay_button_align_self),
         $btn_letter_spacing ? ' letter-spacing:' . esc_attr($btn_letter_spacing) . 'px;' : ''
     );
     if (!empty($resolved_image)) {
@@ -246,7 +332,7 @@ if ($is_overlay_mode) {
     }
 }
 
-$wrapper_style = trim($position_style . ' ' . $overlay_wrapper_vars);
+$wrapper_style = trim($position_style . ' ' . $overlay_wrapper_vars . ' --ess-overlay-tab-corner-radius:' . $overlay_tab_corner_radius . 'px;');
 
 $display_trigger = $ctacontent->display_trigger ?? 'immediately';
 $display_trigger_seconds = absint($ctacontent->display_trigger_seconds ?? 0);

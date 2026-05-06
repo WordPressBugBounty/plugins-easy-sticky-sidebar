@@ -65,14 +65,27 @@ $button_alignment_style = sprintf(
     esc_attr($align_items_value),
     esc_attr($justify_value)
 );
+$button_text_orientation = strtolower((string) ($ctacontent->button_text_orientation ?? ($ctacontent->overlay_tab_text_orientation ?? 'top-to-bottom')));
+if (!in_array($button_text_orientation, ['top-to-bottom', 'bottom-to-top'], true)) {
+    $button_text_orientation = 'top-to-bottom';
+}
+$is_side_tab_orientation = in_array((string) ($ctacontent->SSuprydp_cta_position ?? 'right'), ['left', 'right'], true);
+$tab_cta_classes = $cta_classes;
+if ($button_text_orientation === 'bottom-to-top' && $is_side_tab_orientation) {
+    $tab_cta_classes[] = 'ess-tab-text-bottom-to-top';
+}
 
 $button_icon_class = function_exists('easy_sticky_sidebar_normalize_icon_class')
     ? easy_sticky_sidebar_normalize_icon_class($ctacontent->button_icon ?? '')
     : trim((string) ($ctacontent->button_icon ?? ''));
+$button_icon_size = absint($ctacontent->button_icon_size ?? 16);
+$button_icon_position = function_exists('easy_sticky_sidebar_get_button_icon_position')
+    ? easy_sticky_sidebar_get_button_icon_position($ctacontent)
+    : 'before';
 ?>
 
 <div id="<?php echo esc_attr('easy-sticky-sidebar-' . $ctacontent->id); ?>" style="<?php echo esc_attr($position_style); ?>"
-    class="<?php echo esc_attr(implode(' ', $cta_classes)); ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"
+    class="<?php echo esc_attr(implode(' ', $tab_cta_classes)); ?>" data-id="<?php echo esc_attr($ctacontent->id); ?>"
     data-button-icon="<?php echo esc_attr($button_icon_class); ?>"
     data-display-trigger="<?php echo esc_attr($display_trigger); ?>"
     data-display-trigger-seconds="<?php echo esc_attr($display_trigger_seconds); ?>"
@@ -94,16 +107,21 @@ $button_icon_class = function_exists('easy_sticky_sidebar_normalize_icon_class')
         <?php echo $cta_target_blank ? ' target="_blank"' : ''; ?>
         <?php echo $cta_nofollow ? ' rel="nofollow"' : ''; ?>>
         <?php
-            $button_icon = $button_icon_class !== ''
-                ? '<i class="icon ' . esc_attr($button_icon_class) . '"></i> '
-                : '';
+            $button_icon = function_exists('easy_sticky_sidebar_get_button_icon_html')
+                ? easy_sticky_sidebar_get_button_icon_html($ctacontent)
+                : ($button_icon_class !== ''
+                    ? '<i class="icon ' . esc_attr($button_icon_class) . '" style="font-size:' . esc_attr($button_icon_size > 0 ? $button_icon_size : 16) . 'px;"></i>'
+                    : '');
             $button_text = trim((string) $ctacontent->SSuprydp_button_option_text);
             if ($button_text === '') {
                 $button_text = 'Call Now';
             }
-            $button_text_html = $button_text === '' ? '' : esc_html($button_text);
+            $button_text_html = $button_text === '' ? '' : '<span class="ess-sticky-sidebar-button-label">' . esc_html($button_text) . '</span>';
+            $button_markup = $button_icon_position === 'after'
+                ? $button_text_html . $button_icon
+                : $button_icon . $button_text_html;
         ?>
-        <div><?php echo wp_kses($button_icon . $button_text_html, array('i' => array('class' => array()))); ?></div>
+        <div><?php echo wp_kses($button_markup, array('i' => array('class' => array(), 'style' => array()), 'span' => array('class' => array()))); ?></div>
     </a>
     <?php 
 	if (function_exists('wordpress_cta_pro_get_close_button')) { 
